@@ -92,7 +92,8 @@ export default {
       searchQuery: '',
       currentPage: 1,
       pageSize: 30,
-      loading: false
+      loading: false,
+      userId: null
     };
   },
   computed: {
@@ -116,9 +117,13 @@ export default {
     }
   },
   mounted() {
+    // 從路由查詢參數中獲取 user_id
+    this.userId = this.$route.query.user_id;
     this.fetchData();
   },
   activated() {
+    // 從路由查詢參數中獲取 user_id
+    this.userId = this.$route.query.user_id;
     this.fetchData();
   },
   methods: {
@@ -137,10 +142,17 @@ export default {
       }
     },
     async fetchSessions() {
-      const response = await sessionAPI.getActiveSessions({
+      const params = {
         skip: 0,
         limit: 1000
-      });
+      };
+
+      // 如果有 user_id，添加到查詢參數中
+      if (this.userId) {
+        params.user_id = this.userId;
+      }
+
+      const response = await sessionAPI.getActiveSessions(params);
       this.sessions = response.data.sessions || [];
     },
     async fetchStats() {
@@ -335,7 +347,7 @@ h1 {
 
 .controls {
   display: flex;
-  gap: 15px;
+  gap: 8px;
   margin-bottom: 20px;
   flex-wrap: wrap;
   align-items: center;

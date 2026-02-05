@@ -93,14 +93,31 @@ export default {
     }
   },
   activated() {
+    // 重新從路由查詢參數中獲取 user_id，以防路由參數變化
+    this.userId = this.$route.query.user_id;
+    this.username = this.$route.query.username || '未知用戶';
     if (this.userId) {
       this.fetchUserSessions();
+    }
+  },
+  watch: {
+    // 監聽路由查詢參數變化
+    '$route.query': {
+      handler(newQuery) {
+        if (newQuery.user_id && newQuery.user_id !== this.userId) {
+          this.userId = newQuery.user_id;
+          this.username = newQuery.username || '未知用戶';
+          this.fetchUserSessions();
+        }
+      },
+      deep: true
     }
   },
   methods: {
     async fetchUserSessions() {
       this.loading = true;
       try {
+        console.log(this.userId)
         const response = await sessionAPI.getUserSessions(this.userId);
         this.sessions = response.data.sessions || [];
         this.stats = {
@@ -298,7 +315,7 @@ h1 {
 
 .controls {
   display: flex;
-  gap: 15px;
+  gap: 8px;
   margin-bottom: 20px;
   flex-wrap: wrap;
   justify-content: center;
