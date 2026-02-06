@@ -92,27 +92,6 @@ export default {
       this.$router.push('/admin');
     }
   },
-  activated() {
-    // 重新從路由查詢參數中獲取 user_id，以防路由參數變化
-    this.userId = this.$route.query.user_id;
-    this.username = this.$route.query.username || '未知用戶';
-    if (this.userId) {
-      this.fetchUserSessions();
-    }
-  },
-  watch: {
-    // 監聽路由查詢參數變化
-    '$route.query': {
-      handler(newQuery) {
-        if (newQuery.user_id && newQuery.user_id !== this.userId) {
-          this.userId = newQuery.user_id;
-          this.username = newQuery.username || '未知用戶';
-          this.fetchUserSessions();
-        }
-      },
-      deep: true
-    }
-  },
   methods: {
     async fetchUserSessions() {
       this.loading = true;
@@ -203,12 +182,12 @@ export default {
       return expiryDate < new Date();
     },
     getStatusClass(session) {
-      if (session.is_revoked) return 'status-revoked';
+      if (session.revoked) return 'status-revoked';
       if (this.isExpired(session)) return 'status-expired';
       return 'status-active';
     },
     getStatusText(session) {
-      if (session.is_revoked) return '已撤銷';
+      if (session.revoked) return '已撤銷';
       if (this.isExpired(session)) return '已過期';
       return '活躍';
     },
@@ -405,6 +384,7 @@ tbody tr:last-child td {
   font-size: 12px;
   font-weight: bold;
   display: inline-block;
+  white-space: nowrap;
 }
 
 .status-active {
@@ -418,7 +398,7 @@ tbody tr:last-child td {
 }
 
 .status-revoked {
-  background-color: #f44336;
+  background-color: #683733;
   color: white;
 }
 
@@ -438,6 +418,7 @@ tbody tr:last-child td {
 @media (max-width: 768px) {
   .stats-info {
     flex-direction: column;
+    gap:10px;
     align-items: center;
   }
 

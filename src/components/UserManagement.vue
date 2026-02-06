@@ -9,7 +9,7 @@
         <button @click="apidetail">近期api調用</button>
         <button @click="viewAllCustom">所有數據</button>
         <button @click="goToSessionManagement">會話管理</button>
-        <button @click="checkServerStatus">服務器</button>
+        <button @click="checkServerStatus">寶塔</button>
       </div>
       <!-- 搜索框 -->
       <div class="search-container">
@@ -199,8 +199,10 @@ export default {
     },
     checkServerStatus() {
       // 新分頁打開阿里雲服務器控制台
-      window.open('https://ecs.console.aliyun.com/server/region/cn-shenzhen#/', '_blank');
+      // window.open('https://ecs.console.aliyun.com/server/region/cn-shenzhen#/', '_blank');
+      window.open('https://47.115.57.138:40260/home', '_blank')
     },
+
     // 查看用戶統計
     async viewUserStats(user) {
       this.$router.push({name: 'UserStats', query: {username: user.username}});

@@ -4,7 +4,7 @@
 
     <div class="stats-container">
       <div class="stats-card">
-        <div class="number">{{ stats.active_sessions || 0 }}</div>
+        <div class="number">{{ stats.active_tokens || 0 }}</div>
         <div class="label">活躍會話</div>
       </div>
       <div class="stats-card">
@@ -12,7 +12,7 @@
         <div class="label">在線用戶</div>
       </div>
       <div class="stats-card">
-        <div class="number">{{ stats.revoked_sessions || 0 }}</div>
+        <div class="number">{{ stats.revoked_tokens || 0 }}</div>
         <div class="label">已撤銷</div>
       </div>
     </div>
@@ -475,6 +475,7 @@ tbody tr:last-child td {
   .stats-container {
     flex-direction: column;
     align-items: center;
+    gap:10px
   }
 
   .controls {
@@ -488,6 +489,9 @@ tbody tr:last-child td {
 
   th, td {
     padding: 8px;
+  }
+  .stats-card{
+    padding: 10px 20px;
   }
 }
 </style>

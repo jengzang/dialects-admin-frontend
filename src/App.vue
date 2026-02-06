@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <router-view v-slot="{ Component }">
-      <keep-alive>
+      <keep-alive :include="['UserManagement', 'Custom', 'SessionManagement', 'ApiDetail']">
         <component :is="Component" />
       </keep-alive>
     </router-view>

@@ -99,6 +99,19 @@ export default {
       showAdminConfirmDialog: false,  // 控制設置管理員的確認彈窗顯示
     };
   },
+  mounted() {
+    // 初始化頁面時，根據路由參數獲取用戶數據
+    if (this.oldname || this.oldemail) {
+      api.get(`/users/single?query=${this.oldname || this.oldemail}`)
+        .then(response => {
+          this.updatedUser.username = response.data.username;
+          this.updatedUser.email = response.data.email;
+        })
+        .catch(error => {
+          console.error('Error fetching user data', error);
+        });
+    }
+  },
   methods: {
     // 更新用戶名
     async updateUsername() {
@@ -193,20 +206,6 @@ export default {
     // 取消設置為管理員
     cancelSetAdmin() {
       this.showAdminConfirmDialog = false;  // 隱藏彈窗
-    },
-
-    // 初始化頁面時，根據路由參數獲取用戶數據
-    async mounted() {
-      if (this.oldname || this.oldemail) {
-        try {
-          // 根據用戶名或郵箱查詢用戶數據
-          const response = await api.get(`/users/single?query=${this.oldname || this.oldemail}`);
-          this.updatedUser.username = response.data.username;
-          this.updatedUser.email = response.data.email;
-        } catch (error) {
-          console.error('Error fetching user data', error);
-        }
-      }
     },
 
     // 顯示刪除確認彈窗
