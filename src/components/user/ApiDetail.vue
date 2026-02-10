@@ -151,6 +151,7 @@ import api from '../../axios.js'; // 引入API请求配置
 import {formatTime} from "../../utils.js";
 
 export default {
+  name: 'ApiDetail',
   data() {
     return {
       currentPage: 1,  // 当前页码

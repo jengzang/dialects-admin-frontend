@@ -68,6 +68,7 @@
 import api from '../axios'; // 引入我們的 axios 配置
 
 export default {
+  name: 'UserManagement',
   data() {
     return {
       users: [],

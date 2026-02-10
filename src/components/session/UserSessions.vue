@@ -170,7 +170,12 @@ export default {
       // 處理 ISO 8601 字符串格式
       let expiryDate;
       if (typeof session.expires_at === 'string') {
-        expiryDate = new Date(session.expires_at);
+        // 確保正確解析 UTC 時間
+        let timeStr = session.expires_at;
+        if (!timeStr.includes('Z') && !timeStr.includes('+') && !timeStr.includes('-', 10)) {
+          timeStr = timeStr.replace(' ', 'T') + 'Z';
+        }
+        expiryDate = new Date(timeStr);
       } else if (typeof session.expires_at === 'number') {
         expiryDate = session.expires_at < 10000000000
           ? new Date(session.expires_at * 1000)
@@ -197,7 +202,13 @@ export default {
       // 處理不同的時間戳格式
       let date;
       if (typeof timestamp === 'string') {
-        date = new Date(timestamp);
+        // 如果是字符串，確保正確解析 UTC 時間
+        let timeStr = timestamp;
+        if (!timeStr.includes('Z') && !timeStr.includes('+') && !timeStr.includes('-', 10)) {
+          // 將空格替換為 T，並添加 Z 表示 UTC
+          timeStr = timeStr.replace(' ', 'T') + 'Z';
+        }
+        date = new Date(timeStr);
       } else if (typeof timestamp === 'number') {
         if (timestamp < 10000000000) {
           date = new Date(timestamp * 1000);
@@ -222,7 +233,7 @@ export default {
       if (diff < 86400) return `${Math.floor(diff / 3600)}小時前`;
       if (diff < 604800) return `${Math.floor(diff / 86400)}天前`;
 
-      return date.toLocaleString('zh-CN');
+      return date.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
     },
     formatExpireTime(timestamp) {
       if (!timestamp) return '-';
@@ -230,7 +241,12 @@ export default {
       // 處理不同的時間戳格式
       let date;
       if (typeof timestamp === 'string') {
-        date = new Date(timestamp);
+        // 如果是字符串，確保正確解析 UTC 時間
+        let timeStr = timestamp;
+        if (!timeStr.includes('Z') && !timeStr.includes('+') && !timeStr.includes('-', 10)) {
+          timeStr = timeStr.replace(' ', 'T') + 'Z';
+        }
+        date = new Date(timeStr);
       } else if (typeof timestamp === 'number') {
         if (timestamp < 10000000000) {
           date = new Date(timestamp * 1000);

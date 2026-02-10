@@ -58,7 +58,7 @@ import api from '../../axios.js'; // 引入API请求配置
 import { formatTime } from "../../utils.js";  // 假设你有一个 utils.js 用来处理时间格式化
 
 export default {
-  name: 'DataTable',
+  name: 'Custom',
   setup() {
     const data = ref([]);  // 定义所有数据
     const currentPage = ref(1);  // 当前页码
