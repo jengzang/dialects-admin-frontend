@@ -17,6 +17,8 @@ import EditCustom from "../components/custom/EditCustom.vue"
 import IP from "../components/user/IPQuery.vue"
 import SessionManagement from "../components/session/SessionManagement.vue"
 import UserSessions from "../components/session/UserSessions.vue"
+import UserSessionManagement from "../components/session/UserSessionManagement.vue"
+import GlobalSessionManagement from "../components/session/GlobalSessionManagement.vue"
 
 // 根路徑配置
 const routes = [
@@ -108,6 +110,18 @@ const routes = [
     path: '/sessions/user',
     name: 'UserSessions',
     component: UserSessions,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/user-sessions/:userId',
+    name: 'UserSessionManagement',
+    component: UserSessionManagement,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/sessions/global',
+    name: 'GlobalSessionManagement',
+    component: GlobalSessionManagement,
     meta: { requiresAuth: true }
   },
 ]

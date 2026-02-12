@@ -221,17 +221,18 @@ export default {
     },
     // 跳轉到會話管理頁面
     goToSessionManagement() {
-      this.$router.push({ name: 'SessionManagement' });
+      this.$router.push({ name: 'GlobalSessionManagement' });
     },
     // 查看用戶會話
     viewUserSessions(user) {
       this.$router.push({
-        name: 'UserSessions',
+        name: 'UserSessionManagement',
+        params: { userId: user.id },
         query: {
-          user_id: user.id,
           username: user.username
         }
       });
+    },
     },
     logout() {
       // 退出後跳轉到 WEB_BASE
