@@ -100,8 +100,7 @@ const fetchUserData = async () => {
   const response = await userAPI.getAllUsers();
   const usersData = response.data;
 
-  const dataCountResponse = await statsAPI.getDataCounts();
-  const dataCounts = dataCountResponse.data;
+  const dataCounts = await statsAPI.getDataCounts();
 
   // 将数据总数与用户列表合并
   usersData.forEach(user => {
