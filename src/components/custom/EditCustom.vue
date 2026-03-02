@@ -98,20 +98,20 @@
 
 
 <script setup>
-import { ref, computed, onMounted } from ‘vue’;
-import { useRouter, useRoute } from ‘vue-router’;
-import { ElMessage } from ‘element-plus’;
-import api from “../../axios.js”;
-import { formatTime } from “../../utils.js”;
-import { useCustomStore } from “../../stores”;
+import { ref, computed, onMounted } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
+import { ElMessage } from 'element-plus';
+import api from "../../axios.js";
+import { formatTime } from "../../utils.js";
+import { useCustomStore } from "../../stores";
 
 const customStore = useCustomStore();
 const router = useRouter();
 const route = useRoute();
 
 const users = ref([]);
-const username = ref(‘’);
-const EditData = ref([{ created_at: ‘’ }]);
+const username = ref('');
+const EditData = ref([{ created_at: '' }]);
 
 const mergedData = computed(() => {
   // 合并 users 和 EditData
@@ -132,25 +132,25 @@ const mergedData = computed(() => {
 const fetchSelectedData = async (requestData) => {
   try {
     // 发送 POST 请求，传递包含所有 created_at 和 username 的列表
-    const response = await api.post(‘/custom/selected’, requestData);
+    const response = await api.post('/custom/selected', requestData);
 
     users.value = response.data;
-    // 确保 ‘T’ 被替换为空格
+    // 确保 'T' 被替换为空格
     users.value = users.value.map(user => ({
       ...user,
-      created_at: user.created_at.replace(‘T’, ‘ ‘) // 统一格式化
+      created_at: user.created_at.replace('T', ' ') // 统一格式化
     }));
     // 将格式化后的 users 数据赋值给 EditData，直接使用相同的数据源
     EditData.value = [...users.value]; // 直接引用 users
   } catch (error) {
-    console.error(‘请求失败:’, error);
+    console.error('请求失败:', error);
   }
 };
 
 const DeleteData = async () => {
   // 校验每一行的创建时间是否已填写
   if (EditData.value.some(item => !item.created_at)) {
-    ElMessage.warning(“⚠️ 請填寫所有創建時間！”);
+    ElMessage.warning("⚠️ 請填寫所有創建時間！");
     return;
   }
 
@@ -162,22 +162,22 @@ const DeleteData = async () => {
 
   try {
     // 发送到后端，后端将接收一个包含多个对象的列表
-    const res = await api.delete(“/custom/delete”, {
+    const res = await api.delete("/custom/delete", {
       data: deleteList, // 批量刪除的數據
     });
-    ElMessage.success(“✅ 編輯成功！”);
+    ElMessage.success("✅ 編輯成功！");
   } catch (error) {
-    console.error(“刪除失敗”, error);
-    ElMessage.error(“❌ 刪除失敗！”);
+    console.error("刪除失敗", error);
+    ElMessage.error("❌ 刪除失敗！");
   }
 };
 
 const SubmitData = async () => {
   try {
-    // 在提交前，檢查是否有其他字段為空（除了”說明”）
+    // 在提交前，檢查是否有其他字段為空（除了"說明"）
     for (let row of EditData.value) {
       if (!row.簡稱 || !row.音典分區 || !row.經緯度 || !row.特徵 || !row.值) {
-        ElMessage.warning(“⚠️ 所有字段（除了’說明’）都必須填寫！”);
+        ElMessage.warning("⚠️ 所有字段（除了'說明'）都必須填寫！");
         return; // 如果有空字段，停止提交
       }
     }
@@ -190,19 +190,19 @@ const SubmitData = async () => {
       聲韻調: item.聲韻調,
       特徵: item.特徵,
       值: item.值,
-      說明: item.說明 || ‘無’,  // 如果沒有說明，则默认为’無’
+      說明: item.說明 || '無',  // 如果沒有說明，则默认为'無'
       username: username.value
     }));
 
     // 提交数据
-    const res = await api.post(“/custom/create”, submitData);
+    const res = await api.post("/custom/create", submitData);
 
     // 提示用户提交了多少份数据
     const dataCount = res.data.length || submitData.length;
     ElMessage.success(`✅ 批量提交成功！提交了 ${dataCount} 份數據`);
   } catch (error) {
-    console.error(“提交失敗”, error);
-    ElMessage.error(“❌ 提交失敗！”);
+    console.error("提交失敗", error);
+    ElMessage.error("❌ 提交失敗！");
   }
 };
 
@@ -218,7 +218,7 @@ const deleteRow = (index) => {
 
 const goToCustomPerUser = (username) => {
   console.log(username);
-  router.push({ name: ‘PerUser’, query: { username: username } });
+  router.push({ name: 'PerUser', query: { username: username } });
 };
 
 onMounted(async () => {
@@ -230,14 +230,14 @@ onMounted(async () => {
     // 构造请求数据
     const requestData = selectedUsers.map(createdAt => ({
       username: usernameQuery,
-      created_at: createdAt.replace(‘T’, ‘ ‘)  // 将 ‘T’ 替换为空格
+      created_at: createdAt.replace('T', ' ')  // 将 'T' 替换为空格
     }));
     username.value = usernameQuery;
 
     // 获取用户数据
     await fetchSelectedData(requestData);
   } else {
-    console.log(‘没有选中的数据或没有用户名’);
+    console.log('没有选中的数据或没有用户名');
   }
 });
 </script>
