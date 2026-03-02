@@ -72,190 +72,162 @@
     </div>
   </div>
 </template>
-<script>
-import { userAPI, statsAPI } from '../api/index'; // 引入 API 模塊
+<script setup>
+import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { userAPI, statsAPI } from '../api/index';
 import { BasePagination, BaseSearchInput } from '@/components/common';
 
-export default {
-  name: 'UserManagement',
-  components: {
-    BasePagination,
-    BaseSearchInput
-  },
-  data() {
-    return {
-      users: [],
-      searchQuery: '',  // 用于存储搜索框的内容
-      searchResultIndex: -1,  // 存储匹配的行索引
-      filteredUsers: [],  // 新增的字段，确保 Vue 可以访问它
-      confirmUser: null,  // 儲存選中的用戶
-      newUser: { username: '', email: '' }, // 新用戶的數據
-      currentPage: 1,  // 当前页码
-      pageSize: 30,  // 每页显示的记录数
-      totalPages: 1,  // 总页数
-      sortOrder: {  // 控制排序的对象
-        username: 'asc',
-        email: 'asc',
-        data_count: 'asc',
-      },
-      username: '',  // 当前的用户名
-    };
-  },
-  methods: {
-    async getUsers() {
-      try {
-        // 调用获取用户数据的函数
-        await this.fetchUserData();
-      } catch (error) {
-        // console.error('Error fetching users', error);
-        if (error.response && error.response.status === 401) {
-          alert('Token 无效或已过期，请重新登录');
+const router = useRouter();
 
-          // 延迟 0.5 秒后重试
-          setTimeout(async () => {
-            try {
-              await this.fetchUserData();  // 重新调用获取数据函数
-            } catch (retryError) {
-              console.error('Retry failed', retryError);
-              this.$router.push({ name: 'Login' });  // 如果重试失败，跳转到登录页面
-            }
-          }, 500);  // 延迟 0.5 秒（500 毫秒）
-        }
-      }
-    },
+const users = ref([]);
+const searchQuery = ref('');
+const searchResultIndex = ref(-1);
+const filteredUsers = ref([]);
+const confirmUser = ref(null);
+const newUser = ref({ username: '', email: '' });
+const currentPage = ref(1);
+const pageSize = ref(30);
+const totalPages = ref(1);
+const sortOrder = ref({
+  username: 'asc',
+  email: 'asc',
+  data_count: 'asc',
+});
+const username = ref('');
 
-// 封装获取用户数据的函数
-    async fetchUserData() {
-      const response = await userAPI.getAllUsers();
-      const users = response.data;
+const fetchUserData = async () => {
+  const response = await userAPI.getAllUsers();
+  const usersData = response.data;
 
-      const dataCountResponse = await statsAPI.getDataCounts();
-      const dataCounts = dataCountResponse.data;
+  const dataCountResponse = await statsAPI.getDataCounts();
+  const dataCounts = dataCountResponse.data;
 
-      // 将数据总数与用户列表合并
-      users.forEach(user => {
-        const userData = dataCounts.find(item => item.username === user.username);
-        user.data_count = userData ? userData.data_count : 0;
-      });
+  // 将数据总数与用户列表合并
+  usersData.forEach(user => {
+    const userData = dataCounts.find(item => item.username === user.username);
+    user.data_count = userData ? userData.data_count : 0;
+  });
 
-      this.users = users;
-      this.totalPages = Math.ceil(this.users.length / this.pageSize);  // 计算总页数
-    },
-
-    // 获取箭头的 CSS 类
-    getArrowClass(field) {
-      return this.sortOrder[field] === 'asc' ? 'arrow-up' : 'arrow-down';
-    },
-
-    searchUser() {
-      // console.log("Search Query:", this.searchQuery);  // 调试：打印搜索框输入的内容
-      const searchQueryLower = this.searchQuery.toLowerCase();
-
-      // 过滤符合条件的用户
-      this.filteredUsers = this.users.filter(user =>
-          (user.username && user.username.toLowerCase().includes(searchQueryLower)) ||
-          (user.email && user.email.toLowerCase().includes(searchQueryLower))
-      );
-
-      // console.log("Filtered Users:", this.filteredUsers);  // 调试：打印过滤后的用户
-
-      this.currentPage = 1;
-      this.totalPages = Math.ceil(this.filteredUsers.length / this.pageSize);
-    },
-
-
-    // 排序方法
-    sortData(field) {
-      const currentOrder = this.sortOrder[field] === 'asc' ? 'desc' : 'asc';
-      this.sortOrder[field] = currentOrder;
-
-      if (field === 'username' || field === 'email') {
-        // 字符串字段排序
-        this.users.sort((a, b) => {
-          const valueA = a[field] || '';
-          const valueB = b[field] || '';
-          return currentOrder === 'asc' ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
-        });
-      } else if (field === 'data_count') {
-        // 数字字段排序
-        this.users.sort((a, b) => {
-          return currentOrder === 'asc' ? a[field] - b[field] : b[field] - a[field];
-        });
-      }
-
-      // 排序之后重新计算分页
-      this.totalPages = Math.ceil(this.users.length / this.pageSize);
-      this.currentPage = 1;  // 重置当前页为第一页
-    },
-
-    // 处理分页变化
-    handlePageChange(page) {
-      this.currentPage = page;
-    },
-
-    // 詳細api
-    async apidetail(user) {
-      this.$router.push({name: 'ApiDetail'});
-    },
-
-    // 跳轉到創建用戶頁面
-    goToCreateUser() {
-      this.$router.push({ name: 'CreateUser' });  // 跳轉到創建用戶頁面
-    },
-    checkServerStatus() {
-      // 新分頁打開阿里雲服務器控制台
-      // window.open('https://ecs.console.aliyun.com/server/region/cn-shenzhen#/', '_blank');
-      window.open('https://47.115.57.138:40260/home', '_blank')
-    },
-
-    // 查看用戶統計
-    async viewUserStats(user) {
-      this.$router.push({name: 'UserStats', query: {username: user.username}});
-    },
-    async viewAllCustom() {
-      this.$router.push({name: 'Custom'});
-    },
-    // 編輯用戶
-    async editUser(user) {
-      this.$router.push({name: 'EditUser', query: {username: user.username, email: user.email}});
-    },
-    // 查看用戶個人界面
-    goToCustomPerUser(user) {
-      this.$router.push({ name: 'PerUser' ,query: {username: user.username}});  // 跳轉到創建用戶頁面
-    },
-    // 跳轉到會話管理頁面
-    goToSessionManagement() {
-      this.$router.push({ name: 'GlobalSessionManagement' });
-    },
-    // 查看用戶會話
-    viewUserSessions(user) {
-      this.$router.push({
-        name: 'UserSessionManagement',
-        params: { userId: user.id },
-        query: {
-          username: user.username
-        }
-      });
-    },
-    logout() {
-      // 退出後跳轉到 WEB_BASE
-      window.location.href = window.WEB_BASE;
-    },
-
-  },
-  computed: {
-    // 当前页面的数据
-    currentPageData() {
-      const startIndex = (this.currentPage - 1) * this.pageSize;
-      const currentData = this.searchQuery ? this.filteredUsers : this.users; // 如果有搜索，使用 filteredUsers 否则使用原始 users
-      if (!Array.isArray(currentData)) return [];
-      return currentData.slice(startIndex, startIndex + this.pageSize);  // 根据当前页码和每页显示的数据数量筛选
-    },
-  },
-  mounted() {
-    this.getUsers();  // 加載用戶列表
-  },
+  users.value = usersData;
+  totalPages.value = Math.ceil(users.value.length / pageSize.value);
 };
+
+const getUsers = async () => {
+  try {
+    await fetchUserData();
+  } catch (error) {
+    if (error.response && error.response.status === 401) {
+      alert('Token 无效或已过期，请重新登录');
+
+      setTimeout(async () => {
+        try {
+          await fetchUserData();
+        } catch (retryError) {
+          console.error('Retry failed', retryError);
+          router.push({ name: 'Login' });
+        }
+      }, 500);
+    }
+  }
+};
+
+const getArrowClass = (field) => {
+  return sortOrder.value[field] === 'asc' ? 'arrow-up' : 'arrow-down';
+};
+
+const searchUser = () => {
+  const searchQueryLower = searchQuery.value.toLowerCase();
+
+  filteredUsers.value = users.value.filter(user =>
+      (user.username && user.username.toLowerCase().includes(searchQueryLower)) ||
+      (user.email && user.email.toLowerCase().includes(searchQueryLower))
+  );
+
+  currentPage.value = 1;
+  totalPages.value = Math.ceil(filteredUsers.value.length / pageSize.value);
+};
+
+const sortData = (field) => {
+  const currentOrder = sortOrder.value[field] === 'asc' ? 'desc' : 'asc';
+  sortOrder.value[field] = currentOrder;
+
+  if (field === 'username' || field === 'email') {
+    users.value.sort((a, b) => {
+      const valueA = a[field] || '';
+      const valueB = b[field] || '';
+      return currentOrder === 'asc' ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
+    });
+  } else if (field === 'data_count') {
+    users.value.sort((a, b) => {
+      return currentOrder === 'asc' ? a[field] - b[field] : b[field] - a[field];
+    });
+  }
+
+  totalPages.value = Math.ceil(users.value.length / pageSize.value);
+  currentPage.value = 1;
+};
+
+const handlePageChange = (page) => {
+  currentPage.value = page;
+};
+
+const apidetail = async (user) => {
+  router.push({ name: 'ApiDetail' });
+};
+
+const goToCreateUser = () => {
+  router.push({ name: 'CreateUser' });
+};
+
+const checkServerStatus = () => {
+  window.open('https://47.115.57.138:40260/home', '_blank');
+};
+
+const viewUserStats = async (user) => {
+  router.push({ name: 'UserStats', query: { username: user.username } });
+};
+
+const viewAllCustom = async () => {
+  router.push({ name: 'Custom' });
+};
+
+const editUser = async (user) => {
+  router.push({ name: 'EditUser', query: { username: user.username, email: user.email } });
+};
+
+const goToCustomPerUser = (user) => {
+  router.push({ name: 'PerUser', query: { username: user.username } });
+};
+
+const goToSessionManagement = () => {
+  router.push({ name: 'GlobalSessionManagement' });
+};
+
+const viewUserSessions = (user) => {
+  router.push({
+    name: 'UserSessionManagement',
+    params: { userId: user.id },
+    query: {
+      username: user.username
+    }
+  });
+};
+
+const logout = () => {
+  window.location.href = window.WEB_BASE;
+};
+
+const currentPageData = computed(() => {
+  const startIndex = (currentPage.value - 1) * pageSize.value;
+  const currentData = searchQuery.value ? filteredUsers.value : users.value;
+  if (!Array.isArray(currentData)) return [];
+  return currentData.slice(startIndex, startIndex + pageSize.value);
+});
+
+onMounted(() => {
+  getUsers();
+});
 </script>
 
 <style scoped lang="scss">
