@@ -151,7 +151,7 @@ import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import userSessionAPI from '@/api/userSession';
-import axios from 'axios';
+import { statsAPI } from '@/api/index';
 import queryGreenIcon from '@/assets/query_green.ico';
 
 const router = useRouter();
@@ -168,12 +168,8 @@ const onlySuspicious = ref(false);
 
 const loadUserStats = async () => {
   try {
-    const token = localStorage.getItem('access_token');
-    const response = await axios.get(
-      `${process.env.VUE_APP_API_BASE_URL || 'http://localhost:8000'}/admin/users/${userId.value}/stats`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    userStats.value = response.data.stats || {};
+    const response = await statsAPI.getUserStats(username.value);
+    userStats.value = response || {};
   } catch (error) {
     console.error('Failed to load user stats:', error);
     ElMessage.error('加載用戶統計失敗');
@@ -204,18 +200,14 @@ const loadSessions = async () => {
 
 const loadRecentIPs = async () => {
   try {
-    const token = localStorage.getItem('access_token');
-    const response = await axios.get(
-      `${process.env.VUE_APP_API_BASE_URL || 'http://localhost:8000'}/login-logs/success-login-logs`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-        params: { user_id: userId.value, limit: 100 }
-      }
-    );
-    const logs = response.data.logs || [];
+    const response = await statsAPI.getSuccessLoginLogs(username.value);
+    const logs = response || [];
     const ipCount = {};
     logs.forEach(log => {
-      ipCount[log.ip_address] = (ipCount[log.ip_address] || 0) + 1;
+      const ip = log.ip_address || log.ip;
+      if (ip) {
+        ipCount[ip] = (ipCount[ip] || 0) + 1;
+      }
     });
     recentIPs.value = Object.entries(ipCount)
       .map(([ip, count]) => ({ ip, count }))
@@ -223,6 +215,7 @@ const loadRecentIPs = async () => {
       .slice(0, 10);
   } catch (error) {
     console.error('Failed to load recent IPs:', error);
+    ElMessage.error('加載最近登錄 IP 失敗');
   }
 };
 
