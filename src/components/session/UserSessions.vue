@@ -68,7 +68,7 @@
 </template>
 
 <script>
-import { sessionAPI } from '../../api/session';
+import userSessionAPI from '../../api/userSession';
 import { ElMessageBox, ElMessage } from 'element-plus';
 
 export default {
@@ -97,7 +97,7 @@ export default {
       this.loading = true;
       try {
         console.log(this.userId)
-        const response = await sessionAPI.getUserSessions(this.userId);
+        const response = await userSessionAPI.getUserSessions(this.userId);
         this.sessions = response.data.sessions || [];
         this.stats = {
           total: response.data.total_sessions || 0,
@@ -122,7 +122,7 @@ export default {
           }
         );
 
-        await sessionAPI.revokeSession(tokenId);
+        await userSessionAPI.revokeSession(tokenId);
         ElMessage.success('會話已撤銷');
         await this.fetchUserSessions();
       } catch (error) {
@@ -143,7 +143,7 @@ export default {
           }
         );
 
-        const response = await sessionAPI.revokeUserSessions(this.userId);
+        const response = await userSessionAPI.revokeUserSessions(this.userId);
         ElMessage.success(`已撤銷 ${response.data.revoked_count} 個會話`);
         await this.fetchUserSessions();
       } catch (error) {

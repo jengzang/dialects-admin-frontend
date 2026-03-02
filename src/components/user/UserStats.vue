@@ -99,7 +99,7 @@
 </template>
 
 <script>
-import api from '../../axios.js';  // 引入我們的全局 axios 配置
+import { statsAPI, analyticsAPI } from '../../api/index';  // 引入 API 模塊
 import {formatTime} from "../../utils.js";
 
 export default {
@@ -118,23 +118,20 @@ export default {
     this.username = username;  // 設置當前的用戶名
     try {
       // 獲取用戶統計數據
-      const statsResponse = await api.get(`/stats/stats?query=${username}`);
-      this.stats = statsResponse.data;
+      this.stats = await statsAPI.getStatsQuery(username);
 
       // 獲取API使用統計數據
-      const apiUsageResponse = await api.get(`/api-usage/api-summary?query=${username}`);
+      this.apiUsage = await analyticsAPI.getApiSummary(username);
       // console.log(apiUsageResponse.data);
-      this.apiUsage = apiUsageResponse.data;
       this.filteredApiUsage = this.apiUsage.filter(log => !log.path.includes('/login'));
 
-      const response = await api.get(`/login-logs/success-login-logs?query=${username}`);
-      this.loginHistory = response.data;
+      this.loginHistory = await statsAPI.getSuccessLoginLogs(username);
       this.processIpCounts();  // 處理 IP 地址及其對應的次數
 
-      const response2 = await api.get(`/api-usage/api-detail?query=${username}`);  // 请求后端接口获取 API 使用情况
-      this.userName = response2.data.user;
+      const response2 = await analyticsAPI.getApiDetail(username);  // 请求后端接口获取 API 使用情况
+      this.userName = response2.user;
 
-      this.apiLogs = response2.data.api_logs.map(log => ({
+      this.apiLogs = response2.api_logs.map(log => ({
         ...log,
         // 提取操作系统和浏览器信息
         ...this.getDeviceInfo(log.user_agent),

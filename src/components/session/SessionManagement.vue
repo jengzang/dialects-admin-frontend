@@ -80,7 +80,7 @@
 </template>
 
 <script>
-import { sessionAPI } from '../../api/session';
+import userSessionAPI from '../../api/userSession';
 import { ElMessageBox, ElMessage } from 'element-plus';
 
 export default {
@@ -152,11 +152,11 @@ export default {
         params.user_id = this.userId;
       }
 
-      const response = await sessionAPI.getActiveSessions(params);
+      const response = await userSessionAPI.getActiveSessions(params);
       this.sessions = response.data.sessions || [];
     },
     async fetchStats() {
-      const response = await sessionAPI.getStats();
+      const response = await userSessionAPI.getStats();
       this.stats = response.data || {};
     },
     async revokeSession(tokenId, username) {
@@ -171,7 +171,7 @@ export default {
           }
         );
 
-        await sessionAPI.revokeSession(tokenId);
+        await userSessionAPI.revokeSession(tokenId);
         ElMessage.success('會話已撤銷');
         await this.fetchData();
       } catch (error) {
@@ -192,7 +192,7 @@ export default {
           }
         );
 
-        const response = await sessionAPI.cleanupExpired();
+        const response = await userSessionAPI.cleanupExpired();
         ElMessage.success(`已清理 ${response.data.deleted_count} 個過期 Token`);
         await this.fetchData();
       } catch (error) {

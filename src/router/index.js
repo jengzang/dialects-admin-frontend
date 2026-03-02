@@ -8,7 +8,6 @@ import UserStats from '../components/user/UserStats.vue'
 import Login from '../components/Login.vue'
 import CreateUser from '../components/user/CreateUser.vue'
 import ApiDetail from "../components/user/ApiDetail.vue"
-import ApiChart from "../components/user/ApiChart.vue"
 import Custom from "../components/custom/Custom.vue"
 import CustomPerUser from "../components/custom/CustomPerUser.vue"
 import CreateCustom from "../components/custom/CreateCustom.vue"
@@ -62,12 +61,6 @@ const routes = [
     path: '/users/stats',
     name: 'UserStats',
     component: UserStats,
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/utils-chart',
-    name: 'ApiChart',
-    component: ApiChart,
     meta: { requiresAuth: true }
   },
   {

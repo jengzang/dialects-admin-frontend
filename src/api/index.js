@@ -3,3 +3,7 @@
  */
 export { userAPI } from './user';
 export { customAPI } from './custom';
+export { default as sessionAPI } from './userSession';
+export { analyticsAPI } from './analytics';
+export { ipAPI } from './ip';
+export { statsAPI } from './stats';

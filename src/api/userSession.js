@@ -6,6 +6,27 @@ import api from '../axios.js';
  */
 const userSessionAPI = {
   /**
+   * Get active sessions (legacy endpoint from session.js)
+   * @param {Object} params - Query parameters
+   * @param {number} params.user_id - Optional: filter by user
+   * @param {number} params.skip - Pagination offset
+   * @param {number} params.limit - Page size
+   * @returns {Promise} Active sessions list
+   */
+  getActiveSessions(params = {}) {
+    return api.get('/sessions/active', { params }).then(res => res.data);
+  },
+
+  /**
+   * Get user sessions (legacy endpoint from session.js)
+   * @param {number} userId - User ID
+   * @returns {Promise} User sessions list
+   */
+  getUserSessions(userId) {
+    return api.get(`/sessions/user/${userId}`).then(res => res.data);
+  },
+
+  /**
    * List sessions with advanced filtering
    * @param {Object} params - Filter parameters
    * @param {number} params.user_id - Filter by user ID
@@ -22,7 +43,7 @@ const userSessionAPI = {
    * @returns {Promise} List of sessions
    */
   listSessions(params = {}) {
-    return api.get('/user-sessions/', { params }).then(res => res.data);
+    return api.get('/user-sessions/list', { params }).then(res => res.data);
   },
 
   /**
@@ -72,7 +93,7 @@ const userSessionAPI = {
     if (!sessionIds || sessionIds.length === 0) {
       return Promise.reject(new Error('Session IDs are required'));
     }
-    return api.post('/user-sessions/bulk-revoke', { session_ids: sessionIds, reason }).then(res => res.data);
+    return api.post('/user-sessions/revoke-bulk', { session_ids: sessionIds, reason }).then(res => res.data);
   },
 
   /**
@@ -85,7 +106,7 @@ const userSessionAPI = {
     if (!userId) {
       return Promise.reject(new Error('User ID is required'));
     }
-    return api.post(`/user-sessions/user/${userId}/revoke-all`, { reason }).then(res => res.data);
+    return api.post(`/user-sessions/revoke-user/${userId}`, { reason }).then(res => res.data);
   },
 
   /**
@@ -131,6 +152,14 @@ const userSessionAPI = {
     return api.get(`/user-sessions/user/${userId}/history`, {
       params: { include_revoked: includeRevoked }
     }).then(res => res.data);
+  },
+
+  /**
+   * Clean up expired tokens (legacy endpoint from session.js)
+   * @returns {Promise} Cleanup result
+   */
+  cleanupExpired() {
+    return api.post('/sessions/cleanup-expired').then(res => res.data);
   }
 };
 

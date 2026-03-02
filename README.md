@@ -79,7 +79,6 @@ frontend-admin/
 │   │   │   ├── EditUser.vue
 │   │   │   ├── UserStats.vue
 │   │   │   ├── ApiDetail.vue
-│   │   │   ├── ApiChart.vue
 │   │   │   └── IPQuery.vue
 │   │   ├── custom/            # 自定義數據組件
 │   │   │   ├── Custom.vue
@@ -199,7 +198,6 @@ window.ADMIN_BASE = window.WEB_BASE + "/admin"
 | `/users/edit` | EditUser | 編輯用戶 | ✅ |
 | `/users/stats` | UserStats | 用戶統計 | ✅ |
 | `/apiUsage` | ApiDetail | API 使用詳情 | ✅ |
-| `/utils-chart` | ApiChart | API 使用圖表 | ✅ |
 | `/ip/:ip` | IPQuery | IP 地理位置查詢 | ✅ |
 | `/custom` | Custom | 所有自定義數據 | ✅ |
 | `/per-user` | CustomPerUser | 用戶數據 | ✅ |

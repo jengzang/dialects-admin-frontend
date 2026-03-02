@@ -78,14 +78,14 @@
         style="width: 100%"
         @row-click="showSessionDetail">
         <el-table-column prop="session_id" label="會話 ID" width="120">
-          <template slot-scope="scope">
+          <template #default="scope">
             <el-tooltip :content="scope.row.session_id" placement="top">
               <span>{{ scope.row.session_id.substring(0, 8) }}...</span>
             </el-tooltip>
           </template>
         </el-table-column>
         <el-table-column prop="device_info" label="設備信息" width="200">
-          <template slot-scope="scope">
+          <template #default="scope">
             <el-tooltip :content="scope.row.device_info" placement="top">
               <span>{{ truncate(scope.row.device_info, 30) }}</span>
             </el-tooltip>
@@ -93,24 +93,24 @@
         </el-table-column>
         <el-table-column prop="current_ip" label="當前 IP" width="140" />
         <el-table-column prop="created_at" label="創建時間" width="160">
-          <template slot-scope="scope">
+          <template #default="scope">
             {{ formatDateTime(scope.row.created_at) }}
           </template>
         </el-table-column>
         <el-table-column prop="last_activity_at" label="最後活動" width="160">
-          <template slot-scope="scope">
+          <template #default="scope">
             {{ formatDateTime(scope.row.last_activity_at) }}
           </template>
         </el-table-column>
         <el-table-column label="狀態" width="120">
-          <template slot-scope="scope">
+          <template #default="scope">
             <el-tag :type="getStatusType(scope.row)" size="small">
               {{ getStatusText(scope.row) }}
             </el-tag>
           </template>
         </el-table-column>
         <el-table-column label="統計" width="180">
-          <template slot-scope="scope">
+          <template #default="scope">
             <div style="font-size: 12px;">
               <div>刷新: {{ scope.row.refresh_count }}</div>
               <div>IP變更: {{ scope.row.ip_change_count }}</div>
@@ -119,7 +119,7 @@
           </template>
         </el-table-column>
         <el-table-column label="操作" width="180" fixed="right">
-          <template slot-scope="scope">
+          <template #default="scope">
             <el-button size="mini" @click.stop="showSessionDetail(scope.row)">詳情</el-button>
             <el-button
               size="mini"

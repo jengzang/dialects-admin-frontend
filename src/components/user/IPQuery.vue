@@ -29,7 +29,7 @@
 
 <script>
 import L from 'leaflet';
-import api from "@/axios"; // 引入 Leaflet 库
+import { ipAPI } from '@/api/index'; // 引入 IP API 模塊
 
 export default {
   data() {
@@ -55,8 +55,7 @@ export default {
     async fetchIPInfo() {
       if (!this.ip) return;
       try {
-        const response = await api.get(`/ip/${this.selectedApi}/${this.ip}`);
-        const data = await response.data;
+        const data = await ipAPI.queryIP(this.ip, this.selectedApi);
 
         // 统一格式化返回数据
         this.ipInfo = {

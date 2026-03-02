@@ -92,14 +92,12 @@
         </el-form-item>
         <el-form-item label="可疑狀態">
           <el-select v-model="filters.is_suspicious" placeholder="全部" clearable>
-            <el-option label="全部" :value="null" />
             <el-option label="僅可疑" :value="true" />
             <el-option label="非可疑" :value="false" />
           </el-select>
         </el-form-item>
         <el-form-item label="撤銷狀態">
           <el-select v-model="filters.revoked" placeholder="全部" clearable>
-            <el-option label="全部" :value="null" />
             <el-option label="活躍" :value="false" />
             <el-option label="已撤銷" :value="true" />
           </el-select>
@@ -140,30 +138,30 @@
         <el-table-column type="selection" width="55" />
         <el-table-column prop="username" label="用戶名" width="120" />
         <el-table-column prop="session_id" label="會話 ID" width="120">
-          <template slot-scope="scope">
+          <template #default="scope">
             {{ scope.row.session_id.substring(0, 8) }}...
           </template>
         </el-table-column>
         <el-table-column prop="current_ip" label="當前 IP" width="140" />
         <el-table-column prop="device_info" label="設備" width="150">
-          <template slot-scope="scope">
+          <template #default="scope">
             {{ truncate(scope.row.device_info, 20) }}
           </template>
         </el-table-column>
         <el-table-column prop="created_at" label="創建時間" width="160">
-          <template slot-scope="scope">
+          <template #default="scope">
             {{ formatDateTime(scope.row.created_at) }}
           </template>
         </el-table-column>
         <el-table-column label="狀態" width="100">
-          <template slot-scope="scope">
+          <template #default="scope">
             <el-tag :type="getStatusType(scope.row)" size="small">
               {{ getStatusText(scope.row) }}
             </el-tag>
           </template>
         </el-table-column>
         <el-table-column label="統計" width="150">
-          <template slot-scope="scope">
+          <template #default="scope">
             <div style="font-size: 12px;">
               <div>刷新: {{ scope.row.refresh_count }}</div>
               <div>IP: {{ scope.row.ip_change_count }} | 設備: {{ scope.row.device_change_count }}</div>
@@ -171,7 +169,7 @@
           </template>
         </el-table-column>
         <el-table-column label="操作" width="200" fixed="right">
-          <template slot-scope="scope">
+          <template #default="scope">
             <el-button size="mini" @click="viewUser(scope.row)">查看用戶</el-button>
             <el-button
               size="mini"

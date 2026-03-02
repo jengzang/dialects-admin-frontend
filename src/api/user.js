@@ -24,6 +24,14 @@ export const userAPI = {
   },
 
   /**
+   * 獲取所有用戶列表（包含詳細信息）
+   * @returns {Promise} 用戶列表
+   */
+  getAllUsers() {
+    return api.get('/users/all');
+  },
+
+  /**
    * 創建新用戶
    * @param {Object} userData - 用戶數據
    * @returns {Promise} 創建結果
@@ -56,30 +64,5 @@ export const userAPI = {
    */
   getStats() {
     return api.get('/users/stats');
-  },
-
-  /**
-   * 獲取 API 使用詳情
-   * @returns {Promise} API 使用詳情
-   */
-  getApiUsage() {
-    return api.get('/apiUsage');
-  },
-
-  /**
-   * 獲取 API 使用圖表數據
-   * @returns {Promise} 圖表數據
-   */
-  getApiChart() {
-    return api.get('/utils-chart');
-  },
-
-  /**
-   * 通過 IP 查詢信息
-   * @param {string} ip - IP 地址
-   * @returns {Promise} IP 信息
-   */
-  queryByIP(ip) {
-    return api.get(`/ip/${ip}`);
   }
 };

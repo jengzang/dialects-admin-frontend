@@ -1,0 +1,3 @@
+scp dist/index.html root@47.115.57.138:/srv/myapp/statics/admin/
+scp dist/admin.css root@47.115.57.138:/srv/myapp/statics/admin/
+scp dist/admin.js root@47.115.57.138:/srv/myapp/statics/admin/

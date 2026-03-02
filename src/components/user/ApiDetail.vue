@@ -147,7 +147,7 @@
 
 
 <script>
-import api from '../../axios.js'; // 引入API请求配置
+import { analyticsAPI } from '../../api/index'; // 引入 API 模塊
 import {formatTime} from "../../utils.js";
 
 export default {
@@ -185,10 +185,11 @@ export default {
   },
   async mounted() {
     try {
-      const response = await api.get(`/api-usage/api-usage`, {
-        params: { page: this.currentPage, limit: this.pageSize } // 添加分页参数
+      const apiLogs = await analyticsAPI.getApiUsage({
+        skip: this.currentPage,
+        limit: this.pageSize
       });
-      this.apiLogs = response.data;  // 处理返回的 API 使用记录
+      this.apiLogs = apiLogs;  // 处理返回的 API 使用记录
       // console.log(this.apiLogs)
       // 为每个日志添加上行流量和下行流量，假设 log.request_size 和 log.response_size 存在
       this.apiLogs = this.apiLogs.map(log => ({
@@ -317,10 +318,6 @@ export default {
 
   methods: {
     formatTime,
-    // 跳转到图表页面
-    goToApiStatsPage() {
-      this.$router.push({name: 'ApiChart'});
-    },
     // 获取箭头的 CSS 类
     getArrowClass(field) {
       return this.sortOrder[field] === 'asc' ? 'arrow-up' : 'arrow-down';

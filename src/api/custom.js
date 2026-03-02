@@ -46,5 +46,13 @@ export const customAPI = {
    */
   delete(createdAtList) {
     return api.delete('/custom/delete', { data: createdAtList });
+  },
+
+  /**
+   * 獲取所有用戶的數據總數
+   * @returns {Promise} 數據總數列表
+   */
+  getDataCounts() {
+    return api.get('/custom/num');
   }
 };

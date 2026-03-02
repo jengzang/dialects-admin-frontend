@@ -65,7 +65,7 @@
   </div>
 </template>
 <script>
-import api from '../axios'; // 引入我們的 axios 配置
+import { userAPI, statsAPI } from '../api/index'; // 引入 API 模塊
 
 export default {
   name: 'UserManagement',
@@ -113,10 +113,10 @@ export default {
 
 // 封装获取用户数据的函数
     async fetchUserData() {
-      const response = await api.get('/users/all');
+      const response = await userAPI.getAllUsers();
       const users = response.data;
 
-      const dataCountResponse = await api.get('/custom/num');
+      const dataCountResponse = await statsAPI.getDataCounts();
       const dataCounts = dataCountResponse.data;
 
       // 将数据总数与用户列表合并
