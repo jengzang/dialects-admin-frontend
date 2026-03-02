@@ -170,9 +170,9 @@
         </el-table-column>
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="scope">
-            <el-button size="mini" @click="viewUser(scope.row)">查看用戶</el-button>
+            <el-button size="small" @click="viewUser(scope.row)">查看用戶</el-button>
             <el-button
-              size="mini"
+              size="small"
               type="danger"
               @click="revokeSession(scope.row)"
               :disabled="scope.row.revoked">
