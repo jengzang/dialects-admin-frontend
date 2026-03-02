@@ -32,82 +32,80 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
+import { ElMessage } from 'element-plus';
 import { useUserStore } from '../stores';
 import { setToken } from '../utils/auth';
-import { ElMessage } from 'element-plus';
 import { resetUserInfoCache } from '../router';
 
-export default {
-  data() {
-    return {
-      username: '',
-      password: '',
-      errorMessage: '',
-      loading: false
-    };
-  },
-  methods: {
-    async handleLogin() {
-      // 清空之前的錯誤信息
-      this.errorMessage = '';
-      this.loading = true;
+const router = useRouter();
+const route = useRoute();
 
-      try {
-        // 準備請求數據
-        const form = new URLSearchParams();
-        form.append('username', this.username);
-        form.append('password', this.password);
+const username = ref('');
+const password = ref('');
+const errorMessage = ref('');
+const loading = ref(false);
 
-        // 使用原來的 API（因為後端可能還是使用 /auth/login）
-        const WEB_BASE = window.WEB_BASE;
-        const res = await fetch(WEB_BASE + '/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: form,
-        });
+const handleLogin = async () => {
+  // 清空之前的錯誤信息
+  errorMessage.value = '';
+  loading.value = true;
 
-        if (!res.ok) {
-          throw new Error('登錄失敗');
-        }
+  try {
+    // 準備請求數據
+    const form = new URLSearchParams();
+    form.append('username', username.value);
+    form.append('password', password.value);
 
-        const data = await res.json();
+    // 使用原來的 API（因為後端可能還是使用 /auth/login）
+    const WEB_BASE = window.WEB_BASE;
+    const res = await fetch(WEB_BASE + '/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: form,
+    });
 
-        // 兼容新舊版本的 token 格式
-        const accessToken = data.access_token;
-        const refreshToken = data.refresh_token || null;
-        const expiresIn = data.expires_in || 1800;
-
-        // 保存 Token（支持雙 token 機制）
-        setToken(accessToken, refreshToken, expiresIn);
-
-        // 重置用戶信息緩存，強制重新獲取
-        resetUserInfoCache();
-
-        // 顯示成功消息
-        ElMessage.success('登錄成功');
-
-        // 登錄成功後跳轉
-        this.redirectAfterLogin();
-
-      } catch (error) {
-        console.error('Login failed:', error);
-        this.errorMessage = '登錄失敗，用戶名或密碼錯誤';
-        ElMessage.error(this.errorMessage);
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    // 統一跳轉邏輯
-    redirectAfterLogin() {
-      setTimeout(() => {
-        // 檢查是否有重定向目標
-        const redirect = this.$route.query.redirect || '/';
-        this.$router.replace(redirect);
-      }, 500);
+    if (!res.ok) {
+      throw new Error('登錄失敗');
     }
-  },
+
+    const data = await res.json();
+
+    // 兼容新舊版本的 token 格式
+    const accessToken = data.access_token;
+    const refreshToken = data.refresh_token || null;
+    const expiresIn = data.expires_in || 1800;
+
+    // 保存 Token（支持雙 token 機制）
+    setToken(accessToken, refreshToken, expiresIn);
+
+    // 重置用戶信息緩存，強制重新獲取
+    resetUserInfoCache();
+
+    // 顯示成功消息
+    ElMessage.success('登錄成功');
+
+    // 登錄成功後跳轉
+    redirectAfterLogin();
+
+  } catch (error) {
+    console.error('Login failed:', error);
+    errorMessage.value = '登錄失敗，用戶名或密碼錯誤';
+    ElMessage.error(errorMessage.value);
+  } finally {
+    loading.value = false;
+  }
+};
+
+// 統一跳轉邏輯
+const redirectAfterLogin = () => {
+  setTimeout(() => {
+    // 檢查是否有重定向目標
+    const redirect = route.query.redirect || '/';
+    router.replace(redirect);
+  }, 500);
 };
 </script>
 

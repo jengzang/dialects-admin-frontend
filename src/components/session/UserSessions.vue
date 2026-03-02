@@ -67,216 +67,223 @@
   </div>
 </template>
 
-<script>
-import userSessionAPI from '../../api/userSession';
+<script setup>
+import { ref, onMounted } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { ElMessageBox, ElMessage } from 'element-plus';
+import userSessionAPI from '../../api/userSession';
 
-export default {
-  name: 'UserSessions',
-  data() {
-    return {
-      sessions: [],
-      stats: {},
-      loading: false,
-      userId: null,
-      username: ''
+const router = useRouter();
+const route = useRoute();
+
+const sessions = ref([]);
+const stats = ref({});
+const loading = ref(false);
+const userId = ref(null);
+const username = ref('');
+
+const fetchUserSessions = async () => {
+  loading.value = true;
+  try {
+    console.log(userId.value);
+    const response = await userSessionAPI.getUserSessions(userId.value);
+    sessions.value = response.data.sessions || [];
+    stats.value = {
+      total: response.data.total_sessions || 0,
+      active: response.data.active_sessions || 0
     };
-  },
-  mounted() {
-    this.userId = this.$route.query.user_id;
-    this.username = this.$route.query.username || '未知用戶';
-    if (this.userId) {
-      this.fetchUserSessions();
-    } else {
-      ElMessage.error('缺少用戶ID參數');
-      this.$router.push('/admin');
-    }
-  },
-  methods: {
-    async fetchUserSessions() {
-      this.loading = true;
-      try {
-        console.log(this.userId)
-        const response = await userSessionAPI.getUserSessions(this.userId);
-        this.sessions = response.data.sessions || [];
-        this.stats = {
-          total: response.data.total_sessions || 0,
-          active: response.data.active_sessions || 0
-        };
-      } catch (error) {
-        console.error('Failed to fetch user sessions:', error);
-        this.handleError(error);
-      } finally {
-        this.loading = false;
+  } catch (error) {
+    console.error('Failed to fetch user sessions:', error);
+    handleError(error);
+  } finally {
+    loading.value = false;
+  }
+};
+
+const revokeSession = async (tokenId) => {
+  try {
+    await ElMessageBox.confirm(
+      `確定要撤銷此會話嗎？用戶將在此設備上被強制登出。`,
+      '撤銷會話',
+      {
+        confirmButtonText: '確定',
+        cancelButtonText: '取消',
+        type: 'warning'
       }
-    },
-    async revokeSession(tokenId) {
-      try {
-        await ElMessageBox.confirm(
-          `確定要撤銷此會話嗎？用戶將在此設備上被強制登出。`,
-          '撤銷會話',
-          {
-            confirmButtonText: '確定',
-            cancelButtonText: '取消',
-            type: 'warning'
-          }
-        );
+    );
 
-        await userSessionAPI.revokeSession(tokenId);
-        ElMessage.success('會話已撤銷');
-        await this.fetchUserSessions();
-      } catch (error) {
-        if (error !== 'cancel') {
-          this.handleError(error);
-        }
-      }
-    },
-    async revokeAllSessions() {
-      try {
-        await ElMessageBox.confirm(
-          `確定要撤銷用戶 ${this.username} 的所有會話嗎？該用戶將在所有設備上被強制登出。`,
-          '撤銷所有會話',
-          {
-            confirmButtonText: '確定',
-            cancelButtonText: '取消',
-            type: 'warning'
-          }
-        );
-
-        const response = await userSessionAPI.revokeUserSessions(this.userId);
-        ElMessage.success(`已撤銷 ${response.data.revoked_count} 個會話`);
-        await this.fetchUserSessions();
-      } catch (error) {
-        if (error !== 'cancel') {
-          this.handleError(error);
-        }
-      }
-    },
-    handleError(error) {
-      if (error.response?.status === 403) {
-        ElMessage.error('沒有權限執行此操作');
-      } else if (error.response?.status === 404) {
-        ElMessage.error('會話不存在或已被撤銷');
-      } else if (error.response?.status === 401) {
-        ElMessage.error('登錄已過期，請重新登錄');
-        this.$router.push('/login');
-      } else {
-        ElMessage.error('操作失敗，請稍後重試');
-      }
-    },
-    isExpired(session) {
-      if (!session.expires_at) return false;
-
-      // 處理 ISO 8601 字符串格式
-      let expiryDate;
-      if (typeof session.expires_at === 'string') {
-        // 確保正確解析 UTC 時間
-        let timeStr = session.expires_at;
-        if (!timeStr.includes('Z') && !timeStr.includes('+') && !timeStr.includes('-', 10)) {
-          timeStr = timeStr.replace(' ', 'T') + 'Z';
-        }
-        expiryDate = new Date(timeStr);
-      } else if (typeof session.expires_at === 'number') {
-        expiryDate = session.expires_at < 10000000000
-          ? new Date(session.expires_at * 1000)
-          : new Date(session.expires_at);
-      } else {
-        return false;
-      }
-
-      return expiryDate < new Date();
-    },
-    getStatusClass(session) {
-      if (session.revoked) return 'status-revoked';
-      if (this.isExpired(session)) return 'status-expired';
-      return 'status-active';
-    },
-    getStatusText(session) {
-      if (session.revoked) return '已撤銷';
-      if (this.isExpired(session)) return '已過期';
-      return '活躍';
-    },
-    formatTime(timestamp) {
-      if (!timestamp) return '-';
-
-      // 處理不同的時間戳格式
-      let date;
-      if (typeof timestamp === 'string') {
-        // 如果是字符串，確保正確解析 UTC 時間
-        let timeStr = timestamp;
-        if (!timeStr.includes('Z') && !timeStr.includes('+') && !timeStr.includes('-', 10)) {
-          // 將空格替換為 T，並添加 Z 表示 UTC
-          timeStr = timeStr.replace(' ', 'T') + 'Z';
-        }
-        date = new Date(timeStr);
-      } else if (typeof timestamp === 'number') {
-        if (timestamp < 10000000000) {
-          date = new Date(timestamp * 1000);
-        } else {
-          date = new Date(timestamp);
-        }
-      } else {
-        return '-';
-      }
-
-      // 檢查日期是否有效
-      if (isNaN(date.getTime())) {
-        console.error('Invalid timestamp:', timestamp);
-        return 'Invalid Date';
-      }
-
-      const now = new Date();
-      const diff = Math.floor((now - date) / 1000);
-
-      if (diff < 60) return `${diff}秒前`;
-      if (diff < 3600) return `${Math.floor(diff / 60)}分鐘前`;
-      if (diff < 86400) return `${Math.floor(diff / 3600)}小時前`;
-      if (diff < 604800) return `${Math.floor(diff / 86400)}天前`;
-
-      return date.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
-    },
-    formatExpireTime(timestamp) {
-      if (!timestamp) return '-';
-
-      // 處理不同的時間戳格式
-      let date;
-      if (typeof timestamp === 'string') {
-        // 如果是字符串，確保正確解析 UTC 時間
-        let timeStr = timestamp;
-        if (!timeStr.includes('Z') && !timeStr.includes('+') && !timeStr.includes('-', 10)) {
-          timeStr = timeStr.replace(' ', 'T') + 'Z';
-        }
-        date = new Date(timeStr);
-      } else if (typeof timestamp === 'number') {
-        if (timestamp < 10000000000) {
-          date = new Date(timestamp * 1000);
-        } else {
-          date = new Date(timestamp);
-        }
-      } else {
-        return '-';
-      }
-
-      // 檢查日期是否有效
-      if (isNaN(date.getTime())) {
-        console.error('Invalid expire timestamp:', timestamp);
-        return 'Invalid Date';
-      }
-
-      const now = new Date();
-      const diff = Math.floor((date - now) / 1000);
-
-      if (diff < 0) return '已過期';
-      if (diff < 3600) return `${Math.floor(diff / 60)}分鐘後過期`;
-      if (diff < 86400) return `${Math.floor(diff / 3600)}小時後過期`;
-
-      return `${Math.floor(diff / 86400)}天後過期`;
-    },
-    goBack() {
-      this.$router.push('/');
+    await userSessionAPI.revokeSession(tokenId);
+    ElMessage.success('會話已撤銷');
+    await fetchUserSessions();
+  } catch (error) {
+    if (error !== 'cancel') {
+      handleError(error);
     }
   }
 };
+
+const revokeAllSessions = async () => {
+  try {
+    await ElMessageBox.confirm(
+      `確定要撤銷用戶 ${username.value} 的所有會話嗎？該用戶將在所有設備上被強制登出。`,
+      '撤銷所有會話',
+      {
+        confirmButtonText: '確定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    );
+
+    const response = await userSessionAPI.revokeUserSessions(userId.value);
+    ElMessage.success(`已撤銷 ${response.data.revoked_count} 個會話`);
+    await fetchUserSessions();
+  } catch (error) {
+    if (error !== 'cancel') {
+      handleError(error);
+    }
+  }
+};
+
+const handleError = (error) => {
+  if (error.response?.status === 403) {
+    ElMessage.error('沒有權限執行此操作');
+  } else if (error.response?.status === 404) {
+    ElMessage.error('會話不存在或已被撤銷');
+  } else if (error.response?.status === 401) {
+    ElMessage.error('登錄已過期，請重新登錄');
+    router.push('/login');
+  } else {
+    ElMessage.error('操作失敗，請稍後重試');
+  }
+};
+
+const isExpired = (session) => {
+  if (!session.expires_at) return false;
+
+  // 處理 ISO 8601 字符串格式
+  let expiryDate;
+  if (typeof session.expires_at === 'string') {
+    // 確保正確解析 UTC 時間
+    let timeStr = session.expires_at;
+    if (!timeStr.includes('Z') && !timeStr.includes('+') && !timeStr.includes('-', 10)) {
+      timeStr = timeStr.replace(' ', 'T') + 'Z';
+    }
+    expiryDate = new Date(timeStr);
+  } else if (typeof session.expires_at === 'number') {
+    expiryDate = session.expires_at < 10000000000
+      ? new Date(session.expires_at * 1000)
+      : new Date(session.expires_at);
+  } else {
+    return false;
+  }
+
+  return expiryDate < new Date();
+};
+
+const getStatusClass = (session) => {
+  if (session.revoked) return 'status-revoked';
+  if (isExpired(session)) return 'status-expired';
+  return 'status-active';
+};
+
+const getStatusText = (session) => {
+  if (session.revoked) return '已撤銷';
+  if (isExpired(session)) return '已過期';
+  return '活躍';
+};
+
+const formatTime = (timestamp) => {
+  if (!timestamp) return '-';
+
+  // 處理不同的時間戳格式
+  let date;
+  if (typeof timestamp === 'string') {
+    // 如果是字符串，確保正確解析 UTC 時間
+    let timeStr = timestamp;
+    if (!timeStr.includes('Z') && !timeStr.includes('+') && !timeStr.includes('-', 10)) {
+      // 將空格替換為 T，並添加 Z 表示 UTC
+      timeStr = timeStr.replace(' ', 'T') + 'Z';
+    }
+    date = new Date(timeStr);
+  } else if (typeof timestamp === 'number') {
+    if (timestamp < 10000000000) {
+      date = new Date(timestamp * 1000);
+    } else {
+      date = new Date(timestamp);
+    }
+  } else {
+    return '-';
+  }
+
+  // 檢查日期是否有效
+  if (isNaN(date.getTime())) {
+    console.error('Invalid timestamp:', timestamp);
+    return 'Invalid Date';
+  }
+
+  const now = new Date();
+  const diff = Math.floor((now - date) / 1000);
+
+  if (diff < 60) return `${diff}秒前`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}分鐘前`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}小時前`;
+  if (diff < 604800) return `${Math.floor(diff / 86400)}天前`;
+
+  return date.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+};
+
+const formatExpireTime = (timestamp) => {
+  if (!timestamp) return '-';
+
+  // 處理不同的時間戳格式
+  let date;
+  if (typeof timestamp === 'string') {
+    // 如果是字符串，確保正確解析 UTC 時間
+    let timeStr = timestamp;
+    if (!timeStr.includes('Z') && !timeStr.includes('+') && !timeStr.includes('-', 10)) {
+      timeStr = timeStr.replace(' ', 'T') + 'Z';
+    }
+    date = new Date(timeStr);
+  } else if (typeof timestamp === 'number') {
+    if (timestamp < 10000000000) {
+      date = new Date(timestamp * 1000);
+    } else {
+      date = new Date(timestamp);
+    }
+  } else {
+    return '-';
+  }
+
+  // 檢查日期是否有效
+  if (isNaN(date.getTime())) {
+    console.error('Invalid expire timestamp:', timestamp);
+    return 'Invalid Date';
+  }
+
+  const now = new Date();
+  const diff = Math.floor((date - now) / 1000);
+
+  if (diff < 0) return '已過期';
+  if (diff < 3600) return `${Math.floor(diff / 60)}分鐘後過期`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}小時後過期`;
+
+  return `${Math.floor(diff / 86400)}天後過期`;
+};
+
+const goBack = () => {
+  router.push('/');
+};
+
+onMounted(() => {
+  userId.value = route.query.user_id;
+  username.value = route.query.username || '未知用戶';
+  if (userId.value) {
+    fetchUserSessions();
+  } else {
+    ElMessage.error('缺少用戶ID參數');
+    router.push('/admin');
+  }
+});
 </script>
 
 <style scoped lang="scss">

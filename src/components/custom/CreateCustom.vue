@@ -81,134 +81,127 @@
   </div>
 </template>
 
-<script>
-import api from "../../axios.js"; // 引入你的 api 實例
+<script setup>
+import { ref, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
+import { ElMessage } from 'element-plus';
+import api from "../../axios.js";
 
-export default {
-  data() {
-    return {
-      username: '',  // 當前的用戶名
-      formData: [  // 表格數據
-        {
-          簡稱: '',
-          音典分區: '',
-          經緯度: '',
-          特徵: '',
-          聲韻調: '',
-          值: '',
-          說明: '',
-          username: '' // 用戶名將在 mounted 中填充
-        }
-      ],
-      pastedData: '',  // 用於存放用戶粘貼的數據
-      submissionMessage: '', // 存放提交后提示消息
-      copyPreviousRow: false, // 是否勾選"默認複製上一行的數據"
-    };
-  },
-  mounted() {
-    // 從路由參數中獲取用戶名
-    const { username } = this.$route.query;
-    this.username = username || '';  // 設置用戶名
-    // 自動填充表格中的所有行的 username
-    this.formData.forEach(row => {
-      row.username = this.username;
-    });
-  },
-  methods: {
-    // 添加表格行
-    addRow() {
-      let newRow = {
-        簡稱: '',
-        音典分區: '',
-        經緯度: '',
-        特徵: '',
-        聲韻調: '',
-        值: '',
-        說明: '',
-        username: this.username
-      };
+const route = useRoute();
 
-      // 如果勾選了"默認複製上一行的數據"，複製上一行的數據
-      if (this.copyPreviousRow && this.formData.length > 0) {
-        const lastRow = this.formData[this.formData.length - 1];
-        newRow = {...lastRow};  // 複製上一行的數據
+const username = ref('');
+const formData = ref([
+  {
+    簡稱: '',
+    音典分區: '',
+    經緯度: '',
+    特徵: '',
+    聲韻調: '',
+    值: '',
+    說明: '',
+    username: ''
+  }
+]);
+const pastedData = ref('');
+const submissionMessage = ref('');
+const copyPreviousRow = ref(false);
+
+const addRow = () => {
+  let newRow = {
+    簡稱: '',
+    音典分區: '',
+    經緯度: '',
+    特徵: '',
+    聲韻調: '',
+    值: '',
+    說明: '',
+    username: username.value
+  };
+
+  // 如果勾選了"默認複製上一行的數據"，複製上一行的數據
+  if (copyPreviousRow.value && formData.value.length > 0) {
+    const lastRow = formData.value[formData.value.length - 1];
+    newRow = {...lastRow};
+  }
+
+  formData.value.push(newRow);
+};
+
+const deleteRow = (index) => {
+  formData.value.splice(index, 1);
+};
+
+const submitData = async () => {
+  try {
+    // 在提交前，檢查是否有其他字段為空（除了"說明"）
+    for (let row of formData.value) {
+      if (!row.簡稱 || !row.音典分區 || !row.經緯度 || !row.特徵 || !row.聲韻調 || !row.值) {
+        ElMessage.warning("⚠️ 所有字段（除了'說明'）都必須填寫！");
+        return;
       }
-
-      // 添加新行
-      this.formData.push(newRow);
-    },
-
-    // 刪除表格行
-    deleteRow(index) {
-      this.formData.splice(index, 1);
-    },
-
-    // 提交數據
-    async submitData() {
-      try {
-        // 在提交前，檢查是否有其他字段為空（除了"說明"）
-        for (let row of this.formData) {
-          if (!row.簡稱 || !row.音典分區 || !row.經緯度 || !row.特徵 || !row.聲韻調 || !row.值) {
-            this.$message.warning("⚠️ 所有字段（除了'說明'）都必須填寫！");
-            return; // 如果有空字段，停止提交
-          }
-        }
-        const res = await api.post("/custom/create", this.formData);
-        // 提交后清空表单数据
-        this.formData = [];
-        // 提示用户提交了多少份数据
-        const dataCount = res.data.length || this.formData.length;
-        this.submissionMessage = `✅ 已成功提交 ${dataCount} 份數據！`;
-        // 显示成功提示
-        this.$message.success(`批量提交成功！提交了 ${dataCount} 份數據`);
-      } catch (error) {
-        console.error("提交失敗", error);
-        this.$message.error("❌ 提交失敗！");
-      }
-    },
-    // 解析用戶粘貼的數據並添加到表格
-    parseAndAddRows() {
-      const lines = this.pastedData.trim().split('\n');
-
-      // 合併列名並去掉空格，形成一個字符串
-      const columnNames = ['簡稱', '音典分區', '經緯度', '特徵', '聲韻調', '值', '說明'];
-      const columnNamesString = columnNames.join('').replace(/\s+/g, ''); // 去掉空格
-
-      const newRows = [];
-
-      // 遍歷每一行數據
-      lines.forEach((line, index) => {
-        // 去掉每列的空格和制表符
-        const columns = line.split('\t').map(col => col.replace(/\s+/g, '').trim());
-
-        // 合併粘貼的數據行並去掉空格，形成一個字符串
-        const lineString = columns.join('').replace(/\s+/g, '');
-
-        // 檢查是否為列名行
-        if (index === 0 && lineString === columnNamesString) {
-          // 如果該行與列名匹配，則跳過這一行
-          return;
-        }
-
-        // 如果這一行不是列名行，則處理並添加到新行數據中
-        newRows.push({
-          簡稱: columns[0] || '',
-          音典分區: columns[1] || '',
-          經緯度: columns[2] || '',
-          特徵: columns[3] || '',
-          聲韻調: columns[4] || '',
-          值: columns[5] || '',
-          說明: columns[6] || '',
-          username: this.username
-        });
-      });
-
-      // 將解析出來的行數據添加到表格中
-      this.formData.push(...newRows);
-      this.pastedData = '';  // 清空粘貼框
     }
+    const res = await api.post("/custom/create", formData.value);
+    // 提交后清空表单数据
+    formData.value = [];
+    // 提示用户提交了多少份数据
+    const dataCount = res.data.length || formData.value.length;
+    submissionMessage.value = `✅ 已成功提交 ${dataCount} 份數據！`;
+    ElMessage.success(`批量提交成功！提交了 ${dataCount} 份數據`);
+  } catch (error) {
+    console.error("提交失敗", error);
+    ElMessage.error("❌ 提交失敗！");
   }
 };
+
+const parseAndAddRows = () => {
+  const lines = pastedData.value.trim().split('\n');
+
+  // 合併列名並去掉空格，形成一個字符串
+  const columnNames = ['簡稱', '音典分區', '經緯度', '特徵', '聲韻調', '值', '說明'];
+  const columnNamesString = columnNames.join('').replace(/\s+/g, '');
+
+  const newRows = [];
+
+  // 遍歷每一行數據
+  lines.forEach((line, index) => {
+    // 去掉每列的空格和制表符
+    const columns = line.split('\t').map(col => col.replace(/\s+/g, '').trim());
+
+    // 合併粘貼的數據行並去掉空格，形成一個字符串
+    const lineString = columns.join('').replace(/\s+/g, '');
+
+    // 檢查是否為列名行
+    if (index === 0 && lineString === columnNamesString) {
+      return;
+    }
+
+    // 如果這一行不是列名行，則處理並添加到新行數據中
+    newRows.push({
+      簡稱: columns[0] || '',
+      音典分區: columns[1] || '',
+      經緯度: columns[2] || '',
+      特徵: columns[3] || '',
+      聲韻調: columns[4] || '',
+      值: columns[5] || '',
+      說明: columns[6] || '',
+      username: username.value
+    });
+  });
+
+  // 將解析出來的行數據添加到表格中
+  formData.value.push(...newRows);
+  pastedData.value = '';
+};
+
+onMounted(() => {
+  // 從路由參數中獲取用戶名
+  const usernameQuery = route.query.username;
+  username.value = usernameQuery || '';
+  // 自動填充表格中的所有行的 username
+  formData.value.forEach(row => {
+    row.username = username.value;
+  });
+});
 </script>
 
 <style scoped lang="scss">

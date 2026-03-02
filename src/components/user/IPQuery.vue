@@ -27,87 +27,83 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, onMounted, watch, nextTick } from 'vue';
+import { useRoute } from 'vue-router';
 import L from 'leaflet';
-import { ipAPI } from '@/api/index'; // 引入 IP API 模塊
+import { ipAPI } from '@/api/index';
 
-export default {
-  data() {
-    return {
-      ip: this.$route.params.ip || "",
-      ipInfo: null,
-      map: null, // 存储地图实例
-      selectedApi: 'ip-api', // 默认使用 ip-api
+const route = useRoute();
+
+const ip = ref(route.params.ip || '');
+const ipInfo = ref(null);
+const map = ref(null);
+const selectedApi = ref('ip-api');
+
+const fetchIPInfo = async () => {
+  if (!ip.value) return;
+  try {
+    const data = await ipAPI.queryIP(ip.value, selectedApi.value);
+
+    // 统一格式化返回数据
+    ipInfo.value = {
+      query: data.query,
+      country: data.country,
+      region: data.region,
+      city: data.city,
+      isp: data.isp,
+      org: data.org,
+      as: data.as,
+      lat: data.lat,
+      lon: data.lon
     };
-  },
-  async mounted() {
-    await this.fetchIPInfo(); // 获取 IP 信息并初始化地图
-  },
-  watch: {
-    // 监听 IP 路由参数变化，重新发起请求
-    '$route.params.ip'(newIp) {
-      this.ip = newIp;
-      this.fetchIPInfo();
+
+    // 更新地图
+    if (ipInfo.value.lat && ipInfo.value.lon) {
+      nextTick(() => {
+        initMap(ipInfo.value.lat, ipInfo.value.lon);
+      });
     }
-  },
-  methods: {
-    // 获取 IP 信息
-    async fetchIPInfo() {
-      if (!this.ip) return;
-      try {
-        const data = await ipAPI.queryIP(this.ip, this.selectedApi);
-
-        // 统一格式化返回数据
-        this.ipInfo = {
-          query: data.query,
-          country: data.country,
-          region: data.region,
-          city: data.city,
-          isp: data.isp,
-          org: data.org,
-          as: data.as,
-          lat: data.lat,
-          lon: data.lon
-        };
-
-        // 更新地图
-        if (this.ipInfo.lat && this.ipInfo.lon) {
-          this.$nextTick(() => {
-            this.initMap(this.ipInfo.lat, this.ipInfo.lon);
-          });
-        }
-      } catch (err) {
-        console.error("获取 IP 信息失败:", err);
-        this.ipInfo = null;
-      }
-    },
-    // 初始化地图
-    initMap(lat, lon) {
-      if (this.map) {
-        // 销毁现有地图实例，避免旧地图影响
-        this.map.remove();
-      }
-
-      // 创建一个新的地图实例
-      this.map = L.map('map').setView([lat, lon], 13);
-
-      // 添加 OpenStreetMap 瓦片图层
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      }).addTo(this.map);
-
-      // 添加新的标记
-      L.marker([lat, lon]).addTo(this.map)
-          .bindPopup(`<b>緯度:</b> ${lat}<br><b>經度:</b> ${lon}`)
-          .openPopup();
-    },
-    // 选择API
-    selectApi(apiUrl) {
-      this.selectedApi = apiUrl;
-      this.fetchIPInfo(); // 切换API后重新查询IP信息
-    }
+  } catch (err) {
+    console.error("获取 IP 信息失败:", err);
+    ipInfo.value = null;
   }
 };
+
+const initMap = (lat, lon) => {
+  if (map.value) {
+    // 销毁现有地图实例，避免旧地图影响
+    map.value.remove();
+  }
+
+  // 创建一个新的地图实例
+  map.value = L.map('map').setView([lat, lon], 13);
+
+  // 添加 OpenStreetMap 瓦片图层
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  }).addTo(map.value);
+
+  // 添加新的标记
+  L.marker([lat, lon]).addTo(map.value)
+      .bindPopup(`<b>緯度:</b> ${lat}<br><b>經度:</b> ${lon}`)
+      .openPopup();
+};
+
+const selectApi = (apiUrl) => {
+  selectedApi.value = apiUrl;
+  fetchIPInfo();
+};
+
+// 监听 IP 路由参数变化，重新发起请求
+watch(() => route.params.ip, (newIp) => {
+  ip.value = newIp;
+  fetchIPInfo();
+});
+
+onMounted(async () => {
+  await fetchIPInfo();
+});
 </script>
 
 
