@@ -86,170 +86,150 @@
   </div>
 </template>
 
-<script>
-import api from '../../axios.js';  // 引入我們的全局 axios 配置
+<script setup>
+import { ref, onMounted } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
+import { ElMessage } from 'element-plus';
+import api from '../../axios.js';
 
-export default {
-  data() {
-    return {
-      updatedUser: { username: '', email: '', password: '' },  // 用來存放用戶更新的數據
-      oldname: this.$route.query.username,       // 從路由中獲取原始用戶名
-      oldemail: this.$route.query.email,         // 從路由中獲取原始郵箱
-      showConfirmDialog: false,  // 控制彈窗顯示
-      showAdminConfirmDialog: false,  // 控制設置管理員的確認彈窗顯示
-    };
-  },
-  mounted() {
-    // 初始化頁面時，根據路由參數獲取用戶數據
-    if (this.oldname || this.oldemail) {
-      api.get(`/users/single?query=${this.oldname || this.oldemail}`)
-        .then(response => {
-          this.updatedUser.username = response.data.username;
-          this.updatedUser.email = response.data.email;
-        })
-        .catch(error => {
-          console.error('Error fetching user data', error);
-        });
+const router = useRouter();
+const route = useRoute();
+
+const updatedUser = ref({ username: '', email: '', password: '' });
+const oldname = ref(route.query.username);
+const oldemail = ref(route.query.email);
+const showConfirmDialog = ref(false);
+const showAdminConfirmDialog = ref(false);
+const confirmUser = ref(null);
+
+const updateUsername = async () => {
+  if (updatedUser.value.username && updatedUser.value.username !== oldname.value) {
+    try {
+      await api.put(`/users/update?query=${oldname.value}`, { username: updatedUser.value.username });
+      ElMessage.success('用戶名更新成功!');
+      oldname.value = updatedUser.value.username;
+    } catch (error) {
+      if (error.response && error.response.data && error.response.data.detail) {
+        ElMessage.error(`編輯用戶名失敗: ${error.response.data.detail}`);
+      } else {
+        ElMessage.error('編輯用戶名失敗，請稍後再試');
+      }
     }
-  },
-  methods: {
-    // 更新用戶名
-    async updateUsername() {
-      if (this.updatedUser.username && this.updatedUser.username !== this.oldname) {
-        try {
-          await api.put(`/users/update?query=${this.oldname}`, { username: this.updatedUser.username });
-          this.$message.success('用戶名更新成功!');
-          this.oldname = this.updatedUser.username; // 更新顯示的用戶名
-        } catch (error) {
-          // 捕獲錯誤並顯示詳細錯誤信息
-          if (error.response && error.response.data && error.response.data.detail) {
-            this.$message.error(`編輯用戶名失敗: ${error.response.data.detail}`);
-          } else {
-            this.$message.error('編輯用戶名失敗，請稍後再試');
-          }
-        }
-      } else {
-        this.$message.warning('請輸入有效的用戶名');
-      }
-    },
-
-    // 更新郵箱
-    async updateEmail() {
-      const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/; // 郵箱格式正則表達式
-      if (!this.updatedUser.email || !emailPattern.test(this.updatedUser.email)) {
-        this.$message.warning('請輸入有效的郵箱地址');
-        return;
-      }
-      if (this.updatedUser.email && this.updatedUser.email !== this.oldemail) {
-        try {
-          await api.put(`/users/update?query=${this.oldemail}`, { email: this.updatedUser.email });
-          this.$message.success('郵箱更新成功!');
-          this.oldemail = this.updatedUser.email; // 更新顯示的郵箱
-        } catch (error) {
-          // 捕獲錯誤並顯示詳細錯誤信息
-          if (error.response && error.response.data && error.response.data.detail) {
-            this.$message.error(`編輯郵箱失敗: ${error.response.data.detail}`);
-          } else {
-            this.$message.error('編輯郵箱失敗，請稍後再試');
-          }
-        }
-      } else {
-        this.$message.warning('請輸入有效的郵箱');
-      }
-    },
-
-// 更新密碼
-    async updatePassword() {
-      const password = this.updatedUser.password;
-      if (!password || password.length < 6) {
-        this.$message.warning('密碼至少需要6個字符');
-        return;
-      }
-      try {
-        await api.put(`/users/password`, { username: this.oldname, password: password });
-        this.$message.success('密碼更新成功!');
-        this.updatedUser.password = ''; // 清空密碼框
-      } catch (error) {
-        // 捕獲錯誤並顯示詳細錯誤信息
-        if (error.response && error.response.data && error.response.data.detail) {
-          this.$message.error(`更新密碼失敗: ${error.response.data.detail}`);
-        } else {
-          this.$message.error('更新密碼失敗，請稍後再試');
-        }
-      }
-    },
-
-    // 設置當前用戶為管理員
-    async confirmSetAdmin() {
-      try {
-        const response = await api.put('/users/let_admin', {
-          username: this.oldname,
-          role: 'admin'
-        });
-        this.$message.success('用戶已成功設置為管理員！');
-        this.showAdminConfirmDialog = false;  // 隱藏彈窗
-      } catch (error) {
-        // 捕獲錯誤並顯示詳細錯誤信息
-        if (error.response && error.response.data && error.response.data.detail) {
-          this.$message.error(`設置管理員失敗: ${error.response.data.detail}`);
-          this.showAdminConfirmDialog = false;  // 隱藏彈窗
-        } else {
-          this.$message.error('設置管理員失敗！' + (error.response?.data?.detail || ''));
-          this.showAdminConfirmDialog = false;  // 隱藏彈窗
-        }
-      }
-    },
-    // 顯示設置為管理員的確認彈窗
-    showSetAdminConfirm() {
-      this.showAdminConfirmDialog = true;
-    },
-    // 取消設置為管理員
-    cancelSetAdmin() {
-      this.showAdminConfirmDialog = false;  // 隱藏彈窗
-    },
-
-    // 顯示刪除確認彈窗
-    showDeleteConfirm(user) {
-      this.showConfirmDialog = true;
-      this.confirmUser = user;  // 存儲需要刪除的用戶
-    },
-
-    // 確認刪除
-    async confirmDelete() {
-      try {
-        // 進行刪除請求
-        await api.delete(`/users/delete?query=${this.confirmUser}`);  // 刪除用戶
-
-        // 顯示成功提示
-        this.$message.success('用戶刪除成功！');
-        // 關閉刪除確認彈窗
-        this.showConfirmDialog = false;
-        this.$router.push({ name: 'Home' });
-      } catch (error) {
-        // 關閉彈窗
-        this.showConfirmDialog = false;
-
-        // 捕獲錯誤並顯示詳細錯誤信息
-        if (error.response && error.response.data && error.response.data.detail) {
-          this.$message.error(`刪除用戶失敗: ${error.response.data.detail}`);
-        } else {
-          // 顯示通用錯誤信息
-          this.$message.error('刪除用戶失敗，請稍後再試');
-        }
-      }
-    },
-
-    // 取消刪除
-    cancelDelete() {
-      this.showConfirmDialog = false;  // 關閉彈窗
-    },
-
-
-    goToHome() {
-      this.$router.push({ name: 'Home' });
-    },
-  },
+  } else {
+    ElMessage.warning('請輸入有效的用戶名');
+  }
 };
+
+const updateEmail = async () => {
+  const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+  if (!updatedUser.value.email || !emailPattern.test(updatedUser.value.email)) {
+    ElMessage.warning('請輸入有效的郵箱地址');
+    return;
+  }
+  if (updatedUser.value.email && updatedUser.value.email !== oldemail.value) {
+    try {
+      await api.put(`/users/update?query=${oldemail.value}`, { email: updatedUser.value.email });
+      ElMessage.success('郵箱更新成功!');
+      oldemail.value = updatedUser.value.email;
+    } catch (error) {
+      if (error.response && error.response.data && error.response.data.detail) {
+        ElMessage.error(`編輯郵箱失敗: ${error.response.data.detail}`);
+      } else {
+        ElMessage.error('編輯郵箱失敗，請稍後再試');
+      }
+    }
+  } else {
+    ElMessage.warning('請輸入有效的郵箱');
+  }
+};
+
+const updatePassword = async () => {
+  const password = updatedUser.value.password;
+  if (!password || password.length < 6) {
+    ElMessage.warning('密碼至少需要6個字符');
+    return;
+  }
+  try {
+    await api.put(`/users/password`, { username: oldname.value, password: password });
+    ElMessage.success('密碼更新成功!');
+    updatedUser.value.password = '';
+  } catch (error) {
+    if (error.response && error.response.data && error.response.data.detail) {
+      ElMessage.error(`更新密碼失敗: ${error.response.data.detail}`);
+    } else {
+      ElMessage.error('更新密碼失敗，請稍後再試');
+    }
+  }
+};
+
+const confirmSetAdmin = async () => {
+  try {
+    const response = await api.put('/users/let_admin', {
+      username: oldname.value,
+      role: 'admin'
+    });
+    ElMessage.success('用戶已成功設置為管理員！');
+    showAdminConfirmDialog.value = false;
+  } catch (error) {
+    if (error.response && error.response.data && error.response.data.detail) {
+      ElMessage.error(`設置管理員失敗: ${error.response.data.detail}`);
+      showAdminConfirmDialog.value = false;
+    } else {
+      ElMessage.error('設置管理員失敗！' + (error.response?.data?.detail || ''));
+      showAdminConfirmDialog.value = false;
+    }
+  }
+};
+
+const showSetAdminConfirm = () => {
+  showAdminConfirmDialog.value = true;
+};
+
+const cancelSetAdmin = () => {
+  showAdminConfirmDialog.value = false;
+};
+
+const showDeleteConfirm = (user) => {
+  showConfirmDialog.value = true;
+  confirmUser.value = user;
+};
+
+const confirmDelete = async () => {
+  try {
+    await api.delete(`/users/delete?query=${confirmUser.value}`);
+    ElMessage.success('用戶刪除成功！');
+    showConfirmDialog.value = false;
+    router.push({ name: 'Home' });
+  } catch (error) {
+    showConfirmDialog.value = false;
+    if (error.response && error.response.data && error.response.data.detail) {
+      ElMessage.error(`刪除用戶失敗: ${error.response.data.detail}`);
+    } else {
+      ElMessage.error('刪除用戶失敗，請稍後再試');
+    }
+  }
+};
+
+const cancelDelete = () => {
+  showConfirmDialog.value = false;
+};
+
+const goToHome = () => {
+  router.push({ name: 'Home' });
+};
+
+onMounted(() => {
+  if (oldname.value || oldemail.value) {
+    api.get(`/users/single?query=${oldname.value || oldemail.value}`)
+      .then(response => {
+        updatedUser.value.username = response.data.username;
+        updatedUser.value.email = response.data.email;
+      })
+      .catch(error => {
+        console.error('Error fetching user data', error);
+      });
+  }
+});
 </script>
 
 

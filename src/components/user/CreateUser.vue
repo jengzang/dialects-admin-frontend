@@ -55,41 +55,38 @@
   </div>
 </template>
 
-<script>
-import api from '../../axios.js';  // 引入我們的 axios 配置
+<script setup>
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { ElMessage } from 'element-plus';
+import api from '../../axios.js';
 
-export default {
-  data() {
-    return {
-      newUser: {
-        username: '',
-        email: '',
-        password: '',
-        role: 'user'  // 默認角色是 'user'
-      }
-    };
-  },
-  methods: {
-    async createUser() {
-      try {
-        const response = await api.post('/users/create', this.newUser);
-        this.$message.success('用戶創建成功!');
-        this.$router.push({ name: 'Home' });  // 成功後跳轉回用戶管理頁面
-      } catch (error) {
-        // 捕獲錯誤並顯示詳細錯誤信息
-        if (error.response && error.response.data && error.response.data.detail) {
-          this.$message.error(`創建用戶失敗: ${error.response.data.detail}`);
-        } else {
-          // 如果沒有詳細錯誤信息，顯示通用錯誤
-          this.$message.error('創建用戶失敗，請稍後再試');
-        }
-        console.error('Error creating user', error);
-      }
-    },
-    goToHome(){
-      this.$router.push({name: 'Home'});
-    },
+const router = useRouter();
+
+const newUser = ref({
+  username: '',
+  email: '',
+  password: '',
+  role: 'user'
+});
+
+const createUser = async () => {
+  try {
+    const response = await api.post('/users/create', newUser.value);
+    ElMessage.success('用戶創建成功!');
+    router.push({ name: 'Home' });
+  } catch (error) {
+    if (error.response && error.response.data && error.response.data.detail) {
+      ElMessage.error(`創建用戶失敗: ${error.response.data.detail}`);
+    } else {
+      ElMessage.error('創建用戶失敗，請稍後再試');
+    }
+    console.error('Error creating user', error);
   }
+};
+
+const goToHome = () => {
+  router.push({ name: 'Home' });
 };
 </script>
 
