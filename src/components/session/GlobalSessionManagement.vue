@@ -195,163 +195,173 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import userSessionAPI from '@/api/userSession';
 import queryGreenIcon from '@/assets/query_green.ico';
 
-export default {
-  name: 'GlobalSessionManagement',
-  data() {
-    return {
-      stats: {},
-      sessions: [],
-      selectedSessions: [],
-      loading: false,
-      filters: {
-        username: '',
-        ip_address: '',
-        is_suspicious: null,
-        revoked: null,
-        sort_by: 'created_at',
-        sort_order: 'desc'
-      },
-      currentPage: 1,
-      pageSize: 20,
-      totalSessions: 0,
-      queryGreenIcon: queryGreenIcon
+const router = useRouter();
+
+const stats = ref({});
+const sessions = ref([]);
+const selectedSessions = ref([]);
+const loading = ref(false);
+const filters = ref({
+  username: '',
+  ip_address: '',
+  is_suspicious: null,
+  revoked: null,
+  sort_by: 'created_at',
+  sort_order: 'desc'
+});
+const currentPage = ref(1);
+const pageSize = ref(20);
+const totalSessions = ref(0);
+
+const loadStats = async () => {
+  try {
+    const response = await userSessionAPI.getStats();
+    stats.value = response.stats || {};
+  } catch (error) {
+    console.error('Failed to load stats:', error);
+    ElMessage.error('加載統計數據失敗');
+  }
+};
+
+const loadSessions = async () => {
+  loading.value = true;
+  try {
+    const params = {
+      ...filters.value,
+      skip: (currentPage.value - 1) * pageSize.value,
+      limit: pageSize.value
     };
-  },
-  mounted() {
-    this.loadStats();
-    this.loadSessions();
-  },
-  methods: {
-    async loadStats() {
-      try {
-        const response = await userSessionAPI.getStats();
-        this.stats = response.stats || {};
-      } catch (error) {
-        console.error('Failed to load stats:', error);
-        this.$message.error('加載統計數據失敗');
+    Object.keys(params).forEach(key => {
+      if (params[key] === null || params[key] === '') {
+        delete params[key];
       }
-    },
-    async loadSessions() {
-      this.loading = true;
-      try {
-        const params = {
-          ...this.filters,
-          skip: (this.currentPage - 1) * this.pageSize,
-          limit: this.pageSize
-        };
-        Object.keys(params).forEach(key => {
-          if (params[key] === null || params[key] === '') {
-            delete params[key];
-          }
-        });
-        const response = await userSessionAPI.listSessions(params);
-        this.sessions = response.sessions || [];
-        this.totalSessions = response.total || 0;
-      } catch (error) {
-        console.error('Failed to load sessions:', error);
-        this.$message.error('加載會話列表失敗');
-      } finally {
-        this.loading = false;
-      }
-    },
-    searchSessions() {
-      this.currentPage = 1;
-      this.loadSessions();
-    },
-    resetFilters() {
-      this.filters = {
-        username: '',
-        ip_address: '',
-        is_suspicious: null,
-        revoked: null,
-        sort_by: 'created_at',
-        sort_order: 'desc'
-      };
-      this.searchSessions();
-    },
-    handlePageChange(page) {
-      this.currentPage = page;
-      this.loadSessions();
-    },
-    handleSelectionChange(selection) {
-      this.selectedSessions = selection;
-    },
-    async revokeSession(session) {
-      try {
-        await this.$confirm('確定要撤銷此會話嗎？', '確認', {
-          confirmButtonText: '確定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        });
-        await userSessionAPI.revokeSession(session.session_id, 'admin_action');
-        this.$message.success('會話已撤銷');
-        await this.loadSessions();
-      } catch (error) {
-        if (error !== 'cancel') {
-          console.error('Failed to revoke session:', error);
-          this.$message.error('撤銷會話失敗');
-        }
-      }
-    },
-    async bulkRevoke() {
-      try {
-        await this.$confirm(
-          `確定要撤銷選中的 ${this.selectedSessions.length} 個會話嗎？`,
-          '確認',
-          {
-            confirmButtonText: '確定',
-            cancelButtonText: '取消',
-            type: 'warning'
-          }
-        );
-        const sessionIds = this.selectedSessions.map(s => s.session_id);
-        await userSessionAPI.revokeBulk(sessionIds, 'admin_action');
-        this.$message.success('批量撤銷成功');
-        await this.loadSessions();
-      } catch (error) {
-        if (error !== 'cancel') {
-          console.error('Failed to bulk revoke:', error);
-          this.$message.error('批量撤銷失敗');
-        }
-      }
-    },
-    viewUser(session) {
-      this.$router.push({
-        name: 'UserSessionManagement',
-        params: { userId: session.user_id },
-        query: { username: session.username }
-      });
-    },
-    formatDateTime(dateStr) {
-      if (!dateStr) return 'N/A';
-      return new Date(dateStr).toLocaleString('zh-CN');
-    },
-    formatHours(hours) {
-      if (!hours) return '0h';
-      return `${Math.round(hours)}h`;
-    },
-    truncate(str, length) {
-      if (!str) return '';
-      return str.length > length ? str.substring(0, length) + '...' : str;
-    },
-    getStatusType(session) {
-      if (session.revoked) return 'info';
-      if (session.is_suspicious) return 'danger';
-      if (new Date(session.expires_at) < new Date()) return 'warning';
-      return 'success';
-    },
-    getStatusText(session) {
-      if (session.revoked) return '已撤銷';
-      if (session.is_suspicious) return '可疑';
-      if (new Date(session.expires_at) < new Date()) return '已過期';
-      return '活躍';
+    });
+    const response = await userSessionAPI.listSessions(params);
+    sessions.value = response.sessions || [];
+    totalSessions.value = response.total || 0;
+  } catch (error) {
+    console.error('Failed to load sessions:', error);
+    ElMessage.error('加載會話列表失敗');
+  } finally {
+    loading.value = false;
+  }
+};
+
+const searchSessions = () => {
+  currentPage.value = 1;
+  loadSessions();
+};
+
+const resetFilters = () => {
+  filters.value = {
+    username: '',
+    ip_address: '',
+    is_suspicious: null,
+    revoked: null,
+    sort_by: 'created_at',
+    sort_order: 'desc'
+  };
+  searchSessions();
+};
+
+const handlePageChange = (page) => {
+  currentPage.value = page;
+  loadSessions();
+};
+
+const handleSelectionChange = (selection) => {
+  selectedSessions.value = selection;
+};
+
+const revokeSession = async (session) => {
+  try {
+    await ElMessageBox.confirm('確定要撤銷此會話嗎？', '確認', {
+      confirmButtonText: '確定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    });
+    await userSessionAPI.revokeSession(session.session_id, 'admin_action');
+    ElMessage.success('會話已撤銷');
+    await loadSessions();
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('Failed to revoke session:', error);
+      ElMessage.error('撤銷會話失敗');
     }
   }
 };
+
+const bulkRevoke = async () => {
+  try {
+    await ElMessageBox.confirm(
+      `確定要撤銷選中的 ${selectedSessions.value.length} 個會話嗎？`,
+      '確認',
+      {
+        confirmButtonText: '確定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    );
+    const sessionIds = selectedSessions.value.map(s => s.session_id);
+    await userSessionAPI.revokeBulk(sessionIds, 'admin_action');
+    ElMessage.success('批量撤銷成功');
+    await loadSessions();
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('Failed to bulk revoke:', error);
+      ElMessage.error('批量撤銷失敗');
+    }
+  }
+};
+
+const viewUser = (session) => {
+  router.push({
+    name: 'UserSessionManagement',
+    params: { userId: session.user_id },
+    query: { username: session.username }
+  });
+};
+
+const formatDateTime = (dateStr) => {
+  if (!dateStr) return 'N/A';
+  return new Date(dateStr).toLocaleString('zh-CN');
+};
+
+const formatHours = (hours) => {
+  if (!hours) return '0h';
+  return `${Math.round(hours)}h`;
+};
+
+const truncate = (str, length) => {
+  if (!str) return '';
+  return str.length > length ? str.substring(0, length) + '...' : str;
+};
+
+const getStatusType = (session) => {
+  if (session.revoked) return 'info';
+  if (session.is_suspicious) return 'danger';
+  if (new Date(session.expires_at) < new Date()) return 'warning';
+  return 'success';
+};
+
+const getStatusText = (session) => {
+  if (session.revoked) return '已撤銷';
+  if (session.is_suspicious) return '可疑';
+  if (new Date(session.expires_at) < new Date()) return '已過期';
+  return '活躍';
+};
+
+onMounted(() => {
+  loadStats();
+  loadSessions();
+});
 </script>
 
 <style scoped lang="scss">
