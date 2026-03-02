@@ -1,39 +1,41 @@
 <template>
-  <div class="pagination">
+  <div :class="containerClass">
     <button
-      class="pagination-btn"
+      v-if="showFirstLast"
+      :class="buttonClass"
       @click="goToPage(1)"
       :disabled="currentPage === 1"
     >
-      首頁
+      {{ firstText }}
     </button>
 
     <button
-      class="pagination-btn"
+      :class="buttonClass"
       @click="goToPage(currentPage - 1)"
       :disabled="currentPage === 1"
     >
-      上一頁
+      {{ prevText }}
     </button>
 
-    <span class="pagination-info">
-      第 {{ currentPage }} / {{ totalPages }} 頁
+    <span :class="infoClass">
+      {{ infoText }}
     </span>
 
     <button
-      class="pagination-btn"
+      :class="buttonClass"
       @click="goToPage(currentPage + 1)"
       :disabled="currentPage >= totalPages"
     >
-      下一頁
+      {{ nextText }}
     </button>
 
     <button
-      class="pagination-btn"
+      v-if="showFirstLast"
+      :class="buttonClass"
       @click="goToPage(totalPages)"
       :disabled="currentPage >= totalPages"
     >
-      末頁
+      {{ lastText }}
     </button>
   </div>
 </template>
@@ -55,9 +57,55 @@ export default {
     pageSize: {
       type: Number,
       default: 30
+    },
+    // 样式定制
+    containerClass: {
+      type: String,
+      default: 'pagination'
+    },
+    buttonClass: {
+      type: String,
+      default: 'pagination-btn'
+    },
+    infoClass: {
+      type: String,
+      default: 'pagination-info'
+    },
+    // 文本定制
+    showFirstLast: {
+      type: Boolean,
+      default: true
+    },
+    firstText: {
+      type: String,
+      default: '首頁'
+    },
+    prevText: {
+      type: String,
+      default: '上一頁'
+    },
+    nextText: {
+      type: String,
+      default: '下一頁'
+    },
+    lastText: {
+      type: String,
+      default: '末頁'
+    },
+    infoFormat: {
+      type: String,
+      default: 'default' // 'default' 或 'simple'
     }
   },
   emits: ['page-change'],
+  computed: {
+    infoText() {
+      if (this.infoFormat === 'simple') {
+        return `頁面 ${this.currentPage} / ${this.totalPages}`;
+      }
+      return `第 ${this.currentPage} / ${this.totalPages} 頁`;
+    }
+  },
   methods: {
     goToPage(page) {
       if (page >= 1 && page <= this.totalPages && page !== this.currentPage) {
@@ -69,5 +117,5 @@ export default {
 </script>
 
 <style scoped>
-/* 使用全局樣式，這裡只添加組件特定樣式 */
+/* 组件不再包含默认样式，使用父组件或全局样式 */
 </style>

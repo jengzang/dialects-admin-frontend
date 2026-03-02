@@ -24,11 +24,10 @@
       <button @click="cleanupExpired" class="warning-btn" :disabled="loading">
         清理過期Token
       </button>
-      <input
+      <BaseSearchInput
         v-model="searchQuery"
-        type="text"
         placeholder="搜索用戶名、設備信息..."
-        class="search-input"
+        input-class="search-input"
       />
     </div>
 
@@ -67,11 +66,15 @@
       </div>
     </div>
 
-    <div class="pagination" v-if="totalPages > 1">
-      <button @click="prevPage" :disabled="currentPage === 1">上一頁</button>
-      <span>頁面 {{ currentPage }} / {{ totalPages }}</span>
-      <button @click="nextPage" :disabled="currentPage === totalPages">下一頁</button>
-    </div>
+    <BasePagination
+      v-if="totalPages > 1"
+      :current-page="currentPage"
+      :total-pages="totalPages"
+      :page-size="pageSize"
+      :show-first-last="false"
+      info-format="simple"
+      @page-change="handlePageChange"
+    />
 
     <div class="back-button">
       <button @click="goBack">返回首頁</button>
@@ -82,9 +85,14 @@
 <script>
 import userSessionAPI from '../../api/userSession';
 import { ElMessageBox, ElMessage } from 'element-plus';
+import { BasePagination, BaseSearchInput } from '@/components/common';
 
 export default {
   name: 'SessionManagement',
+  components: {
+    BasePagination,
+    BaseSearchInput
+  },
   data() {
     return {
       sessions: [],
@@ -292,15 +300,8 @@ export default {
 
       return `${Math.floor(diff / 86400)}天後過期`;
     },
-    prevPage() {
-      if (this.currentPage > 1) {
-        this.currentPage--;
-      }
-    },
-    nextPage() {
-      if (this.currentPage < this.totalPages) {
-        this.currentPage++;
-      }
+    handlePageChange(page) {
+      this.currentPage = page;
     },
     goBack() {
       this.$router.push('/');

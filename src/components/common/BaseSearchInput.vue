@@ -1,18 +1,17 @@
 <template>
-  <div class="search-container">
-    <input
-      :value="modelValue"
-      @input="$emit('update:modelValue', $event.target.value)"
-      type="text"
-      :placeholder="placeholder"
-      class="search-input"
-    />
-  </div>
+  <input
+    :value="modelValue"
+    @input="$emit('update:modelValue', $event.target.value)"
+    type="text"
+    :placeholder="placeholder"
+    :class="inputClass"
+  />
 </template>
 
 <script>
 export default {
   name: 'BaseSearchInput',
+  inheritAttrs: false,
   props: {
     modelValue: {
       type: String,
@@ -21,6 +20,10 @@ export default {
     placeholder: {
       type: String,
       default: '搜索...'
+    },
+    inputClass: {
+      type: String,
+      default: 'search-input'
     }
   },
   emits: ['update:modelValue']
@@ -28,7 +31,5 @@ export default {
 </script>
 
 <style scoped>
-.search-container {
-  display: inline-block;
-}
+/* 组件不再包含默认样式，使用父组件或全局样式 */
 </style>
