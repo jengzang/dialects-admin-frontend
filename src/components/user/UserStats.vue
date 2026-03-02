@@ -98,176 +98,123 @@
   </div>
 </template>
 
-<script>
-import { statsAPI, analyticsAPI } from '../../api/index';  // 引入 API 模塊
-import {formatTime} from "../../utils.js";
+<script setup>
+import { ref, onMounted } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
+import { statsAPI, analyticsAPI } from '../../api/index';
+import { formatTime } from "../../utils.js";
 
-export default {
-  data() {
-    return {
-      stats: {},
-      username: '',
-      filteredApiUsage: [],  // API 使用統計
-      loginHistory: [],
-      ipCounts: {} , // 用於存儲按 IP 地址分組後的次數統計
-      apiLogs:{},
-    };
-  },
-  async mounted() {
-    const { username } = this.$route.query;  // 從路由參數中獲取用戶名
-    this.username = username;  // 設置當前的用戶名
-    try {
-      // 獲取用戶統計數據
-      this.stats = await statsAPI.getStatsQuery(username);
+const router = useRouter();
+const route = useRoute();
 
-      // 獲取API使用統計數據
-      this.apiUsage = await analyticsAPI.getApiSummary(username);
-      // console.log(apiUsageResponse.data);
-      this.filteredApiUsage = this.apiUsage.filter(log => !log.path.includes('/login'));
+const stats = ref({});
+const username = ref('');
+const filteredApiUsage = ref([]);
+const loginHistory = ref([]);
+const ipCounts = ref({});
+const apiLogs = ref({});
+const userName = ref('');
+const tooltipStyle = ref({});
 
-      this.loginHistory = await statsAPI.getSuccessLoginLogs(username);
-      this.processIpCounts();  // 處理 IP 地址及其對應的次數
-
-      const response2 = await analyticsAPI.getApiDetail(username);  // 请求后端接口获取 API 使用情况
-      this.userName = response2.user;
-
-      this.apiLogs = response2.api_logs.map(log => ({
-        ...log,
-        // 提取操作系统和浏览器信息
-        ...this.getDeviceInfo(log.user_agent),
-        showUserAgent: false,  // 初始时不显示 User Agent
-        // 假设 log.request_size 是上行流量，log.response_size 是下行流量
-        uploadTraffic: log.request_size ? (log.request_size / 1024).toFixed(2) : '0.00',  // 转换为 KB
-        downloadTraffic: log.response_size ? (log.response_size /  1024).toFixed(2) : '0.00',  // 转换为 KB
-      }));
-
-      // 初始化按 API 路径分组的对象
-      // const apiStats = {};
-      // 按 path 分组并累加每个 API 的统计数据
-      // response2.data.api_logs.forEach(log => {
-      //   const duration = log.duration ? parseFloat(log.duration) : 0;
-      //   const uploadTraffic = log.request_size ? (log.request_size / 1024) : 0;  // 转换为 KB
-      //   const downloadTraffic = log.response_size ? (log.response_size / 1024) : 0;  // 转换为 KB
-      //
-      //   const path = log.path;
-      //
-      //   // 如果该 API 路径没有记录，就初始化它
-      //   if (!apiStats[path]) {
-      //     apiStats[path] = {
-      //       path: path,
-      //       totalDuration: 0,
-      //       totalUploadTraffic: 0,
-      //       totalDownloadTraffic: 0,
-      //       count: 0,
-      //     };
-      //   }
-      //
-      //   // 累加该 API 的数据
-      //   apiStats[path].totalDuration += duration;
-      //   apiStats[path].totalUploadTraffic += uploadTraffic;
-      //   apiStats[path].totalDownloadTraffic += downloadTraffic;
-      //   apiStats[path].count += 1;
-      // });
-
-      // // 将累加后的数据添加到 filteredApiUsage 中
-      // this.filteredApiUsage.forEach(api => {
-      //   const stats = apiStats[api.path] || {
-      //     // path: api.path,
-      //     totalDuration: 0,
-      //     totalUploadTraffic: 0,
-      //     totalDownloadTraffic: 0,
-      //     // count: 0,
-      //   };
-      //
-      //   // 将累加的统计信息直接添加到 filteredApiUsage 中
-      //   api.totalDuration = stats.totalDuration;
-      //   api.totalUploadTraffic = stats.totalUploadTraffic;
-      //   api.totalDownloadTraffic = stats.totalDownloadTraffic;
-      //   // api.count = stats.count;
-      // });
-
-
-    } catch (error) {
-      console.error('Error fetching stats and API usage', error);
-    }
-  },
-  methods: {
-    formatTime,
-    // 將秒數轉換為小時和分鐘格式
-    formatOnlineTime(seconds) {
-      const hours = Math.floor(seconds / 3600);
-      const minutes = Math.floor((seconds % 3600) / 60);
-      return `${hours}小時 ${minutes}分鐘`;
-    },
-
-    processIpCounts() {
-      const counts = {};
-      this.loginHistory.forEach(log => {
-        if (counts[log.ip]) {
-          counts[log.ip] += 1;  // 如果 IP 已經出現過，次數加 1
-        } else {
-          counts[log.ip] = 1;  // 否則初始化次數為 1
-        }
-      });
-      this.ipCounts = counts;  // 更新統計結果
-    },
-    // 提取操作系统和浏览器信息
-    getDeviceInfo(userAgent) {
-      let os = "Unknown OS";
-      let browser = "Unknown Browser";
-
-      // 操作系统提取
-      if (/iPhone|iPad|iPod/.test(userAgent)) {
-        os = "iOS";
-      } else if (/Android/.test(userAgent)) {
-        os = "Android";
-      } else if (/Windows/.test(userAgent)) {
-        os = "Windows";
-      } else if (/Macintosh/.test(userAgent)) {
-        os = "Mac OS";
-      } else if (/Linux/.test(userAgent)) {
-        os = "Linux";
-      }
-
-      // 浏览器提取
-      if (/Chrome/.test(userAgent)) {
-        browser = "Chrome";
-      } else if (/Firefox/.test(userAgent)) {
-        browser = "Firefox";
-      } else if (/Safari/.test(userAgent)) {
-        browser = "Safari";
-      } else if (/Edge/.test(userAgent)) {
-        browser = "Edge";
-      }
-
-      return { os, browser };
-    },
-
-// 显示原始 User Agent并根据鼠标位置调整 top 和 left
-    showUserAgent(event, log) {
-      log.showUserAgent = true;
-
-      // 获取鼠标位置
-      const rect = event.currentTarget.getBoundingClientRect(); // 获取单元格位置
-
-      // 动态设置工具提示的 top 和 left 位置
-      this.tooltipStyle = {
-        position: 'fixed',
-        top: `${event.clientY + 10}px`,  // 鼠标 Y 坐标加上偏移量 10px
-        left: `${rect.left + window.scrollX}px`,  // 获取单元格的 left 位置
-        zIndex: 1000
-      };
-    },
-
-    // 隐藏原始 User Agent
-    hideUserAgent(log) {
-      log.showUserAgent = false;
-    },
-    goToHome(){
-      this.$router.push({name: 'Home'});
-    },
-  }
+const formatOnlineTime = (seconds) => {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  return `${hours}小時 ${minutes}分鐘`;
 };
+
+const processIpCounts = () => {
+  const counts = {};
+  loginHistory.value.forEach(log => {
+    if (counts[log.ip]) {
+      counts[log.ip] += 1;
+    } else {
+      counts[log.ip] = 1;
+    }
+  });
+  ipCounts.value = counts;
+};
+
+const getDeviceInfo = (userAgent) => {
+  let os = "Unknown OS";
+  let browser = "Unknown Browser";
+
+  // 操作系统提取
+  if (/iPhone|iPad|iPod/.test(userAgent)) {
+    os = "iOS";
+  } else if (/Android/.test(userAgent)) {
+    os = "Android";
+  } else if (/Windows/.test(userAgent)) {
+    os = "Windows";
+  } else if (/Macintosh/.test(userAgent)) {
+    os = "Mac OS";
+  } else if (/Linux/.test(userAgent)) {
+    os = "Linux";
+  }
+
+  // 浏览器提取
+  if (/Chrome/.test(userAgent)) {
+    browser = "Chrome";
+  } else if (/Firefox/.test(userAgent)) {
+    browser = "Firefox";
+  } else if (/Safari/.test(userAgent)) {
+    browser = "Safari";
+  } else if (/Edge/.test(userAgent)) {
+    browser = "Edge";
+  }
+
+  return { os, browser };
+};
+
+const showUserAgent = (event, log) => {
+  log.showUserAgent = true;
+
+  const rect = event.currentTarget.getBoundingClientRect();
+
+  tooltipStyle.value = {
+    position: 'fixed',
+    top: `${event.clientY + 10}px`,
+    left: `${rect.left + window.scrollX}px`,
+    zIndex: 1000
+  };
+};
+
+const hideUserAgent = (log) => {
+  log.showUserAgent = false;
+};
+
+const goToHome = () => {
+  router.push({ name: 'Home' });
+};
+
+onMounted(async () => {
+  const usernameQuery = route.query.username;
+  username.value = usernameQuery;
+  try {
+    // 獲取用戶統計數據
+    stats.value = await statsAPI.getStatsQuery(usernameQuery);
+
+    // 獲取API使用統計數據
+    const apiUsage = await analyticsAPI.getApiSummary(usernameQuery);
+    filteredApiUsage.value = apiUsage.filter(log => !log.path.includes('/login'));
+
+    loginHistory.value = await statsAPI.getSuccessLoginLogs(usernameQuery);
+    processIpCounts();
+
+    const response2 = await analyticsAPI.getApiDetail(usernameQuery);
+    userName.value = response2.user;
+
+    apiLogs.value = response2.api_logs.map(log => ({
+      ...log,
+      ...getDeviceInfo(log.user_agent),
+      showUserAgent: false,
+      uploadTraffic: log.request_size ? (log.request_size / 1024).toFixed(2) : '0.00',
+      downloadTraffic: log.response_size ? (log.response_size / 1024).toFixed(2) : '0.00',
+    }));
+
+  } catch (error) {
+    console.error('Error fetching stats and API usage', error);
+  }
+});
 </script>
 
 <style scoped lang="scss">

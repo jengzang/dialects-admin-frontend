@@ -150,279 +150,272 @@
 
 
 
-<script>
-import { analyticsAPI } from '../../api/index'; // 引入 API 模塊
-import {formatTime} from "../../utils.js";
+<script setup>
+import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { analyticsAPI } from '../../api/index';
+import { formatTime } from "../../utils.js";
 import { BasePagination } from '@/components/common';
 
-export default {
-  name: 'ApiDetail',
-  components: {
-    BasePagination
-  },
-  data() {
-    return {
-      currentPage: 1,  // 当前页码
-      pageSize: 50,   // 每页显示的记录数
-      totalPages: 1,  // 总页数
-      userName: '',  // 用户名
-      apiLogs: [],   // 用于存储用户的 API 使用记录
-      uniqueUsers: [],  // 存储独特用户列表
-      uniqueIPs: [],  // 存储独特IP地址列表
-      apiCalls: {},   // 存储各个API调用次数
-      totalAPICalls: 0, // 总的API调用次数
-      showUserModal: false, // 控制独特用户弹窗
-      showIPModal: false, // 控制独特IP弹窗
-      showAPICallsModal: false, // 控制API调用统计弹窗
-      uniqueUsersCount: 0,  // 独特用户数
-      uniqueIPsCount: 0,    // 独特IP地址数
-      sortOrder: {  // 控制排序的对象
-        user: 'asc',
-        totalDuration: 'desc',
-        occurrenceCount: 'desc',
-        ip: 'asc',
-        path: 'asc',
-        duration: 'desc',
-        os: 'asc',
-        browser: 'asc',
-        called_at: 'desc',
-      },
-      sortField: '',  // 当前排序字段
-      searchQuery: '',  // 新增搜索查询字段
-    };
-  },
-  async mounted() {
-    try {
-      const apiLogs = await analyticsAPI.getApiUsage({
-        skip: this.currentPage,
-        limit: this.pageSize
-      });
-      this.apiLogs = apiLogs;  // 处理返回的 API 使用记录
-      // console.log(this.apiLogs)
-      // 为每个日志添加上行流量和下行流量，假设 log.request_size 和 log.response_size 存在
-      this.apiLogs = this.apiLogs.map(log => ({
-        ...log,
-        uploadTraffic: (log.request_size / 1024).toFixed(2),  // 转换为 KB，保留两位小数
-        downloadTraffic: (log.response_size / 1024).toFixed(2) // 转换为 KB，保留两位小数
-      }));
+const router = useRouter();
 
-      // 独特用户统计
-      this.uniqueUsers = [...new Set(this.apiLogs.map(log => log.user || ''))];
-      this.uniqueUsersCount = this.uniqueUsers.length;
+// 分页相关
+const currentPage = ref(1);
+const pageSize = ref(50);
+const totalPages = ref(1);
 
-      this.userStats = this.uniqueUsers.map(user => {
-        const userLogs = this.apiLogs.filter(log => log.user === user);
-        const totalDuration = userLogs.reduce((acc, log) => acc + log.duration, 0);
-        const occurrenceCount = userLogs.length;
-        const totalUploadTraffic = userLogs.reduce((acc, log) => acc + (log.request_size || 0), 0);  // 上行流量
-        const totalDownloadTraffic = userLogs.reduce((acc, log) => acc + (log.response_size || 0), 0);  // 下行流量
-        return {
-          user: user || '匿名用户',
-          totalDuration,
-          occurrenceCount,
-          totalUploadTraffic: (totalUploadTraffic / (1024)).toFixed(2),  // 转换为 MB
-          totalDownloadTraffic: (totalDownloadTraffic / (1024 * 1024)).toFixed(2)  // 转换为 MB
-        };
-      });
+// 数据相关
+const userName = ref('');
+const apiLogs = ref([]);
+const uniqueUsers = ref([]);
+const uniqueIPs = ref([]);
+const apiCalls = ref({});
+const totalAPICalls = ref(0);
+const userStats = ref([]);
+const ipStats = ref([]);
 
-      // 排序：按总使用时长从大到小
-      this.userStats.sort((a, b) => b.totalDuration - a.totalDuration);
+// 弹窗控制
+const showUserModal = ref(false);
+const showIPModal = ref(false);
+const showAPICallsModal = ref(false);
 
-      // 独特 IP 地址统计
-      this.uniqueIPs = [...new Set(this.apiLogs.map(log => log.ip))];
-      this.uniqueIPsCount = this.uniqueIPs.length;
+// 统计数据
+const uniqueUsersCount = ref(0);
+const uniqueIPsCount = ref(0);
 
-      this.ipStats = this.uniqueIPs.map(ip => {
-        const ipLogs = this.apiLogs.filter(log => log.ip === ip);
-        const totalDuration = ipLogs.reduce((acc, log) => acc + log.duration, 0);
-        const occurrenceCount = ipLogs.length;
-        const totalUploadTraffic = ipLogs.reduce((acc, log) => acc + (log.request_size || 0), 0);  // 上行流量
-        const totalDownloadTraffic = ipLogs.reduce((acc, log) => acc + (log.response_size || 0), 0);  // 下行流量
-        return {
-          ip,
-          totalDuration,
-          occurrenceCount,
-          totalUploadTraffic: (totalUploadTraffic / (1024)).toFixed(2),  // 转换为 MB
-          totalDownloadTraffic: (totalDownloadTraffic / (1024 * 1024)).toFixed(2)  // 转换为 MB
+// 排序相关
+const sortOrder = ref({
+  user: 'asc',
+  totalDuration: 'desc',
+  occurrenceCount: 'desc',
+  ip: 'asc',
+  path: 'asc',
+  duration: 'desc',
+  os: 'asc',
+  browser: 'asc',
+  called_at: 'desc',
+});
+const sortField = ref('');
+const searchQuery = ref('');
 
-        };
-      });
+// 计算属性 - 实时筛选日志数据
+const filteredLogs = computed(() => {
+  return apiLogs.value.filter(log => {
+    return (
+      (log.user || '').includes(searchQuery.value) ||
+      (log.ip || '').includes(searchQuery.value) ||
+      (log.path || '').includes(searchQuery.value) ||
+      (log.os || '').includes(searchQuery.value) ||
+      (log.browser || '').includes(searchQuery.value)
+    );
+  });
+});
 
-      // 排序：按总使用时长从大到小
-      this.ipStats.sort((a, b) => b.totalDuration - a.totalDuration);
+// 计算属性 - 当前页面的数据
+const currentPageData = computed(() => {
+  const startIndex = (currentPage.value - 1) * pageSize.value;
+  return filteredLogs.value.slice(startIndex, startIndex + pageSize.value);
+});
 
-      this.apiCalls = this.apiLogs.reduce((acc, log) => {
-        if (!acc[log.path]) {
-          acc[log.path] = { count: 0, totalDuration: 0, totalUploadTraffic: 0, totalDownloadTraffic: 0 };
-        }
-        acc[log.path].count += 1;
-        acc[log.path].totalDuration += log.duration;
+// 计算属性 - 实时筛选用户统计
+const filteredUserStats = computed(() => {
+  const displayedUsers = filteredLogs.value.map(log => log.user);
+  return userStats.value.filter(userStat => displayedUsers.includes(userStat.user));
+});
 
-        // 转换上行流量和下行流量为 MB，计算时保持数字类型，最后格式化为两位小数
-        acc[log.path].totalUploadTraffic += ((log.request_size / (1024))) || 0;  // 转换为 MB，保持数字
-        acc[log.path].totalDownloadTraffic += ((log.response_size / (1024 * 1024))) || 0;  // 转换为 MB，保持数字
+// 计算属性 - 实时筛选IP统计
+const filteredIPStats = computed(() => {
+  const displayedIPs = filteredLogs.value.map(log => log.ip);
+  return ipStats.value.filter(ipStat => displayedIPs.includes(ipStat.ip));
+});
 
+// 计算属性 - 实时筛选API调用统计
+const filteredAPICalls = computed(() => {
+  const displayedPaths = filteredLogs.value.map(log => log.path);
+  return Object.keys(apiCalls.value)
+    .filter(path => displayedPaths.includes(path))
+    .reduce((obj, path) => {
+      obj[path] = apiCalls.value[path];
+      return obj;
+    }, {});
+});
 
-
-
-        this.totalAPICalls += 1;
-        return acc;
-      }, {});
-
-      // 总页数的计算
-      this.totalPages = Math.ceil(this.totalAPICalls / this.pageSize);
-
-      // 排序数据
-      this.sortData('called_at');  // ➕ 添加这一行，确保按请求时间倒序初始化
-
-    } catch (error) {
-      console.error('Error fetching API usage data', error);
-    }
-  },
-
-  computed: {
-    // 当前页面的数据
-    currentPageData() {
-      const startIndex = (this.currentPage - 1) * this.pageSize;
-      return this.filteredLogs.slice(startIndex, startIndex + this.pageSize);  // 根据当前页码和每页显示的数据数量筛选
-    },
-
-    // 实时筛选日志数据
-    filteredLogs() {
-      return this.apiLogs.filter(log => {
-        return (
-            (log.user || '').includes(this.searchQuery) ||
-            (log.ip || '').includes(this.searchQuery) ||
-            (log.path || '').includes(this.searchQuery) ||
-            (log.os || '').includes(this.searchQuery) ||
-            (log.browser || '').includes(this.searchQuery)
-        );
-      });
-    },
-
-    // 实时筛选用户统计（基于所有apiLogs数据筛选）
-    filteredUserStats() {
-      const displayedUsers = this.filteredLogs.map(log => log.user);
-      return this.userStats.filter(userStat => displayedUsers.includes(userStat.user));
-    },
-
-    // 实时筛选IP统计（基于所有apiLogs数据筛选）
-    filteredIPStats() {
-      const displayedIPs = this.filteredLogs.map(log => log.ip);
-      return this.ipStats.filter(ipStat => displayedIPs.includes(ipStat.ip));
-    },
-
-    // 实时筛选API调用统计（基于所有apiLogs数据筛选）
-    filteredAPICalls() {
-      const displayedPaths = this.filteredLogs.map(log => log.path);
-      return Object.keys(this.apiCalls)
-          .filter(path => displayedPaths.includes(path))
-          .reduce((obj, path) => {
-            obj[path] = this.apiCalls[path];
-            return obj;
-          }, {});
-    },
-  },
-
-  methods: {
-    formatTime,
-    // 获取箭头的 CSS 类
-    getArrowClass(field) {
-      return this.sortOrder[field] === 'asc' ? 'arrow-up' : 'arrow-down';
-    },
-    // 排序方法
-    sortData(field) {
-      const currentOrder = this.sortOrder[field] === 'asc' ? 'desc' : 'asc';
-      this.sortOrder[field] = currentOrder;
-
-      // 排序字段为时间的特殊处理
-      if (field === 'called_at') {
-        // 处理时间字段排序
-        this.apiLogs.sort((a, b) => {
-          const timeA = new Date(a.called_at).getTime();
-          const timeB = new Date(b.called_at).getTime();
-          return currentOrder === 'asc' ? timeB - timeA : timeA - timeB ;
-        });
-      } else if (field === 'user' || field === 'ip' || field === 'path' || field === 'os' || field === 'browser') {
-        // 字符串字段排序
-        this.apiLogs.sort((a, b) => {
-          const valueA = a[field] || '';
-          const valueB = b[field] || '';
-          if (currentOrder === 'asc') {
-            return valueA.localeCompare(valueB);
-          } else {
-            return valueB.localeCompare(valueA);
-          }
-        });
-      } else {
-        // 数字字段排序
-        this.apiLogs.sort((a, b) => {
-          if (currentOrder === 'asc') {
-            return a[field] - b[field];
-          } else {
-            return b[field] - a[field];
-          }
-        });
-      }
-
-      // 排序之后重新计算分页
-      this.totalPages = Math.ceil(this.apiLogs.length / this.pageSize);
-      this.currentPage = 1;  // 重置当前页为第一页
-    },
-
-    // 处理分页变化
-    handlePageChange(page) {
-      this.currentPage = page;
-      this.fetchPageData();
-    },
-
-    // 更新当前页数据
-    fetchPageData() {
-      this.totalPages = Math.ceil(this.apiLogs.length / this.pageSize);  // 重新计算总页数
-    },
-    // 弹出独特用户的表格
-    showUniqueUsers() {
-      this.showUserModal = true;
-    },
-    closeUserModal() {
-      this.showUserModal = false;
-    },
-
-    // 弹出独特IP地址的表格
-    showUniqueIPs() {
-      this.showIPModal = true;
-    },
-    closeIPModal() {
-      this.showIPModal = false;
-    },
-
-    // 弹出各个API调用次数的统计表格
-    showAPICalls() {
-      this.showAPICallsModal = true;
-    },
-    closeAPICallsModal() {
-      this.showAPICallsModal = false;
-    },
-    async viewUserStats(username) {
-      this.$router.push({name: 'UserStats', query: {username: username}});
-    },
-    async handleIPClick(ip) {
-      this.$router.push({ path: `/ip/${ip}` });
-      console.log('Clicked IP:', ip);  // 打印被点击的 IP
-      //
-      // try {
-      //   const response = await fetch(`http://ip-api.com/json/${ip}`);
-      //   const data = await response.json();  // 解析返回的 JSON 数据
-      //   console.log('IP 归属地:', data);  // 打印 IP 归属地信息
-      // } catch (error) {
-      //   console.error('无法获取 IP 归属地:', error);
-      // }
-    },
-    goToHome(){
-      this.$router.push({name: 'Home'});
-    },
-  }
+// 获取箭头的 CSS 类
+const getArrowClass = (field) => {
+  return sortOrder.value[field] === 'asc' ? 'arrow-up' : 'arrow-down';
 };
+
+// 排序方法
+const sortData = (field) => {
+  const currentOrder = sortOrder.value[field] === 'asc' ? 'desc' : 'asc';
+  sortOrder.value[field] = currentOrder;
+
+  // 排序字段为时间的特殊处理
+  if (field === 'called_at') {
+    apiLogs.value.sort((a, b) => {
+      const timeA = new Date(a.called_at).getTime();
+      const timeB = new Date(b.called_at).getTime();
+      return currentOrder === 'asc' ? timeB - timeA : timeA - timeB;
+    });
+  } else if (field === 'user' || field === 'ip' || field === 'path' || field === 'os' || field === 'browser') {
+    // 字符串字段排序
+    apiLogs.value.sort((a, b) => {
+      const valueA = a[field] || '';
+      const valueB = b[field] || '';
+      if (currentOrder === 'asc') {
+        return valueA.localeCompare(valueB);
+      } else {
+        return valueB.localeCompare(valueA);
+      }
+    });
+  } else {
+    // 数字字段排序
+    apiLogs.value.sort((a, b) => {
+      if (currentOrder === 'asc') {
+        return a[field] - b[field];
+      } else {
+        return b[field] - a[field];
+      }
+    });
+  }
+
+  // 排序之后重新计算分页
+  totalPages.value = Math.ceil(apiLogs.value.length / pageSize.value);
+  currentPage.value = 1;
+};
+
+// 处理分页变化
+const handlePageChange = (page) => {
+  currentPage.value = page;
+  fetchPageData();
+};
+
+// 更新当前页数据
+const fetchPageData = () => {
+  totalPages.value = Math.ceil(apiLogs.value.length / pageSize.value);
+};
+
+// 弹窗控制方法
+const showUniqueUsers = () => {
+  showUserModal.value = true;
+};
+
+const closeUserModal = () => {
+  showUserModal.value = false;
+};
+
+const showUniqueIPs = () => {
+  showIPModal.value = true;
+};
+
+const closeIPModal = () => {
+  showIPModal.value = false;
+};
+
+const showAPICalls = () => {
+  showAPICallsModal.value = true;
+};
+
+const closeAPICallsModal = () => {
+  showAPICallsModal.value = false;
+};
+
+// 导航方法
+const viewUserStats = async (username) => {
+  router.push({ name: 'UserStats', query: { username: username } });
+};
+
+const handleIPClick = async (ip) => {
+  router.push({ path: `/ip/${ip}` });
+  console.log('Clicked IP:', ip);
+};
+
+const goToHome = () => {
+  router.push({ name: 'Home' });
+};
+
+// 生命周期钩子
+onMounted(async () => {
+  try {
+    const logs = await analyticsAPI.getApiUsage({
+      skip: currentPage.value,
+      limit: pageSize.value
+    });
+
+    // 为每个日志添加上行流量和下行流量
+    apiLogs.value = logs.map(log => ({
+      ...log,
+      uploadTraffic: (log.request_size / 1024).toFixed(2),
+      downloadTraffic: (log.response_size / 1024).toFixed(2)
+    }));
+
+    // 独特用户统计
+    uniqueUsers.value = [...new Set(apiLogs.value.map(log => log.user || ''))];
+    uniqueUsersCount.value = uniqueUsers.value.length;
+
+    userStats.value = uniqueUsers.value.map(user => {
+      const userLogs = apiLogs.value.filter(log => log.user === user);
+      const totalDuration = userLogs.reduce((acc, log) => acc + log.duration, 0);
+      const occurrenceCount = userLogs.length;
+      const totalUploadTraffic = userLogs.reduce((acc, log) => acc + (log.request_size || 0), 0);
+      const totalDownloadTraffic = userLogs.reduce((acc, log) => acc + (log.response_size || 0), 0);
+      return {
+        user: user || '匿名用户',
+        totalDuration,
+        occurrenceCount,
+        totalUploadTraffic: (totalUploadTraffic / 1024).toFixed(2),
+        totalDownloadTraffic: (totalDownloadTraffic / (1024 * 1024)).toFixed(2)
+      };
+    });
+
+    // 排序：按总使用时长从大到小
+    userStats.value.sort((a, b) => b.totalDuration - a.totalDuration);
+
+    // 独特 IP 地址统计
+    uniqueIPs.value = [...new Set(apiLogs.value.map(log => log.ip))];
+    uniqueIPsCount.value = uniqueIPs.value.length;
+
+    ipStats.value = uniqueIPs.value.map(ip => {
+      const ipLogs = apiLogs.value.filter(log => log.ip === ip);
+      const totalDuration = ipLogs.reduce((acc, log) => acc + log.duration, 0);
+      const occurrenceCount = ipLogs.length;
+      const totalUploadTraffic = ipLogs.reduce((acc, log) => acc + (log.request_size || 0), 0);
+      const totalDownloadTraffic = ipLogs.reduce((acc, log) => acc + (log.response_size || 0), 0);
+      return {
+        ip,
+        totalDuration,
+        occurrenceCount,
+        totalUploadTraffic: (totalUploadTraffic / 1024).toFixed(2),
+        totalDownloadTraffic: (totalDownloadTraffic / (1024 * 1024)).toFixed(2)
+      };
+    });
+
+    // 排序：按总使用时长从大到小
+    ipStats.value.sort((a, b) => b.totalDuration - a.totalDuration);
+
+    // API 调用统计
+    apiCalls.value = apiLogs.value.reduce((acc, log) => {
+      if (!acc[log.path]) {
+        acc[log.path] = { count: 0, totalDuration: 0, totalUploadTraffic: 0, totalDownloadTraffic: 0 };
+      }
+      acc[log.path].count += 1;
+      acc[log.path].totalDuration += log.duration;
+      acc[log.path].totalUploadTraffic += ((log.request_size / 1024)) || 0;
+      acc[log.path].totalDownloadTraffic += ((log.response_size / (1024 * 1024))) || 0;
+      totalAPICalls.value += 1;
+      return acc;
+    }, {});
+
+    // 总页数的计算
+    totalPages.value = Math.ceil(totalAPICalls.value / pageSize.value);
+
+    // 排序数据 - 确保按请求时间倒序初始化
+    sortData('called_at');
+
+  } catch (error) {
+    console.error('Error fetching API usage data', error);
+  }
+});
 </script>
 
 <style scoped lang="scss">
