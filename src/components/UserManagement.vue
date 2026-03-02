@@ -13,7 +13,11 @@
       </div>
       <!-- 搜索框 -->
       <div class="search-container">
-        <input v-model="searchQuery"  @input="searchUser" type="text" placeholder="搜索用戶名或郵箱" />
+        <BaseSearchInput
+          v-model="searchQuery"
+          @update:modelValue="searchUser"
+          placeholder="搜索用戶名或郵箱"
+        />
       </div>
     </div>
 
@@ -53,11 +57,15 @@
 
     <h3 v-else>🤷‍♂️<br>無用戶數據</h3>
     <!-- 分頁控制 -->
-    <div class="pagination-controls">
-      <button @click="prevPage" :disabled="currentPage === 1">上一頁</button>
-      <span>頁面 {{ currentPage }} / {{ totalPages }}</span>
-      <button @click="nextPage" :disabled="currentPage === totalPages">下一頁</button>
-    </div>
+    <BasePagination
+      :current-page="currentPage"
+      :total-pages="totalPages"
+      :page-size="pageSize"
+      :show-first-last="false"
+      info-format="simple"
+      container-class="pagination-controls"
+      @page-change="handlePageChange"
+    />
 
     <div class="logout-button-container">
       <button @click="logout">返回網站</button>
@@ -66,9 +74,14 @@
 </template>
 <script>
 import { userAPI, statsAPI } from '../api/index'; // 引入 API 模塊
+import { BasePagination, BaseSearchInput } from '@/components/common';
 
 export default {
   name: 'UserManagement',
+  components: {
+    BasePagination,
+    BaseSearchInput
+  },
   data() {
     return {
       users: [],
@@ -175,18 +188,9 @@ export default {
       this.currentPage = 1;  // 重置当前页为第一页
     },
 
-    // 上一页
-    prevPage() {
-      if (this.currentPage > 1) {
-        this.currentPage--;
-      }
-    },
-
-    // 下一页
-    nextPage() {
-      if (this.currentPage < this.totalPages) {
-        this.currentPage++;
-      }
+    // 处理分页变化
+    handlePageChange(page) {
+      this.currentPage = page;
     },
 
     // 詳細api

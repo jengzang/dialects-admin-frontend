@@ -43,11 +43,15 @@
     </table>
 
     <!-- 分頁控制 -->
-    <div class="pagination-controls">
-      <button @click="prevPage" :disabled="currentPage === 1">上一頁</button>
-      <span>頁面 {{ currentPage }} / {{ totalPages }}</span>
-      <button @click="nextPage" :disabled="currentPage === totalPages">下一頁</button>
-    </div>
+    <BasePagination
+      :current-page="currentPage"
+      :total-pages="totalPages"
+      :page-size="pageSize"
+      :show-first-last="false"
+      info-format="simple"
+      container-class="pagination-controls"
+      @page-change="handlePageChange"
+    />
   </div>
 </template>
 
@@ -55,10 +59,14 @@
 <script>
 import { ref, onMounted, computed } from 'vue';
 import api from '../../axios.js'; // 引入API请求配置
+import { BasePagination } from '@/components/common';
 import { formatTime } from "../../utils.js";  // 假设你有一个 utils.js 用来处理时间格式化
 
 export default {
   name: 'Custom',
+  components: {
+    BasePagination
+  },
   setup() {
     const data = ref([]);  // 定义所有数据
     const currentPage = ref(1);  // 当前页码
@@ -128,18 +136,9 @@ export default {
       return sortedData.slice(startIndex, startIndex + pageSize);
     });
 
-    // 上一页
-    const prevPage = () => {
-      if (currentPage.value > 1) {
-        currentPage.value--;
-      }
-    };
-
-    // 下一页
-    const nextPage = () => {
-      if (currentPage.value < totalPages.value) {
-        currentPage.value++;
-      }
+    // 处理分页变化
+    const handlePageChange = (page) => {
+      currentPage.value = page;
     };
 
     // 排序方法
@@ -163,8 +162,7 @@ export default {
       searchQuery,
       totalPages,
       currentPageData,
-      prevPage,
-      nextPage,
+      handlePageChange,
       sortData,
       getArrowClass,
       formatTime,

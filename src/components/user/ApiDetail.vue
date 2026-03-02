@@ -136,11 +136,15 @@
     </table>
 
     <!-- 分頁控制 -->
-    <div class="pagination-controls">
-      <button @click="prevPage" :disabled="currentPage === 1">上一頁</button>
-      <span>頁面 {{ currentPage }} / {{ totalPages }}</span>
-      <button @click="nextPage" :disabled="currentPage === totalPages">下一頁</button>
-    </div>
+    <BasePagination
+      :current-page="currentPage"
+      :total-pages="totalPages"
+      :page-size="pageSize"
+      :show-first-last="false"
+      info-format="simple"
+      container-class="pagination-controls"
+      @page-change="handlePageChange"
+    />
   </div>
 </template>
 
@@ -149,9 +153,13 @@
 <script>
 import { analyticsAPI } from '../../api/index'; // 引入 API 模塊
 import {formatTime} from "../../utils.js";
+import { BasePagination } from '@/components/common';
 
 export default {
   name: 'ApiDetail',
+  components: {
+    BasePagination
+  },
   data() {
     return {
       currentPage: 1,  // 当前页码
@@ -362,20 +370,10 @@ export default {
       this.currentPage = 1;  // 重置当前页为第一页
     },
 
-    // 上一页
-    prevPage() {
-      if (this.currentPage > 1) {
-        this.currentPage--;
-        this.fetchPageData();
-      }
-    },
-
-    // 下一页
-    nextPage() {
-      if (this.currentPage < this.totalPages) {
-        this.currentPage++;
-        this.fetchPageData();
-      }
+    // 处理分页变化
+    handlePageChange(page) {
+      this.currentPage = page;
+      this.fetchPageData();
     },
 
     // 更新当前页数据
