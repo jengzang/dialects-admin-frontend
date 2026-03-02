@@ -262,6 +262,72 @@ import queryGreenIcon from '@/assets/query_green.ico';
 
 ### Date Formatting
 
+Use the `useTimeFormat` composable for consistent time formatting:
+```javascript
+import { useTimeFormat } from '@/composables';
+
+export default {
+  setup() {
+    const { formatTime, formatExpireTime, formatOnlineTime } = useTimeFormat();
+    return { formatTime, formatExpireTime, formatOnlineTime };
+  },
+  // Use in template: {{ formatTime(timestamp) }}
+}
+```
+
+### Composables
+
+**Location:** `src/composables/`
+
+**useTable** - Table state management:
+```javascript
+import { useTable } from '@/composables';
+
+export default {
+  setup() {
+    const tableState = useTable([], {
+      pageSize: 30,
+      searchFields: ['username', 'email']
+    });
+
+    return {
+      ...tableState
+    };
+  },
+  methods: {
+    async fetchData() {
+      const data = await api.getData();
+      this.setData(data);
+    }
+  }
+}
+```
+
+**useTimeFormat** - Time formatting:
+```javascript
+import { useTimeFormat } from '@/composables';
+
+const { formatTime, formatExpireTime, formatOnlineTime, formatDate, formatDateTime } = useTimeFormat();
+
+// formatTime: 相对时间（1分钟前、2小时前）或绝对时间
+// formatExpireTime: 过期时间（已过期、30分钟后过期）
+// formatOnlineTime: 在线时长（2小时 30分钟）
+// formatDate: 日期格式（2026/03/02）
+// formatDateTime: 日期时间格式（2026/03/02 14:30:00）
+```
+
+**useApiStats** - API statistics:
+```javascript
+import { useApiStats } from '@/composables';
+
+const { calculateAllStats } = useApiStats();
+
+const stats = calculateAllStats(apiLogs);
+// Returns: { processedLogs, uniqueUsers, userStats, uniqueIPs, ipStats, apiCalls, totalAPICalls, totalUpload, totalDownload }
+```
+
+### Date Formatting (Legacy)
+
 Use `toLocaleString('zh-CN')` or `toLocaleDateString('zh-CN')` for consistent Chinese date formatting.
 
 ### Component Communication
@@ -363,7 +429,7 @@ Base: `window.ADMIN_BASE` (https://dialects.yzup.top/admin)
 - ✅ SessionManagement.vue - Now uses `userSessionAPI`
 - ✅ UserSessions.vue - Now uses `userSessionAPI`
 
-**Phase 2 In Progress: Component Architecture Refactoring**
+**Phase 2 Complete: Component Architecture Refactoring**
 - ✅ Created global CSS variables (`src/styles/variables.css`) - Apple green theme
 - ✅ Created common styles (`src/styles/common.css`) - Buttons, tables, forms, pagination
 - ✅ Created `src/components/common/` directory for reusable components
@@ -380,9 +446,35 @@ Base: `window.ADMIN_BASE` (https://dialects.yzup.top/admin)
 import { BasePagination, BaseSearchInput, BaseTable, StatsCard } from '@/components/common';
 ```
 
+**Phase 3 Complete: Composables for Business Logic**
+- ✅ Created `src/composables/` directory
+- ✅ Created `useTable.js` - Table state management (sorting, pagination, filtering)
+- ✅ Created `useTimeFormat.js` - Time formatting utilities (formatTime, formatExpireTime, formatOnlineTime, formatDate, formatDateTime)
+- ✅ Created `useApiStats.js` - API statistics calculation (user stats, IP stats, API calls, traffic)
+- ✅ Created `index.js` - Unified composables export
+
+**Composables Usage (Options API with setup):**
+```javascript
+import { useTable, useTimeFormat, useApiStats } from '@/composables';
+
+export default {
+  setup() {
+    const { formatTime, formatExpireTime } = useTimeFormat();
+    const { calculateAllStats } = useApiStats();
+
+    return {
+      formatTime,
+      formatExpireTime,
+      calculateAllStats
+    };
+  },
+  // ... rest of Options API
+}
+```
+
 **Remaining Work:**
-- Migrate remaining page components to views/ directory
 - Apply common components to existing components (SessionManagement, ApiDetail, etc.)
+- Apply composables to existing components to reduce code duplication
+- Migrate remaining page components to views/ directory
 - Extract UserForm, UserTable, CustomForm components
-- Phase 3: Composables for business logic (useTable, useTimeFormat, useApiStats)
 
