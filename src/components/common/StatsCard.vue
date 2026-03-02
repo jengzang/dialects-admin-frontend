@@ -5,37 +5,40 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'StatsCard',
-  props: {
-    number: {
-      type: [Number, String],
-      default: 0
-    },
-    label: {
-      type: String,
-      required: true
-    },
-    color: {
-      type: String,
-      default: 'var(--color-primary)'
-    }
+<script setup>
+import { computed } from 'vue'
+
+defineOptions({
+  name: 'StatsCard'
+})
+
+const props = defineProps({
+  number: {
+    type: [Number, String],
+    default: 0
   },
-  computed: {
-    formattedNumber() {
-      if (typeof this.number === 'number') {
-        return this.number.toLocaleString();
-      }
-      return this.number;
-    },
-    cardStyle() {
-      return {
-        borderTop: `3px solid ${this.color}`
-      };
-    }
+  label: {
+    type: String,
+    required: true
+  },
+  color: {
+    type: String,
+    default: 'var(--color-primary)'
   }
-};
+})
+
+const formattedNumber = computed(() => {
+  if (typeof props.number === 'number') {
+    return props.number.toLocaleString()
+  }
+  return props.number
+})
+
+const cardStyle = computed(() => {
+  return {
+    borderTop: `3px solid ${props.color}`
+  }
+})
 </script>
 
 <style scoped lang="scss">

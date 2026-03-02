@@ -8,26 +8,28 @@
   />
 </template>
 
-<script>
-export default {
+<script setup>
+defineOptions({
   name: 'BaseSearchInput',
-  inheritAttrs: false,
-  props: {
-    modelValue: {
-      type: String,
-      default: ''
-    },
-    placeholder: {
-      type: String,
-      default: '搜索...'
-    },
-    inputClass: {
-      type: String,
-      default: 'search-input'
-    }
+  inheritAttrs: false
+})
+
+defineProps({
+  modelValue: {
+    type: String,
+    default: ''
   },
-  emits: ['update:modelValue']
-};
+  placeholder: {
+    type: String,
+    default: '搜索...'
+  },
+  inputClass: {
+    type: String,
+    default: 'search-input'
+  }
+})
+
+defineEmits(['update:modelValue'])
 </script>
 
 <style scoped lang="scss">

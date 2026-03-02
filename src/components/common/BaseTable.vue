@@ -52,53 +52,54 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'BaseTable',
-  props: {
-    columns: {
-      type: Array,
-      required: true,
-      // columns: [{ key: 'username', label: '用戶名', sortable: true, formatter: (val) => val }]
-    },
-    data: {
-      type: Array,
-      default: () => []
-    },
-    sortable: {
-      type: Boolean,
-      default: true
-    },
-    loading: {
-      type: Boolean,
-      default: false
-    }
+<script setup>
+import { ref } from 'vue'
+
+defineOptions({
+  name: 'BaseTable'
+})
+
+defineProps({
+  columns: {
+    type: Array,
+    required: true,
+    // columns: [{ key: 'username', label: '用戶名', sortable: true, formatter: (val) => val }]
   },
-  data() {
-    return {
-      sortKey: '',
-      sortOrder: 'asc'
-    };
+  data: {
+    type: Array,
+    default: () => []
   },
-  emits: ['sort'],
-  methods: {
-    handleSort(key) {
-      if (this.sortKey === key) {
-        this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
-      } else {
-        this.sortKey = key;
-        this.sortOrder = 'asc';
-      }
-      this.$emit('sort', { key: this.sortKey, order: this.sortOrder });
-    },
-    formatCell(value, column) {
-      if (column.formatter && typeof column.formatter === 'function') {
-        return column.formatter(value);
-      }
-      return value;
-    }
+  sortable: {
+    type: Boolean,
+    default: true
+  },
+  loading: {
+    type: Boolean,
+    default: false
   }
-};
+})
+
+const emit = defineEmits(['sort'])
+
+const sortKey = ref('')
+const sortOrder = ref('asc')
+
+const handleSort = (key) => {
+  if (sortKey.value === key) {
+    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    sortKey.value = key
+    sortOrder.value = 'asc'
+  }
+  emit('sort', { key: sortKey.value, order: sortOrder.value })
+}
+
+const formatCell = (value, column) => {
+  if (column.formatter && typeof column.formatter === 'function') {
+    return column.formatter(value)
+  }
+  return value
+}
 </script>
 
 <style scoped lang="scss">
