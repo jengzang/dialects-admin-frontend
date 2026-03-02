@@ -7,7 +7,7 @@ import EditUser from '../components/user/EditUser.vue'
 import UserStats from '../components/user/UserStats.vue'
 import Login from '../components/Login.vue'
 import CreateUser from '../components/user/CreateUser.vue'
-import ApiDetail from "../components/user/ApiDetail.vue"
+import ApiDetail from "../components/ApiDetail.vue"
 import Custom from "../components/custom/Custom.vue"
 import CustomPerUser from "../components/custom/CustomPerUser.vue"
 import CreateCustom from "../components/custom/CreateCustom.vue"

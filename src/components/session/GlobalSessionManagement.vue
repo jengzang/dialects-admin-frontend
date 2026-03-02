@@ -223,7 +223,7 @@ const totalSessions = ref(0);
 const loadStats = async () => {
   try {
     const response = await userSessionAPI.getStats();
-    stats.value = response.stats || {};
+    stats.value = response || {};
   } catch (error) {
     console.error('Failed to load stats:', error);
     ElMessage.error('加載統計數據失敗');

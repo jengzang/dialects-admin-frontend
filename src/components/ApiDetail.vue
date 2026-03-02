@@ -153,8 +153,8 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { analyticsAPI } from '../../api/index';
-import { formatTime } from "../../utils.js";
+import { analyticsAPI } from '../api';
+import { formatTime } from "../utils.js";
 import { BasePagination } from '@/components/common';
 
 const router = useRouter();

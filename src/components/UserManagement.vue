@@ -335,7 +335,8 @@ table {
   justify-content: center;
   margin-top: $spacing-md;
 
-  button {
+  :deep(button),
+  :deep(.pagination-btn) {
     @include button-variant($color-primary, $color-primary-dark);
     padding: 12px 24px;
     margin: 0 12px;
@@ -348,7 +349,7 @@ table {
     }
   }
 
-  span {
+  :deep(span) {
     font-size: $font-size-md;
     color: $color-text-primary;
     align-self: center;
