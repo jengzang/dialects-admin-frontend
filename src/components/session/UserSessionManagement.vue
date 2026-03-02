@@ -1,12 +1,18 @@
 <template>
   <div class="user-session-management">
-    <el-page-header @back="goBack" :content="`用戶 ${username} 的會話管理`" />
+    <el-page-header @back="goBack">
+      <template #content>
+        <img :src="queryGreenIcon" class="header-icon" />
+        <span>用戶 {{ username }} 的會話管理</span>
+      </template>
+    </el-page-header>
 
     <!-- Statistics Cards -->
     <el-row :gutter="20" class="stats-cards">
       <el-col :span="4">
         <el-card shadow="hover">
           <div class="stat-item">
+            <img :src="queryGreenIcon" class="stat-icon" />
             <div class="stat-value">{{ userStats.login_count || 0 }}</div>
             <div class="stat-label">登錄次數</div>
           </div>
@@ -15,6 +21,7 @@
       <el-col :span="4">
         <el-card shadow="hover">
           <div class="stat-item">
+            <img :src="queryGreenIcon" class="stat-icon" />
             <div class="stat-value">{{ userStats.failed_attempts || 0 }}</div>
             <div class="stat-label">登錄失敗次數</div>
           </div>
@@ -23,6 +30,7 @@
       <el-col :span="4">
         <el-card shadow="hover">
           <div class="stat-item">
+            <img :src="queryGreenIcon" class="stat-icon" />
             <div class="stat-value">{{ userStats.register_ip || 'N/A' }}</div>
             <div class="stat-label">註冊 IP</div>
           </div>
@@ -31,6 +39,7 @@
       <el-col :span="4">
         <el-card shadow="hover">
           <div class="stat-item">
+            <img :src="queryGreenIcon" class="stat-icon" />
             <div class="stat-value">{{ formatDuration(userStats.total_online_seconds) }}</div>
             <div class="stat-label">總在線時長</div>
           </div>
@@ -39,6 +48,7 @@
       <el-col :span="4">
         <el-card shadow="hover">
           <div class="stat-item">
+            <img :src="queryGreenIcon" class="stat-icon" />
             <div class="stat-value">{{ formatDate(userStats.last_login) }}</div>
             <div class="stat-label">最近一次登錄</div>
           </div>
@@ -139,6 +149,7 @@
 <script>
 import userSessionAPI from '@/api/userSession';
 import axios from 'axios';
+import queryGreenIcon from '@/assets/query_green.ico';
 
 export default {
   name: 'UserSessionManagement',
@@ -151,7 +162,8 @@ export default {
       recentIPs: [],
       loading: false,
       showRevoked: true,
-      onlySuspicious: false
+      onlySuspicious: false,
+      queryGreenIcon: queryGreenIcon
     };
   },
   mounted() {
@@ -319,12 +331,29 @@ export default {
   padding: 20px;
 }
 
+.header-icon {
+  width: 24px;
+  height: 24px;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
 .stats-cards {
   margin: 20px 0;
 }
 
 .stat-item {
   text-align: center;
+  position: relative;
+}
+
+.stat-icon {
+  width: 32px;
+  height: 32px;
+  opacity: 0.15;
+  position: absolute;
+  top: 10px;
+  right: 10px;
 }
 
 .stat-value {

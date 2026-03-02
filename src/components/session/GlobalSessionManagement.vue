@@ -1,12 +1,16 @@
 <template>
   <div class="global-session-management">
-    <h2>全局會話管理系統</h2>
+    <div class="page-header">
+      <img :src="queryGreenIcon" class="header-icon" />
+      <h2>全局會話管理系統</h2>
+    </div>
 
     <!-- Statistics Dashboard -->
     <el-row :gutter="20" class="stats-dashboard">
       <el-col :span="3">
         <el-card shadow="hover">
           <div class="stat-item">
+            <img :src="queryGreenIcon" class="stat-icon" />
             <div class="stat-value">{{ stats.total_sessions || 0 }}</div>
             <div class="stat-label">總會話數</div>
           </div>
@@ -15,6 +19,7 @@
       <el-col :span="3">
         <el-card shadow="hover">
           <div class="stat-item">
+            <img :src="queryGreenIcon" class="stat-icon" />
             <div class="stat-value">{{ stats.active_sessions || 0 }}</div>
             <div class="stat-label">活躍會話</div>
           </div>
@@ -23,6 +28,7 @@
       <el-col :span="3">
         <el-card shadow="hover">
           <div class="stat-item">
+            <img :src="queryGreenIcon" class="stat-icon" />
             <div class="stat-value">{{ stats.revoked_sessions || 0 }}</div>
             <div class="stat-label">已撤銷</div>
           </div>
@@ -31,6 +37,7 @@
       <el-col :span="3">
         <el-card shadow="hover">
           <div class="stat-item">
+            <img :src="queryGreenIcon" class="stat-icon" />
             <div class="stat-value">{{ stats.expired_sessions || 0 }}</div>
             <div class="stat-label">已過期</div>
           </div>
@@ -39,6 +46,7 @@
       <el-col :span="3">
         <el-card shadow="hover">
           <div class="stat-item">
+            <img :src="queryGreenIcon" class="stat-icon" />
             <div class="stat-value" style="color: #f56c6c;">{{ stats.suspicious_sessions || 0 }}</div>
             <div class="stat-label">可疑會話</div>
           </div>
@@ -47,6 +55,7 @@
       <el-col :span="3">
         <el-card shadow="hover">
           <div class="stat-item">
+            <img :src="queryGreenIcon" class="stat-icon" />
             <div class="stat-value">{{ stats.unique_users_with_sessions || 0 }}</div>
             <div class="stat-label">在線用戶</div>
           </div>
@@ -55,6 +64,7 @@
       <el-col :span="3">
         <el-card shadow="hover">
           <div class="stat-item">
+            <img :src="queryGreenIcon" class="stat-icon" />
             <div class="stat-value">{{ formatHours(stats.total_online_hours) }}</div>
             <div class="stat-label">總在線時長</div>
           </div>
@@ -63,6 +73,7 @@
       <el-col :span="3">
         <el-card shadow="hover">
           <div class="stat-item">
+            <img :src="queryGreenIcon" class="stat-icon" />
             <div class="stat-value">{{ formatHours(stats.avg_session_duration_hours) }}</div>
             <div class="stat-label">平均會話時長</div>
           </div>
@@ -188,6 +199,7 @@
 
 <script>
 import userSessionAPI from '@/api/userSession';
+import queryGreenIcon from '@/assets/query_green.ico';
 
 export default {
   name: 'GlobalSessionManagement',
@@ -207,7 +219,8 @@ export default {
       },
       currentPage: 1,
       pageSize: 20,
-      totalSessions: 0
+      totalSessions: 0,
+      queryGreenIcon: queryGreenIcon
     };
   },
   mounted() {
@@ -348,12 +361,42 @@ export default {
   padding: 20px;
 }
 
+.page-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.page-header h2 {
+  margin: 0;
+}
+
+.header-icon {
+  width: 32px;
+  height: 32px;
+  margin-right: 12px;
+}
+
 .stats-dashboard {
   margin: 20px 0;
 }
 
 .stat-item {
   text-align: center;
+  position: relative;
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.stat-icon {
+  width: 28px;
+  height: 28px;
+  opacity: 0.15;
+  position: absolute;
+  top: 8px;
+  right: 8px;
 }
 
 .stat-value {

@@ -233,7 +233,6 @@ export default {
         }
       });
     },
-    },
     logout() {
       // 退出後跳轉到 WEB_BASE
       window.location.href = window.WEB_BASE;
@@ -251,7 +250,7 @@ export default {
   },
   mounted() {
     this.getUsers();  // 加載用戶列表
-  }
+  },
 };
 </script>
 
