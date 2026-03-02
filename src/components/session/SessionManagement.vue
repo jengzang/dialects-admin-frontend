@@ -310,9 +310,12 @@ export default {
 };
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@import '@/styles/abstracts/variables';
+@import '@/styles/abstracts/mixins';
+
 .session-management {
-  padding: 20px;
+  padding: $spacing-md;
   max-width: 1400px;
   margin: 0 auto;
 }
@@ -326,41 +329,41 @@ h1 {
 .stats-container {
   display: flex;
   justify-content: center;
-  gap: 20px;
+  gap: $spacing-md;
   margin-bottom: 30px;
   flex-wrap: wrap;
 }
 
 .stats-card {
-  padding: 20px 30px;
+  padding: $spacing-md 30px;
   background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border-radius: $radius-md;
+  box-shadow: $shadow-md;
   text-align: center;
   min-width: 150px;
-  transition: transform 0.3s ease;
-}
+  transition: transform $transition-normal;
 
-.stats-card:hover {
-  transform: translateY(-5px);
-}
+  &:hover {
+    transform: translateY(-5px);
+  }
 
-.stats-card .number {
-  font-size: 36px;
-  font-weight: bold;
-  color: #2c6e49;
-}
+  .number {
+    font-size: 36px;
+    font-weight: bold;
+    color: #2c6e49;
+  }
 
-.stats-card .label {
-  font-size: 14px;
-  color: #666;
-  margin-top: 5px;
+  .label {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+    margin-top: $spacing-xs;
+  }
 }
 
 .controls {
   display: flex;
   gap: 8px;
-  margin-bottom: 20px;
+  margin-bottom: $spacing-md;
   flex-wrap: wrap;
   align-items: center;
 }
@@ -368,100 +371,87 @@ h1 {
 .search-input {
   flex: 1;
   min-width: 250px;
-  padding: 10px 15px;
-  font-size: 16px;
-  border: 2px solid #4CAF50;
-  border-radius: 12px;
+  padding: $spacing-sm 15px;
+  font-size: $font-size-md;
+  border: 2px solid $color-primary;
+  border-radius: $radius-md;
   outline: none;
-  transition: border-color 0.3s ease;
-}
+  transition: border-color $transition-normal;
 
-.search-input:focus {
-  border-color: #217825;
+  &:focus {
+    border-color: $color-primary-dark;
+  }
 }
 
 button {
-  padding: 10px 20px;
-  font-size: 16px;
-  border-radius: 12px;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-button:hover:not(:disabled) {
-  background-color: #217825;
-  transform: scale(1.05);
-}
-
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
+  @include button-variant($color-primary, $color-primary-dark);
+  padding: $spacing-sm $spacing-md;
+  font-size: $font-size-md;
+  border-radius: $radius-md;
 }
 
 .warning-btn {
-  background-color: #ff9800;
-}
+  background-color: $color-warning;
 
-.warning-btn:hover:not(:disabled) {
-  background-color: #f57c00;
+  &:hover:not(:disabled) {
+    background-color: darken($color-warning, 10%);
+  }
 }
 
 .revoke-btn {
-  background-color: #f44336;
+  background-color: $color-danger;
   padding: 6px 12px;
-  font-size: 14px;
-}
+  font-size: $font-size-sm;
 
-.revoke-btn:hover {
-  background-color: #d32f2f;
+  &:hover {
+    background-color: darken($color-danger, 10%);
+  }
 }
 
 .table-container {
   overflow-x: auto;
-  margin-bottom: 20px;
+  margin-bottom: $spacing-md;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  background: white;
-  border-radius: 12px;
+  background: $color-background-white;
+  border-radius: $radius-md;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
+  box-shadow: $shadow-md;
 
-thead {
-  background-color: #4CAF50;
-  color: white;
-}
+  thead {
+    background-color: $color-primary;
+    color: $color-text-white;
+  }
 
-th, td {
-  padding: 12px;
-  text-align: left;
-  border-bottom: 1px solid #ddd;
-}
+  th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
 
-th {
-  font-weight: bold;
-}
+  th {
+    font-weight: bold;
+  }
 
-tbody tr:hover {
-  background-color: #f5f5f5;
-}
+  tbody {
+    tr {
+      @include table-row-hover(#f5f5f5);
 
-tbody tr:last-child td {
-  border-bottom: none;
+      &:last-child td {
+        border-bottom: none;
+      }
+    }
+  }
 }
 
 .loading, .no-data {
   text-align: center;
   padding: 40px;
-  color: #666;
-  font-size: 18px;
+  color: $color-text-secondary;
+  font-size: $font-size-lg;
 }
 
 .pagination {
@@ -469,12 +459,12 @@ tbody tr:last-child td {
   justify-content: center;
   align-items: center;
   gap: 15px;
-  margin-bottom: 20px;
-}
+  margin-bottom: $spacing-md;
 
-.pagination span {
-  font-size: 16px;
-  color: #666;
+  span {
+    font-size: $font-size-md;
+    color: $color-text-secondary;
+  }
 }
 
 .back-button {
@@ -483,27 +473,27 @@ tbody tr:last-child td {
   margin-top: 30px;
 }
 
-@media (max-width: 768px) {
+@include respond-to(tablet) {
   .stats-container {
     flex-direction: column;
     align-items: center;
-    gap:10px
+    gap: $spacing-sm;
   }
 
   .controls {
     flex-direction: column;
   }
-  
 
   table {
-    font-size: 14px;
+    font-size: $font-size-sm;
   }
 
   th, td {
     padding: 8px;
   }
-  .stats-card{
-    padding: 10px 20px;
+
+  .stats-card {
+    padding: $spacing-sm $spacing-md;
   }
 }
 </style>

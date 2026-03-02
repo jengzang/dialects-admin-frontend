@@ -326,9 +326,11 @@ export default {
 };
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@import '@/styles/abstracts/variables';
+
 .user-session-management {
-  padding: 20px;
+  padding: $spacing-md;
 }
 
 .header-icon {
@@ -339,7 +341,7 @@ export default {
 }
 
 .stats-cards {
-  margin: 20px 0;
+  margin: $spacing-md 0;
 }
 
 .stat-item {
@@ -352,8 +354,8 @@ export default {
   height: 32px;
   opacity: 0.15;
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: $spacing-sm;
+  right: $spacing-sm;
 }
 
 .stat-value {
@@ -364,16 +366,16 @@ export default {
 }
 
 .stat-label {
-  font-size: 14px;
+  font-size: $font-size-sm;
   color: #909399;
 }
 
 .action-bar {
-  margin: 20px 0;
+  margin: $spacing-md 0;
 }
 
 .sessions-table,
 .ip-stats {
-  margin: 20px 0;
+  margin: $spacing-md 0;
 }
 </style>

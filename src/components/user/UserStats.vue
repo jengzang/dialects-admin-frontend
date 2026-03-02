@@ -270,65 +270,65 @@ export default {
 };
 </script>
 
-<style scoped>
-/* 設置整體容器 */
+<style scoped lang="scss">
+@import '@/styles/abstracts/variables';
+@import '@/styles/abstracts/mixins';
+
 .stats-container {
-  margin: 20px;
+  margin: $spacing-md;
   font-family: Arial, sans-serif;
-  padding: 10px;
+  padding: $spacing-sm;
 }
 
-
 .user-info {
-  margin-bottom: 20px;
+  margin-bottom: $spacing-md;
 }
 
 h3 {
-  color: #333;
+  color: $color-text-primary;
 }
 
 .stats-card {
   background: #f5f8f1;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  font-size: 16px;
-  margin-bottom: 20px;
-}
+  padding: $spacing-md;
+  border-radius: $radius-sm;
+  box-shadow: $shadow-md;
+  font-size: $font-size-md;
+  margin-bottom: $spacing-md;
 
-.stats-card div {
-  margin-bottom: 10px;
+  div {
+    margin-bottom: $spacing-sm;
+  }
 }
 
 strong {
   color: #007bff;
 }
 
-/* 表格样式 */
 table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 20px;
-  background-color: #f1f8e9; /* 苹果绿色背景 */
-  border: 1px solid #81c784; /* 苹果绿色边框 */
-  border-radius: 8px;
-  overflow: hidden; /* 避免圆角被覆盖 */
-}
+  margin-top: $spacing-md;
+  background-color: $color-background;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  overflow: hidden;
 
-th, td {
-  padding: 10px;
-  text-align: center; /* 表格内容居中 */
-  border-top: 1px solid #81c784; /* 苹果绿色边框 */
-  word-wrap: break-word; /* 自动换行 */
-  max-width: 200px; /* 设置最大宽度 */
-  overflow: hidden; /* 超出内容隐藏 */
-  text-overflow: ellipsis; /* 文字溢出时显示省略号 */
-}
+  th, td {
+    padding: $spacing-sm;
+    text-align: center;
+    border-top: 1px solid $color-border;
+    word-wrap: break-word;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 
-th {
-  background-color: #a5d6a7; /* 更深的绿色作为表头背景 */
-  color: #fff;
-  white-space: nowrap; /* 防止标题文字换行 */
+  th {
+    background-color: $color-primary-light;
+    color: $color-text-white;
+    white-space: nowrap;
+  }
 }
 
 .browser-cell {
@@ -340,9 +340,9 @@ th {
   top: 0;
   left: 0;
   background-color: rgba(0, 0, 0, 0.75);
-  color: #fff;
-  padding: 10px;
-  border-radius: 5px;
+  color: $color-text-white;
+  padding: $spacing-sm;
+  border-radius: $spacing-xs;
   width: 250px;
   max-height: 150px;
   overflow-y: auto;
@@ -350,61 +350,57 @@ th {
   z-index: 1000;
 }
 
-/* 当鼠标悬停时，显示工具提示并使其脱离表格的限制 */
 .browser-cell:hover .user-agent-tooltip {
   display: block;
-  position: fixed;  /* 使工具提示固定在视口 */
-  top: 10px;        /* 你可以调整这里的位置 */
-  left: 10px;       /* 你可以调整这里的位置 */
-  z-index: 1000;    /* 让工具提示层级更高，避免被其他内容覆盖 */
+  position: fixed;
+  top: $spacing-sm;
+  left: $spacing-sm;
+  z-index: 1000;
 }
 
 .table-wrapper {
   width: 100%;
-  text-align: center;     /* 子元素居中 */
-  overflow-x: auto;       /* 超宽时横向滚动 */
-  border-radius: 8px;
+  text-align: center;
+  overflow-x: auto;
+  border-radius: $radius-sm;
 }
 
 .dynamic-table {
-  display: inline-table;  /* 🔥 重点：用 inline-table 而不是 width: 100% */
+  display: inline-table;
   border-collapse: collapse;
-  margin: 0 auto;         /* 保险起见，也居中处理 */
-  background-color: #f1f8e9;
-  border: 1px solid #81c784;
-  border-radius: 8px;
+  margin: 0 auto;
+  background-color: $color-background;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
   text-align: center;
+
+  th, td {
+    padding: $spacing-sm;
+    text-align: center;
+    border-top: 1px solid $color-border;
+    word-wrap: break-word;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  th {
+    background-color: $color-primary-light;
+    color: $color-text-white;
+  }
 }
 
-/* 其他原有样式保持 */
-.dynamic-table th, .dynamic-table td {
-  padding: 10px;
-  text-align: center;
-  border-top: 1px solid #81c784;
-  word-wrap: break-word;
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.dynamic-table th {
-  background-color: #a5d6a7;
-  color: #fff;
-}
-
-
-/* 移动端适配 */
-@media (max-width: 768px) {
+@include respond-to(tablet) {
   .stats-container {
-    margin: 10px;
-    padding: 5px;
+    margin: $spacing-sm;
+    padding: $spacing-xs;
   }
 
   button {
-    padding: 10px 20px;
-    font-size: 14px;
-    min-width: 100px; /* 在小屏幕上减少按钮宽度 */
+    padding: $spacing-sm $spacing-md;
+    font-size: $font-size-sm;
+    min-width: 100px;
   }
 
   .stats-card {
@@ -412,9 +408,9 @@ th {
   }
 
   table {
-    font-size: 14px;  /* 更小的字体 */
+    font-size: $font-size-sm;
     overflow-x: auto;
-    display: block;  /* 使表格可滚动 */
+    display: block;
   }
 
   th, td {
@@ -422,22 +418,20 @@ th {
   }
 }
 
-@media (max-width: 480px) {
+@include respond-to(mobile) {
   button {
     padding: 8px 16px;
-    font-size: 12px; /* 更小的字体 */
+    font-size: $font-size-xs;
   }
 
   .stats-card {
-    padding: 10px;
+    padding: $spacing-sm;
   }
 
   table {
-    font-size: 12px; /* 更小的字体 */
+    font-size: $font-size-xs;
   }
 }
-
-
 </style>
 
 

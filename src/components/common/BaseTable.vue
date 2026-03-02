@@ -101,10 +101,12 @@ export default {
 };
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@import '@/styles/abstracts/variables';
+
 .sort-arrow {
-  margin-left: 5px;
-  font-size: 12px;
+  margin-left: $spacing-xs;
+  font-size: $font-size-xs;
 }
 
 .sort-placeholder {

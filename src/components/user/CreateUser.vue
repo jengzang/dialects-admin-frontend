@@ -93,108 +93,88 @@ export default {
 };
 </script>
 
-<style scoped>
-/* 标题居中 */
+<style scoped lang="scss">
+@import '@/styles/abstracts/variables';
+@import '@/styles/abstracts/mixins';
+
 h2 {
   text-align: center;
-  color: #333;
-  margin-bottom: 20px;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
 }
 
-/* 表單樣式 */
 .form-group {
   width: 100%;
-  max-width: 600px; /* 设置表单最大宽度 */
-  margin: 0 auto; /* 居中显示表单 */
+  max-width: 600px;
+  margin: 0 auto;
+
+  label {
+    font-weight: bold;
+    color: $color-text-primary;
+  }
+
+  input, select {
+    font-family: 'Arial', sans-serif;
+  }
 }
 
 input, select {
   width: 100%;
   padding: 12px;
-  font-size: 16px;
-  border-radius: 12px; /* 更加圆润的输入框 */
-  margin-top: 10px;
+  font-size: $font-size-md;
+  border-radius: $radius-md;
+  margin-top: $spacing-sm;
   border: 1px solid #ccc;
   background-color: #f9f9f9;
-  transition: all 0.3s ease;
-  box-sizing: border-box; /* 确保内边距不会让元素撑开 */
-}
+  transition: all $transition-normal;
+  box-sizing: border-box;
+  font-family: 'Arial', sans-serif;
 
-/* 输入框聚焦时的效果 */
-input:focus, select:focus {
-  border-color: #28a745; /* 绿色的聚焦边框 */
-  outline: none;
-  box-shadow: 0 0 8px rgba(40, 167, 69, 0.3); /* 绿色阴影 */
+  &:focus {
+    border-color: #28a745;
+    outline: none;
+    box-shadow: 0 0 8px rgba(40, 167, 69, 0.3);
+  }
 }
 
 .button-container {
   width: 100%;
   max-width: 600px;
-  margin: 20px auto;       /* 居中容器 */
-  display: flex;           /* 使用 flex 布局 */
-  justify-content: center; /* 水平居中 */
-  align-items: center;     /* 垂直居中 */
-}
-
-/* 按钮样式 */
-button {
-  padding: 12px 20px;
-  font-size: 16px;
-  border-radius: 12px;
-  cursor: pointer;
-  background-color: #28a745; /* 绿色按钮 */
-  color: white;
-  border: none;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-  width: auto;  /* 按钮宽度自适应 */
-  margin-top: 10px;
-  display: inline-flex;     /* 改为 inline-flex */
-  justify-content: center;
-  align-items: center;
-}
-
-/* 按钮悬停效果 */
-button:hover {
-  background-color: #218838; /* 深绿色 */
-  transform: scale(1.05); /* 按钮放大 */
-}
-
-/* 按钮点击时的酷炫效果 */
-button:active {
-  transform: scale(0.98); /* 按钮点击时稍微缩小 */
-  background-color: #1e7e34; /* 点击后的深绿色 */
-}
-
-button:disabled {
-  background-color: #d6e9d7; /* 禁用按钮的颜色 */
-  cursor: not-allowed;
-}
-
-/* 表单区域 */
-.form-group label {
-  font-weight: bold;
-  color: #333;
-}
-
-.form-group input, .form-group select {
-  font-family: 'Arial', sans-serif; /* 苹果风格的字体 */
-}
-
-/* 让所有的表单控件都更加现代 */
-input, select {
-  font-family: 'Arial', sans-serif;
-}
-
-/* 返回首页按钮容器居中 */
-.logout-button-container {
-  width: 100%;
-  max-width: 600px;
-  margin: 20px auto;
+  margin: $spacing-md auto;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
+button {
+  @include button-variant(#28a745, #218838);
+  padding: 12px $spacing-md;
+  font-size: $font-size-md;
+  border-radius: $radius-md;
+  width: auto;
+  margin-top: $spacing-sm;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+
+  &:active {
+    transform: scale(0.98);
+    background-color: #1e7e34;
+  }
+
+  &:disabled {
+    background-color: #d6e9d7;
+  }
+}
+
+.logout-button-container {
+  width: 100%;
+  max-width: 600px;
+  margin: $spacing-md auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 </style>
 
 

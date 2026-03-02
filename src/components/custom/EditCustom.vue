@@ -256,8 +256,10 @@ export default {
 
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@import '@/styles/abstracts/variables';
+
 .el-table {
-  margin-bottom: 20px;
+  margin-bottom: $spacing-md;
 }
 </style>

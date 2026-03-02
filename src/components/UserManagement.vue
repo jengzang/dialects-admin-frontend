@@ -258,247 +258,214 @@ export default {
 };
 </script>
 
-<style scoped>
-/* 一些简单的样式 */
+<style scoped lang="scss">
+@import '@/styles/abstracts/variables';
+@import '@/styles/abstracts/mixins';
+
 form div {
   margin-bottom: 15px;
 }
 
 .button-container {
   display: flex;
-  justify-content: center;  /* 按钮居中显示 */
-  gap: 5px;                    /* 按钮间距 */
-  flex-wrap: nowrap;            /* 强制按钮不换行 */
-  overflow: hidden;             /* 超出部分隐藏 */
-  width: 100%;                  /* 容器宽度为100% */
-  white-space: nowrap;          /* 保证按钮文本不换行 */
+  justify-content: center;
+  gap: $spacing-xs;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  width: 100%;
+  white-space: nowrap;
+
+  button {
+    @include button-variant($color-primary, $color-primary-dark);
+    padding: 8px 12px;
+    font-size: $font-size-sm;
+    border-radius: $radius-md;
+  }
 }
 
-.button-container button {
-  padding: 8px 12px;
-  font-size: 14px;
-  border-radius: 12px;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
+.button-container0 {
+  display: flex;
+  justify-content: center;
+  gap: $spacing-sm;
+  flex-wrap: wrap;
+  max-width: 650px;
+  width: 100%;
 
-.button-container button:hover {
-  background-color: #217825;
-  transform: scale(1.05);
-}
-
-.button-container0 button {
-  padding: 10px 20px;
-  font-size: 16px;
-  border-radius: 12px;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.button-container0 button:hover {
-  background-color: #217825;
-  transform: scale(1.05);
+  button {
+    @include button-variant($color-primary, $color-primary-dark);
+    padding: $spacing-sm $spacing-md;
+    font-size: $font-size-md;
+    border-radius: $radius-md;
+    margin: 0;
+  }
 }
 
 input {
-  padding: 10px;
-  margin-top: 5px;
+  padding: $spacing-sm;
+  margin-top: $spacing-xs;
   width: 100%;
-  border-radius: 12px;
+  border-radius: $radius-md;
   border: 1px solid #ccc;
   background-color: #f9f9f9;
-  font-size: 16px;
-  transition: border-color 0.3s ease;
-}
+  font-size: $font-size-md;
+  transition: border-color $transition-normal;
 
-input:focus {
-  border-color: #217825;  /* 聚焦时输入框的绿色边框 */
-  outline: none;
+  &:focus {
+    border-color: $color-primary-dark;
+    outline: none;
+  }
 }
 
 table {
-  width: 80%;  /* 可根据需要调整宽度 */
+  width: 80%;
   border-collapse: collapse;
-  margin: 20px auto 0;
-  border-radius: 12px;
+  margin: $spacing-md auto 0;
+  border-radius: $radius-md;
   overflow: hidden;
-  background-color: #f1f8e9;  /* 苹果绿色背景 */
-  border: 1px solid #81c784; /* 苹果绿色边框 */
-}
+  background-color: $color-background;
+  border: 1px solid $color-border;
 
-th, td {
-  padding: 12px 18px;
-  text-align: left;
-  font-size: 16px;
-}
+  th, td {
+    padding: 12px 18px;
+    text-align: left;
+    font-size: $font-size-md;
+  }
 
-th {
-  background-color: #a5d6a7;  /* 更深的绿色作为表头背景 */
-  color: #333;
-  font-weight: 600;
-  white-space: nowrap;  /* 防止表头文字换行 */
-}
+  th {
+    background-color: $color-primary-light;
+    color: $color-text-primary;
+    font-weight: 600;
+    white-space: nowrap;
+  }
 
-tr:nth-child(even) {
-  background-color: #f9f9f9;
-}
+  tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
 
-tr:hover {
-  background-color: rgba(187, 234, 196, 0.34);  /* 行悬停时的背景颜色 */
+  tr:hover {
+    background-color: rgba(187, 234, 196, 0.34);
+  }
 }
 
 .arrow-up::after {
   content: '↑';
-  margin-left: 5px;
-  font-size: 14px;
+  margin-left: $spacing-xs;
+  font-size: $font-size-sm;
 }
 
 .arrow-down::after {
   content: '↓';
-  margin-left: 5px;
-  font-size: 14px;
+  margin-left: $spacing-xs;
+  font-size: $font-size-sm;
 }
 
 .pagination-controls {
   display: flex;
   justify-content: center;
-  margin-top: 20px;
-}
+  margin-top: $spacing-md;
 
-.pagination-controls button {
-  padding: 12px 24px;
-  margin: 0 12px;
-  background-color: #4CAF50; /* 按钮的苹果绿色 */
-  color: white;
-  border: none;
-  border-radius: 20px; /* 圆角效果 */
-  font-size: 16px;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-  max-width: 120px;
-}
+  button {
+    @include button-variant($color-primary, $color-primary-dark);
+    padding: 12px 24px;
+    margin: 0 12px;
+    border-radius: 20px;
+    font-size: $font-size-md;
+    max-width: 120px;
 
-.pagination-controls button:hover {
-  background-color: #217825;
-  transform: scale(1.05);
-}
+    &:disabled {
+      background-color: rgba(42, 175, 53, 0.34);
+    }
+  }
 
-.pagination-controls button:disabled {
-  background-color: rgba(42, 175, 53, 0.34);
-  cursor: not-allowed;
-}
-
-.pagination-controls span {
-  font-size: 16px;
-  color: #333;
-  align-self: center;
+  span {
+    font-size: $font-size-md;
+    color: $color-text-primary;
+    align-self: center;
+  }
 }
 
 .top-controls {
   display: flex;
-  justify-content: center!important;  /* 居中按钮和搜索框 */
-  align-items: center;      /* 垂直居中 */
-  gap: 10px;                /* 按钮和搜索框之间的间距 */
-  flex-wrap: wrap;          /* 如果空间不足，允许换行 */
-  width: 100%;              /* 确保容器宽度为100% */
+  justify-content: center !important;
+  align-items: center;
+  gap: $spacing-sm;
+  flex-wrap: wrap;
+  width: 100%;
 }
 
-/* 按钮容器，确保按钮水平居中 */
-.button-container0 {
-  display: flex;
-  justify-content: center;  /* 水平居中按钮 */
-  gap: 10px;                /* 按钮之间的间距 */
-  flex-wrap: wrap;          /* 如果空间不足，允许换行 */
-  max-width: 650px;         /* 最大宽度控制 */
-  width: 100%;              /* 确保按钮容器宽度为100% */
-}
-.button-container0 button{
-  margin:0;
-}
-/* 搜索框容器 */
 .search-container {
   display: flex;
-  justify-content: center;  /* 让搜索框居中 */
-  align-items: center;      /* 垂直居中 */
-  flex-grow: 1;             /* 让搜索框占据剩余空间 */
-  max-width: 400px;         /* 限制搜索框的最大宽度 */
-  flex-shrink: 0;           /* 确保搜索框不会缩小 */
+  justify-content: center;
+  align-items: center;
+  flex-grow: 1;
+  max-width: 400px;
+  flex-shrink: 0;
   justify-self: center;
+
+  input {
+    width: 100%;
+    padding: 12px 20px;
+    font-size: $font-size-md;
+    border-radius: 25px;
+    border: 1px solid #d1d1d1;
+    background: linear-gradient(145deg, #f0f0f0, #e0e0e0);
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.1), -4px -4px 10px rgba(255, 255, 255, 0.1);
+    transition: all $transition-normal;
+
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+      box-shadow: 0 0 10px $color-primary-dark;
+      background: linear-gradient(145deg, #e0e0e0, #f0f0f0);
+    }
+
+    &::placeholder {
+      color: #aaa;
+      opacity: 1;
+    }
+  }
 }
 
-/* 搜索框样式 */
-.search-container input {
-  width: 100%;  /* 搜索框占据父容器的宽度 */
-  padding: 12px 20px;
-  font-size: 16px;
-  border-radius: 25px;
-  border: 1px solid #d1d1d1;
-  background: linear-gradient(145deg, #f0f0f0, #e0e0e0);  /* 渐变背景色 */
-  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.1), -4px -4px 10px rgba(255, 255, 255, 0.1);  /* 立体阴影 */
-  transition: all 0.3s ease-in-out;  /* 添加平滑过渡 */
-}
-
-.search-container input:focus {
-  outline: none;
-  border-color: #4CAF50;  /* 聚焦时的绿色边框 */
-  box-shadow: 0 0 10px #217825;  /* 聚焦时的绿色阴影 */
-  background: linear-gradient(145deg, #e0e0e0, #f0f0f0);  /* 聚焦时背景色变化 */
-}
-
-.search-container input::placeholder {
-  color: #aaa;  /* 设置占位符颜色 */
-  opacity: 1;  /* 确保占位符始终显示 */
-}
-
-
-/* 在移动端时调整 */
-@media (max-width: 768px) {
+@include respond-to(tablet) {
   table {
-    width: 100%;  /* 在小屏幕上设置表格宽度为100% */
-    overflow-x: auto;  /* 允许在小屏幕上水平滚动 */
-    display: block; /* 使表格成为块级元素，启用水平滚动 */
+    width: 100%;
+    overflow-x: auto;
+    display: block;
   }
 
   th, td {
-    padding: 8px 12px; /* 调整内边距，使内容适应屏幕 */
-    font-size: 14px;  /* 调整字体大小 */
+    padding: 8px 12px;
+    font-size: $font-size-sm;
   }
 
   .pagination-controls button {
     padding: 8px 16px;
-    font-size: 14px;  /* 调整分页按钮大小 */
+    font-size: $font-size-sm;
   }
 
-  /* 对话框调整 */
   .confirm-dialog {
-    width: 90%;  /* 弹窗在小屏幕上占宽度的90% */
+    width: 90%;
   }
 
   .top-controls {
-    flex-wrap: wrap; /* 让控件在移动端可以换行 */
-    justify-content: center;  /* 居中对齐 */
+    flex-wrap: wrap;
+    justify-content: center;
   }
 
   .search-container {
-    max-width: 100%; /* 确保搜索框在小屏幕上占满 */
+    max-width: 100%;
   }
 }
 
-@media (max-width: 480px) {
+@include respond-to(mobile) {
   table {
-    font-size: 12px;  /* 在更小的设备上，进一步缩小字体 */
+    font-size: $font-size-xs;
   }
+
   .pagination-controls button {
-    font-size: 12px;  /* 调整分页按钮大小 */
+    font-size: $font-size-xs;
   }
 }
-
 </style>
 
 

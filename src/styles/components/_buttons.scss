@@ -1,0 +1,98 @@
+@import '../abstracts/variables';
+@import '../abstracts/mixins';
+
+// ============================================
+// 基础按钮样式
+// ============================================
+button {
+  margin-top: $spacing-sm;
+  padding: 8px 16px;
+  font-size: $font-size-md;
+  cursor: pointer;
+  border-radius: $radius-md;
+  background-color: $color-primary;
+  color: $color-text-white;
+  border: none;
+  transition: background-color $transition-normal, transform 0.2s ease;
+  max-width: 150px;
+  min-width: 70px;
+  white-space: nowrap;
+  overflow: hidden;
+  justify-content: center;
+  display: flex;
+  align-items: center;
+
+  &:hover {
+    background-color: $color-primary-dark;
+    transform: scale(1.05);
+  }
+
+  &:disabled {
+    background-color: rgba(42, 175, 53, 0.34);
+    cursor: not-allowed;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+// ============================================
+// 退出按钮容器
+// ============================================
+.logout-button-container {
+  display: flex;
+  justify-content: center;
+  margin-top: $spacing-md;
+
+  button {
+    padding: $spacing-sm $spacing-md;
+    font-size: $font-size-md;
+    background-color: #9e9d24;
+    color: $color-text-white;
+    border: none;
+    border-radius: $radius-md;
+    cursor: pointer;
+    transition: background-color $transition-normal, transform 0.2s ease;
+    max-width: 120px;
+
+    &:hover {
+      background-color: #836207;
+      transform: scale(1.05);
+    }
+
+    &:disabled {
+      background-color: rgba(244, 200, 54, 0.34);
+      cursor: not-allowed;
+    }
+  }
+}
+
+// ============================================
+// 响应式调整
+// ============================================
+@include respond-to(tablet) {
+  body {
+    font-size: $font-size-md;
+  }
+
+  button {
+    padding: 8px 16px;
+    font-size: $font-size-sm;
+    max-width: 90px;
+  }
+}
+
+@include respond-to(mobile) {
+  #app {
+    font-size: $font-size-sm;
+    margin-top: 40px;
+  }
+
+  button {
+    padding: 8px 8px !important;
+    font-size: $font-size-xs;
+    max-width: 100px;
+    white-space: nowrap;
+  }
+}

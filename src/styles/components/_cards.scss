@@ -1,0 +1,64 @@
+@import '../abstracts/variables';
+@import '../abstracts/mixins';
+
+// ============================================
+// 分页样式
+// ============================================
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-top: $spacing-md;
+}
+
+.pagination-btn {
+  padding: $spacing-xs $spacing-md;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  background-color: $color-background-white;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover:not(:disabled) {
+    background-color: $color-primary;
+    color: $color-text-white;
+    border-color: $color-primary;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.pagination-info {
+  color: $color-text-secondary;
+  font-size: $font-size-sm;
+}
+
+// ============================================
+// 统计卡片样式
+// ============================================
+.stats-card {
+  @include card($spacing-md, $radius-lg);
+  text-align: center;
+  transition: transform $transition-fast;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-lg;
+  }
+
+  .number {
+    font-size: $font-size-xl;
+    font-weight: 700;
+    color: $color-primary;
+    margin-bottom: $spacing-xs;
+  }
+
+  .label {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+  }
+}

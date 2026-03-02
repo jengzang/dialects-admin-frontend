@@ -111,92 +111,84 @@ export default {
 };
 </script>
 
-<style scoped>
-/* 使用绿色苹果风格的样式 */
+<style scoped lang="scss">
+@import '@/styles/abstracts/variables';
+@import '@/styles/abstracts/mixins';
 
 .login-container {
   max-width: 400px;
   margin: 50px auto;
-  padding: 20px;
+  padding: $spacing-md;
   background-color: #f9f9f9;
-  border-radius: 15px;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-}
+  border-radius: $radius-lg;
+  box-shadow: $shadow-md;
 
-h2 {
-  text-align: center;
-  font-size: 24px;
-  color: #2c6e49;  /* 苹果风格绿色 */
-  font-weight: bold;
+  h2 {
+    text-align: center;
+    font-size: 24px;
+    color: #2c6e49;
+    font-weight: bold;
+  }
 }
 
 .form-group {
   margin-bottom: 15px;
-}
 
-label {
-  display: block;
-  font-size: 16px;
-  color: #333;
-}
+  label {
+    display: block;
+    font-size: $font-size-md;
+    color: $color-text-primary;
+  }
 
-input {
-  width: 90%;
-  padding: 12px;
-  font-size: 16px;
-  border-radius: 25px;
-  border: 1px solid #ccc;
-  background-color: #f1f1f1;
-  margin-top: 5px;
-  transition: all 0.3s ease-in-out;
-}
+  input {
+    width: 90%;
+    padding: 12px;
+    font-size: $font-size-md;
+    border-radius: 25px;
+    border: 1px solid #ccc;
+    background-color: #f1f1f1;
+    margin-top: $spacing-xs;
+    transition: all $transition-normal;
 
-input:focus {
-  outline: none;
-  border-color: #4CAF50;  /* 聚焦时的绿色边框 */
-  box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);  /* 聚焦时的绿色阴影 */
-  background-color: #eafaf0;  /* 聚焦时背景色变化 */
-}
+    &:focus {
+      @include input-focus($color-primary);
+    }
 
-input:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
 }
 
 .button-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 20px;
-}
+  margin-top: $spacing-md;
 
-button {
-  padding: 12px 30px;
-  font-size: 18px;
-  color: white;
-  background-color: #4CAF50; /* 苹果绿色 */
-  border: none;
-  border-radius: 25px;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-  width: auto;
-}
+  button {
+    @include button-variant($color-primary, #45a049);
+    padding: 12px 30px;
+    font-size: $font-size-lg;
+    border-radius: 25px;
+    width: auto;
 
-button:hover:not(:disabled) {
-  background-color: #45a049;  /* 深绿色 */
-  transform: scale(1.05); /* 鼠标悬停时按钮稍微放大 */
-}
+    &:hover:not(:disabled) {
+      transform: scale(1.05);
+    }
 
-button:disabled {
-  background-color: rgba(76, 175, 80, 0.5);
-  cursor: not-allowed;
-  transform: none;
+    &:disabled {
+      background-color: rgba(76, 175, 80, 0.5);
+      transform: none;
+    }
+  }
 }
 
 .error-message {
   text-align: center;
-  color: red;
-  font-size: 14px;
+  color: $color-danger;
+  font-size: $font-size-sm;
   margin-top: 15px;
 }
 </style>

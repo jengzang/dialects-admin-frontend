@@ -354,19 +354,22 @@ export default {
 };
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@import '@/styles/abstracts/variables';
+@import '@/styles/abstracts/mixins';
+
 .global-session-management {
-  padding: 20px;
+  padding: $spacing-md;
 }
 
 .page-header {
   display: flex;
   align-items: center;
-  margin-bottom: 20px;
-}
+  margin-bottom: $spacing-md;
 
-.page-header h2 {
-  margin: 0;
+  h2 {
+    margin: 0;
+  }
 }
 
 .header-icon {
@@ -376,7 +379,7 @@ export default {
 }
 
 .stats-dashboard {
-  margin: 20px 0;
+  margin: $spacing-md 0;
 }
 
 .stat-item {
@@ -405,12 +408,12 @@ export default {
 }
 
 .stat-label {
-  font-size: 14px;
+  font-size: $font-size-sm;
   color: #909399;
 }
 
 .filter-card,
 .sessions-table {
-  margin: 20px 0;
+  margin: $spacing-md 0;
 }
 </style>

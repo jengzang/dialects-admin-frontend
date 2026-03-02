@@ -1,0 +1,70 @@
+// ============================================
+// 按钮变体 Mixin
+// ============================================
+@mixin button-variant($bg-color, $hover-color, $text-color: white) {
+  background-color: $bg-color;
+  color: $text-color;
+  border: none;
+  transition: all $transition-normal;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background-color: $hover-color;
+    transform: translateY(-1px);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// ============================================
+// 响应式断点 Mixin
+// ============================================
+@mixin respond-to($breakpoint) {
+  @if $breakpoint == mobile {
+    @media (max-width: $breakpoint-mobile) {
+      @content;
+    }
+  } @else if $breakpoint == tablet {
+    @media (max-width: $breakpoint-tablet) {
+      @content;
+    }
+  }
+}
+
+// ============================================
+// 输入框焦点状态 Mixin
+// ============================================
+@mixin input-focus($color: $color-primary) {
+  outline: none;
+  border-color: $color;
+  box-shadow: 0 0 8px rgba($color, 0.5);
+  background-color: lighten($color, 45%);
+}
+
+// ============================================
+// 卡片样式 Mixin
+// ============================================
+@mixin card($padding: $spacing-md, $radius: $radius-lg) {
+  background: $color-background-white;
+  border-radius: $radius;
+  padding: $padding;
+  box-shadow: $shadow-md;
+}
+
+// ============================================
+// 表格行 Hover 效果 Mixin
+// ============================================
+@mixin table-row-hover($bg-color: $color-primary-lighter) {
+  transition: background-color $transition-fast;
+
+  &:hover {
+    background-color: $bg-color;
+  }
+}

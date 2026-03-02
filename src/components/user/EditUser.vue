@@ -253,15 +253,16 @@ export default {
 </script>
 
 
-<style scoped>
-/* 整體排版和設計 */
+<style scoped lang="scss">
+@import '@/styles/abstracts/variables';
+@import '@/styles/abstracts/mixins';
+
 .user-info {
-  margin-bottom: 20px;
-}
+  margin-bottom: $spacing-md;
 
-
-.user-info p {
-  margin: 5px 0;
+  p {
+    margin: $spacing-xs 0;
+  }
 }
 
 .update-form {
@@ -270,82 +271,68 @@ export default {
 }
 
 .form-group {
-  font-size: 18px;
+  font-size: $font-size-lg;
   margin-bottom: 15px;
-}
 
-.form-group label {
-  display: block;
-  font-weight: bold;
-  margin-bottom: 5px;
+  label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: $spacing-xs;
+  }
 }
 
 .form-control {
   width: 100%;
   padding: 12px;
-  font-size: 16px;
-  border: 1px solid #a8d5ba; /* 柔和的蘋果綠邊框 */
-  border-radius: 12px; /* 圓角設計 */
-  background-color: #f6fbf3; /* 淺綠色背景 */
-  transition: all 0.3s ease;
-}
+  font-size: $font-size-md;
+  border: 1px solid #a8d5ba;
+  border-radius: $radius-md;
+  background-color: #f6fbf3;
+  transition: all $transition-normal;
 
-.form-control:focus {
-  border-color: #60b68d; /* 聚焦時的柔和蘋果綠 */
-  box-shadow: 0 0 10px rgba(96, 182, 141, 0.5); /* 聚焦時柔和的陰影 */
+  &:focus {
+    border-color: #60b68d;
+    box-shadow: 0 0 10px rgba(96, 182, 141, 0.5);
+  }
 }
 
 button {
-  padding: 10px 16px;
-  font-size: 16px;
-  border-radius: 12px;
-  margin: 5px 0;
+  padding: $spacing-sm 16px;
+  font-size: $font-size-md;
+  border-radius: $radius-md;
+  margin: $spacing-xs 0;
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
+  transition: background-color $transition-normal, transform 0.2s ease;
   border: none;
   font-weight: 600;
-  width: 100%; /* 保證按鈕的寬度一致 */
+  width: 100%;
   max-width: 150px;
+
+  &:active {
+    transform: scale(0.98);
+  }
 }
 
 .button-container {
   display: flex;
   justify-content: center;
-  margin: 5px 0;
+  margin: $spacing-xs 0;
 }
 
 .btn-primary {
-  background-color: #4CAF50; /* 正常狀態下的蘋果綠 */
-  color: white;
-}
+  @include button-variant($color-primary, $color-primary-dark);
 
-.btn-primary:hover {
-  background-color: #217825; /* 懸停時的深蘋果綠 */
-  transform: scale(1.03);
-}
-
-.btn-primary:active {
-  background-color: #1e7e1b; /* 按下時的更深的蘋果綠 */
-  transform: scale(0.98);
+  &:active {
+    background-color: #1e7e1b;
+  }
 }
 
 .btn-secondary {
-  background-color: #4CAF50; /* 使用與主按鈕相同的背景色 */
-  color: white;
-}
+  @include button-variant($color-primary, $color-primary-dark);
 
-.btn-secondary:hover {
-  background-color: #217825; /* 懸停時的顏色 */
-  transform: scale(1.03);
-}
-
-.btn-secondary:active {
-  background-color: #1e7e1b; /* 按下時的顏色 */
-  transform: scale(0.98);
-}
-
-button:active {
-  transform: scale(0.98);
+  &:active {
+    background-color: #1e7e1b;
+  }
 }
 
 .overlay {
@@ -361,37 +348,31 @@ button:active {
 }
 
 .confirm-dialog {
-  background: white;
-  padding: 20px;
+  background: $color-background-white;
+  padding: $spacing-md;
   border-radius: 16px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
   width: 90%;
   max-width: 400px;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
-}
 
-.confirm-dialog h3 {
-  font-size: 20px;
-  font-weight: 600;
-  color: #333;
-}
+  h3 {
+    font-size: $font-size-xl;
+    font-weight: 600;
+    color: $color-text-primary;
+  }
 
-.confirm-dialog button {
-  padding: 10px 20px;
-  font-size: 16px;
-  background-color: #4CAF50; /* 蘋果綠背景 */
-  border: none;
-  border-radius: 12px;
-  color: white;
-  margin-top: 10px;
-}
+  button {
+    @include button-variant($color-primary, $color-primary-dark);
+    padding: $spacing-sm $spacing-md;
+    font-size: $font-size-md;
+    border-radius: $radius-md;
+    margin-top: $spacing-sm;
 
-.confirm-dialog button:hover {
-  background-color: #217825; /* 懸停時的顏色 */
-}
-
-.confirm-dialog button:active {
-  background-color: #1e7e1b; /* 按下時的顏色 */
+    &:active {
+      background-color: #1e7e1b;
+    }
+  }
 }
 </style>
 

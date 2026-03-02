@@ -279,9 +279,12 @@ export default {
 };
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@import '@/styles/abstracts/variables';
+@import '@/styles/abstracts/mixins';
+
 .user-sessions {
-  padding: 20px;
+  padding: $spacing-md;
   max-width: 1400px;
   margin: 0 auto;
 }
@@ -298,131 +301,118 @@ h1 {
   gap: 30px;
   margin-bottom: 30px;
   flex-wrap: wrap;
-}
 
-.stats-info span {
-  font-size: 16px;
-  color: #666;
-  padding: 10px 20px;
-  background-color: #f5f5f5;
-  border-radius: 8px;
+  span {
+    font-size: $font-size-md;
+    color: $color-text-secondary;
+    padding: $spacing-sm $spacing-md;
+    background-color: $color-background-light;
+    border-radius: $radius-sm;
+  }
 }
 
 .controls {
   display: flex;
   gap: 8px;
-  margin-bottom: 20px;
+  margin-bottom: $spacing-md;
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
 }
 
 button {
-  padding: 10px 20px;
-  font-size: 16px;
-  border-radius: 12px;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-button:hover:not(:disabled) {
-  background-color: #217825;
-  transform: scale(1.05);
-}
-
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
+  @include button-variant($color-primary, $color-primary-dark);
+  padding: $spacing-sm $spacing-md;
+  font-size: $font-size-md;
+  border-radius: $radius-md;
 }
 
 .revoke-all-btn {
-  background-color: #f44336;
-}
+  background-color: $color-danger;
 
-.revoke-all-btn:hover:not(:disabled) {
-  background-color: #d32f2f;
+  &:hover:not(:disabled) {
+    background-color: darken($color-danger, 10%);
+  }
 }
 
 .revoke-btn {
-  background-color: #f44336;
+  background-color: $color-danger;
   padding: 6px 12px;
-  font-size: 14px;
-}
+  font-size: $font-size-sm;
 
-.revoke-btn:hover {
-  background-color: #d32f2f;
+  &:hover {
+    background-color: darken($color-danger, 10%);
+  }
 }
 
 .table-container {
   overflow-x: auto;
-  margin-bottom: 20px;
+  margin-bottom: $spacing-md;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  background: white;
-  border-radius: 12px;
+  background: $color-background-white;
+  border-radius: $radius-md;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
+  box-shadow: $shadow-md;
 
-thead {
-  background-color: #4CAF50;
-  color: white;
-}
+  thead {
+    background-color: $color-primary;
+    color: $color-text-white;
+  }
 
-th, td {
-  padding: 12px;
-  text-align: left;
-  border-bottom: 1px solid #ddd;
-}
+  th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
 
-th {
-  font-weight: bold;
-}
+  th {
+    font-weight: bold;
+  }
 
-tbody tr:hover {
-  background-color: #f5f5f5;
-}
+  tbody {
+    tr {
+      @include table-row-hover($color-background-light);
 
-tbody tr:last-child td {
-  border-bottom: none;
+      &:last-child td {
+        border-bottom: none;
+      }
+    }
+  }
 }
 
 .status-badge {
   padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 12px;
+  border-radius: $radius-md;
+  font-size: $font-size-xs;
   font-weight: bold;
   display: inline-block;
   white-space: nowrap;
 }
 
 .status-active {
-  background-color: #4CAF50;
-  color: white;
+  background-color: $color-primary;
+  color: $color-text-white;
 }
 
 .status-expired {
   background-color: #9e9e9e;
-  color: white;
+  color: $color-text-white;
 }
 
 .status-revoked {
   background-color: #683733;
-  color: white;
+  color: $color-text-white;
 }
 
 .loading, .no-data {
   text-align: center;
   padding: 40px;
-  color: #666;
-  font-size: 18px;
+  color: $color-text-secondary;
+  font-size: $font-size-lg;
 }
 
 .back-button {
@@ -431,10 +421,10 @@ tbody tr:last-child td {
   margin-top: 30px;
 }
 
-@media (max-width: 768px) {
+@include respond-to(tablet) {
   .stats-info {
     flex-direction: column;
-    gap:10px;
+    gap: $spacing-sm;
     align-items: center;
   }
 
@@ -443,7 +433,7 @@ tbody tr:last-child td {
   }
 
   table {
-    font-size: 14px;
+    font-size: $font-size-sm;
   }
 
   th, td {

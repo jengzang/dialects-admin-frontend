@@ -255,185 +255,174 @@ export default {
 };
 </script>
 
-<style scoped>
-/* 表格标题样式 */
+<style scoped lang="scss">
+@import '@/styles/abstracts/variables';
+@import '@/styles/abstracts/mixins';
+
 h1 {
   font-size: 30px;
   font-weight: bold;
   text-align: center;
   margin-bottom: 0;
-  color: #2c6e49;  /* 苹果风格绿色 */
+  color: #2c6e49;
 }
 
-/* 显示数据总数的样式 */
 p {
-  font-size: 18px;
+  font-size: $font-size-lg;
   text-align: center;
-  margin-bottom: 20px;
-  color: #333;
+  margin-bottom: $spacing-md;
+  color: $color-text-primary;
   font-weight: normal;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 20px;
-  border-radius: 12px;
+  margin-top: $spacing-md;
+  border-radius: $radius-md;
   overflow: hidden;
-}
 
-th,
-td {
-  border: 1px solid #ddd;
-  padding: 12px;
-  text-align: center;
-  font-size: 16px;
-}
+  th,
+  td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: center;
+    font-size: $font-size-md;
+  }
 
-th {
-  background-color: #e4f4e7;  /* 浅绿色背景 */
-  color: #2c6e49;  /* 绿色字体 */
-  font-weight: bold;
-  cursor: pointer;
-  white-space: nowrap;
+  th {
+    background-color: #e4f4e7;
+    color: #2c6e49;
+    font-weight: bold;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &:hover {
+      background-color: #c8e7c2;
+    }
+  }
+
+  td {
+    background-color: #f9f9f9;
+  }
 }
 
 .arrow-up::after {
   content: '↑';
-  margin-left: 5px;
-  font-size: 14px;
+  margin-left: $spacing-xs;
+  font-size: $font-size-sm;
 }
 
 .arrow-down::after {
   content: '↓';
-  margin-left: 5px;
-  font-size: 14px;
+  margin-left: $spacing-xs;
+  font-size: $font-size-sm;
 }
 
-/* 增加悬浮效果 */
-th:hover {
-  background-color: #c8e7c2;  /* 鼠标悬浮时的浅绿色 */
-}
-
-td {
-  background-color: #f9f9f9;
-}
-
-/* 表格行悬停效果 */
 tr:hover {
-  background-color: #e1f5e1;  /* 鼠标悬浮时的浅绿色 */
+  background-color: #e1f5e1;
 }
 
-/* 設置 2x2 排布，對所有需要的按鈕進行排列 */
 .select-mode-buttons {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  grid-gap: 5px;
-  margin-top: 10px;
+  grid-gap: $spacing-xs;
+  margin-top: $spacing-sm;
+
+  button {
+    @include button-variant($color-primary, #45a049);
+    padding: $spacing-sm $spacing-md;
+    font-size: $font-size-md;
+    border-radius: 25px;
+    max-width: 110px;
+    min-width: 80px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+
+    button {
+      margin: 0;
+    }
+  }
 }
 
-/* 按钮的苹果绿色风格 */
-.select-mode-buttons button,.top-controls button {
-  padding: 10px 20px;
-  font-size: 16px;
-  cursor: pointer;
-  border-radius: 25px; /* 圆角按钮 */
-  background-color: #4CAF50;  /* 绿色 */
-  color: white;
-  border: none;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-  max-width: 110px;
-  min-width: 80px;
+.top-controls {
   display: flex;
   justify-content: center;
   align-items: center;
-}
-.select-mode-buttons button button{
-  margin:0;
-}
+  gap: $spacing-sm;
 
+  button {
+    @include button-variant($color-primary, #45a049);
+    padding: $spacing-sm $spacing-md;
+    font-size: $font-size-md;
+    border-radius: 25px;
+    max-width: 110px;
+    min-width: 80px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+}
 
 button[v-if="false"] {
   display: none;
 }
 
-/* 搜索框样式 */
 .search-container input {
   width: 100%;
   padding: 12px 20px;
-  font-size: 16px;
+  font-size: $font-size-md;
   border-radius: 25px;
   border: 1px solid #ccc;
   background-color: #f1f1f1;
-  transition: all 0.3s ease-in-out;
-  margin-top: 10px;
+  transition: all $transition-normal;
+  margin-top: $spacing-sm;
+
+  &:focus {
+    @include input-focus($color-primary);
+  }
 }
 
-.search-container input:focus {
-  outline: none;
-  border-color: #4CAF50;  /* 聚焦时的绿色边框 */
-  box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);  /* 聚焦时的绿色阴影 */
-  background-color: #eafaf0;  /* 聚焦时背景色变化 */
-}
-
-/* 分页控制 */
 .pagination-controls {
-  margin-top: 20px;
+  margin-top: $spacing-md;
   text-align: center;
-}
 
-.pagination-controls button {
-  padding: 12px 24px;
-  display: inline;
-  margin: 0 10px;
-  background-color: #4CAF50; /* 按钮的绿色 */
-  color: white;
-  border: none;
-  border-radius: 20px; /* 圆角效果 */
-  font-size: 16px;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-}
+  button {
+    @include button-variant($color-primary, #45a049);
+    padding: 12px 24px;
+    display: inline;
+    margin: 0 $spacing-sm;
+    border-radius: 20px;
+    font-size: $font-size-md;
 
-.pagination-controls button:hover {
-  background-color: #45a049;
-  transform: scale(1.05);
-}
-
-.pagination-controls button:disabled {
-  background-color: rgba(76, 175, 80, 0.5);
-  cursor: not-allowed;
-}
-
-.pagination-controls span {
-  font-size: 16px;
-  color: #333;
-  align-self: center;
-}
-/* 控制按钮和搜索框在同一行 */
-.top-controls {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px; /* 给按钮和搜索框之间加个间距 */
-}
-
-/* 移動端適配 */
-@media (max-width: 768px) {
-  th, td {
-    padding: 8px; /* 減少表格單元格的內邊距 */
+    &:disabled {
+      background-color: rgba(76, 175, 80, 0.5);
+    }
   }
 
+  span {
+    font-size: $font-size-md;
+    color: $color-text-primary;
+    align-self: center;
+  }
+}
+
+@include respond-to(tablet) {
+  th, td {
+    padding: 8px;
+  }
 
   .pagination-controls button {
-    font-size: 14px; /* 分頁按鈕文字大小調整 */
-    min-width: 100px; /* 調整分頁按鈕最小寬度 */
+    font-size: $font-size-sm;
+    min-width: 100px;
   }
 
   table {
-    font-size: 14px;  /* 更小的字体 */
+    font-size: $font-size-sm;
     overflow-x: auto;
-    display: block;  /* 使表格可滚动 */
+    display: block;
   }
 
   th, td {
@@ -441,19 +430,18 @@ button[v-if="false"] {
   }
 }
 
-/* 更小的屏幕適配（如手機） */
-@media (max-width: 480px) {
+@include respond-to(mobile) {
   table {
-    font-size: 14px; /* 調整表格字體大小 */
+    font-size: $font-size-sm;
   }
 
   .pagination-controls button {
-    font-size: 12px; /* 調整分頁按鈕字體大小 */
-    padding: 8px 16px; /* 調整按鈕的內邊距 */
+    font-size: $font-size-xs;
+    padding: 8px 16px;
   }
 
   table {
-    font-size: 12px; /* 更小的字体 */
+    font-size: $font-size-xs;
   }
 }
 </style>

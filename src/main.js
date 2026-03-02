@@ -3,9 +3,7 @@ import { createPinia } from 'pinia';
 import App from './App.vue';
 import router from './router';
 import api from './axios';  // 引入 axios 配置
-import './style.css'; // 引入全局CSS
-import './styles/variables.css'; // 引入全局變量
-import './styles/common.css'; // 引入通用樣式
+import './styles/main.scss'; // 引入 Sass 主文件
 import ElementPlus from 'element-plus';  // 引入 Element Plus
 import 'element-plus/dist/index.css';  // 引入 Element Plus 样式
 import 'leaflet/dist/leaflet.css';

@@ -1,0 +1,51 @@
+@import '../abstracts/variables';
+@import '../abstracts/mixins';
+
+// ============================================
+// 表单组样式
+// ============================================
+.form-group {
+  margin-bottom: $spacing-md;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: $spacing-xs;
+  font-weight: 500;
+  color: $color-text-primary;
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+  width: 100%;
+  padding: $spacing-sm $spacing-md;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-sm;
+  font-size: $font-size-sm;
+  transition: border-color $transition-fast;
+
+  &:focus {
+    @include input-focus($color-primary);
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+  }
+}
+
+// ============================================
+// 搜索框样式
+// ============================================
+.search-input {
+  padding: $spacing-sm $spacing-md;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  background-color: $color-background;
+  font-size: $font-size-sm;
+  transition: all $transition-fast;
+  min-width: 250px;
+
+  &:focus {
+    outline: none;
+    border-color: $color-primary;
+    background-color: $color-background-white;
+  }
+}

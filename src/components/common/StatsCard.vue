@@ -38,6 +38,7 @@ export default {
 };
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@import '@/styles/abstracts/variables';
 /* 使用全局 stats-card 樣式 */
 </style>

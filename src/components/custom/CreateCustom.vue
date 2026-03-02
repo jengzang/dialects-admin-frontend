@@ -211,53 +211,52 @@ export default {
 };
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@import '@/styles/abstracts/variables';
+
 .el-table {
-  margin-bottom: 20px;
+  margin-bottom: $spacing-md;
   width: 100%;
   margin-left: auto;
-  margin-right: auto; /* 表格居中 */
-}
+  margin-right: auto;
 
-.el-table th, .el-table td {
-  white-space: nowrap; /* 防止单元格内容换行 */
+  th, td {
+    white-space: nowrap;
+  }
+
+  .el-input {
+    width: 100%;
+  }
 }
 
 .el-table-column {
-  text-align: center; /* 使表格内容居中对齐 */
+  text-align: center;
 }
 
-.el-table .el-input {
-  width: 100%; /* 输入框宽度填满单元格 */
-}
-
-/* 让按钮和复选框排列整齐 */
 .el-button {
-  margin-right: 10px; /* 按钮之间的右边距 */
+  margin-right: $spacing-sm;
+  display: inline-block;
+  vertical-align: middle;
+  margin-bottom: $spacing-md;
+
+  &:hover {
+    cursor: pointer;
+  }
+
+  + .el-checkbox {
+    margin-top: $spacing-sm;
+  }
 }
 
 .el-checkbox {
-  margin-left: 10px; /* 复选框和按钮之间的左边距 */
-}
-
-/* 使按钮和复选框水平居中 */
-.el-button, .el-checkbox {
+  margin-left: $spacing-sm;
   display: inline-block;
-  vertical-align: middle; /* 保证按钮和复选框对齐 */
-}
+  vertical-align: middle;
+  margin-bottom: $spacing-md;
 
-/* 控制按钮和复选框之间的间距 */
-.el-button + .el-checkbox {
-  margin-top: 10px; /* 让复选框距离上方的按钮有适当间距 */
-}
-
-/* 添加按钮和复选框区域的上下间距 */
-.el-button, .el-checkbox {
-  margin-bottom: 20px; /* 按钮和复选框与下方内容的间距 */
-}
-
-.el-button:hover, .el-checkbox:hover {
-  cursor: pointer;
+  &:hover {
+    cursor: pointer;
+  }
 }
 </style>
 

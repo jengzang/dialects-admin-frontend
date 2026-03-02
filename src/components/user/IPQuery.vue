@@ -111,30 +111,30 @@ export default {
 </script>
 
 
-<style scoped>
+<style scoped lang="scss">
+@import '@/styles/abstracts/variables';
+@import '@/styles/abstracts/mixins';
+
 .ip-page {
-  padding: 20px;
+  padding: $spacing-md;
   font-family: 'Arial', sans-serif;
-  background: #eafaf1; /* 更清新的苹果绿色背景色 */
+  background: #eafaf1;
   max-width: 800px;
   margin: 0 auto;
-  border-radius: 12px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: $radius-md;
+  box-shadow: $shadow-md;
 }
 
 .info-box {
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  margin-bottom: 20px;
-  border-left: 8px solid #4CAF50; /* 添加绿色左边框 */
+  @include card($spacing-md, $radius-md);
+  margin-bottom: $spacing-md;
+  border-left: 8px solid $color-primary;
 }
 
 h1 {
   font-size: 26px;
   font-weight: bold;
-  color: #388E3C; /* 更加深沉的苹果绿色 */
+  color: #388E3C;
   margin-bottom: 15px;
 }
 
@@ -143,57 +143,53 @@ h1 {
   grid-template-columns: 1fr 1fr;
   gap: 2px;
   color: #444;
-  background-color: #e0f7e0; /* 绿色背景块 */
-  border-radius: 12px;
-}
+  background-color: #e0f7e0;
+  border-radius: $radius-md;
 
-.info-content div {
-  font-size: 16px;
-  padding: 5px 10px;
-  border-radius: 8px;
+  div {
+    font-size: $font-size-md;
+    padding: $spacing-xs $spacing-sm;
+    border-radius: $radius-sm;
 
-}
-
-.info-content div:hover {
-  background-color: #c8e6c9; /* 鼠标悬停时更深的绿色 */
+    &:hover {
+      background-color: #c8e6c9;
+    }
+  }
 }
 
 .error-message {
   color: #ff4d4f;
   text-align: center;
-  font-size: 18px;
+  font-size: $font-size-lg;
 }
 
 .map-container {
   height: 300px;
-  background: #b2dfdb; /* 更深的绿色用于地图区域背景 */
-  border-radius: 12px;
-  margin-top: 20px;
+  background: #b2dfdb;
+  border-radius: $radius-md;
+  margin-top: $spacing-md;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #888;
-  border: 2px solid #4CAF50; /* 地图区域增加绿色边框 */
+  border: 2px solid $color-primary;
 }
-
-@media (max-width: 768px) {
-  .info-content {
-    grid-template-columns: 1fr;
-  }
-  .map-container {
-    height: 220px; /* 移动端上稍微缩小地图区域 */
-  }
-}
-
-
 
 .api-selector {
-  margin-top: 20px;
+  margin-top: $spacing-md;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); /* 创建响应式的网格布局 */
-  gap: 10px; /* 按钮之间的间隔 */
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: $spacing-sm;
   justify-items: center;
 }
 
+@include respond-to(tablet) {
+  .info-content {
+    grid-template-columns: 1fr;
+  }
 
+  .map-container {
+    height: 220px;
+  }
+}
 </style>

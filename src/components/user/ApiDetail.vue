@@ -425,44 +425,37 @@ export default {
 };
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@import '@/styles/abstracts/variables';
+@import '@/styles/abstracts/mixins';
+
 .stats {
   display: flex;
-  flex-wrap: wrap;            /* 允许按钮在空间不足时换行 */
-  justify-content: center;    /* 水平居中 */
-  align-items: center;        /* 垂直居中 */
-  gap: 5px;                  /* 按钮之间的间距 */
-  margin-top: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: $spacing-xs;
+  margin-top: $spacing-sm;
 }
+
 .stat-btn {
-  padding: 10px;
-  margin: 5px;
-  cursor: pointer;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
+  @include button-variant($color-primary, #45a049);
+  padding: $spacing-sm;
+  margin: $spacing-xs;
   border-radius: 15px;
   font-size: 17px;
   max-width: 120px;
-  width: 100%; /* 在移動端讓按鈕寬度適應 */
+  width: 100%;
 }
 
-/* 按鈕懸停效果 */
-.stat-btn:hover {
-  background-color: #45a049;
-}
-
-/* 表格标题样式 */
 h1 {
   font-size: 30px;
   font-weight: bold;
   text-align: center;
   margin-bottom: 0;
-  color: #2c6e49;  /* 苹果风格绿色 */
+  color: #2c6e49;
 }
 
-
-/* 彈窗樣式優化 */
 .modal {
   position: fixed;
   top: 0;
@@ -476,143 +469,166 @@ h1 {
 }
 
 .modal-content {
-  background-color: white;
-  padding: 20px;
-  border-radius: 5px;
-  width: 90%; /* 使彈窗寬度適應小屏 */
-  max-width: 500px; /* 限制彈窗最大寬度 */
+  background-color: $color-background-white;
+  padding: $spacing-md;
+  border-radius: $spacing-xs;
+  width: 90%;
+  max-width: 500px;
   max-height: 80%;
   overflow-y: auto;
 }
 
 .close {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: $spacing-sm;
+  right: $spacing-sm;
   font-size: 60px;
   cursor: pointer;
+
+  &:hover {
+    color: $color-danger;
+  }
 }
 
-.close:hover {
-  color: red;
-}
-
-
-/* 分頁控制樣式調整 */
 .pagination-controls {
   display: flex;
   justify-content: center;
-  margin-top: 20px;
-  flex-wrap: wrap; /* 允許分頁按鈕在移動端換行 */
+  margin-top: $spacing-md;
+  flex-wrap: wrap;
+
+  button {
+    @include button-variant($color-primary, #45a049);
+    padding: $spacing-sm $spacing-md;
+    margin: $spacing-xs;
+    border-radius: $spacing-xs;
+    font-size: $font-size-md;
+    min-width: 120px;
+    box-sizing: border-box;
+
+    &:disabled {
+      background-color: #ccc;
+    }
+  }
+
+  span {
+    font-size: $font-size-md;
+    align-self: center;
+    color: $color-text-primary;
+  }
 }
 
-.pagination-controls button {
-  padding: 10px 20px;
-  margin: 5px;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  min-width: 120px; /* 分頁按鈕設置最小寬度 */
-  box-sizing: border-box;
-}
-
-.pagination-controls button:hover {
-  background-color: #45a049;
-  transform: scale(1.05);
-}
-
-.pagination-controls button:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-
-.pagination-controls span {
-  font-size: 16px;
-  align-self: center;
-  color: #333;
-}
-/* 显示数据总数的样式 */
 p {
-  font-size: 18px;
+  font-size: $font-size-lg;
   text-align: center;
-  margin-bottom: 20px;
-  color: #333;
+  margin-bottom: $spacing-md;
+  color: $color-text-primary;
   font-weight: normal;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 20px;
-  border-radius: 12px;
+  margin-top: $spacing-md;
+  border-radius: $radius-md;
   overflow: hidden;
-}
 
-th,
-td {
-  border: 1px solid #81c784; /* 设置为苹果绿色的边框 */
-  padding: 12px;
-  text-align: left;
-  font-size: 16px;
-}
+  th, td {
+    border: 1px solid $color-border;
+    padding: 12px;
+    text-align: left;
+    font-size: $font-size-md;
+  }
 
-th {
-  background-color: #a5d6a7;  /* 浅绿色背景 */
-  color: #2c6e49;  /* 绿色字体 */
-  font-weight: bold;
-  cursor: pointer;
-  white-space: nowrap; /* 防止表头文字换行 */
+  th {
+    background-color: $color-primary-light;
+    color: #2c6e49;
+    font-weight: bold;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &:hover {
+      background-color: $color-border;
+    }
+  }
+
+  td {
+    background-color: $color-background;
+  }
 }
 
 .arrow-up::after {
   content: '↑';
-  margin-left: 5px;
-  font-size: 14px;
+  margin-left: $spacing-xs;
+  font-size: $font-size-sm;
 }
 
 .arrow-down::after {
   content: '↓';
-  margin-left: 5px;
-  font-size: 14px;
+  margin-left: $spacing-xs;
+  font-size: $font-size-sm;
 }
 
-/* 增加悬浮效果 */
-th:hover {
-  background-color: #81c784;  /* 鼠标悬浮时的苹果绿色 */
+.header-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: $spacing-md;
+  flex-wrap: nowrap;
+  overflow: hidden;
+
+  h2 {
+    white-space: nowrap;
+    margin: 0;
+  }
 }
 
-td {
-  background-color: #f1f8e9;
+.search-box {
+  padding: 6px 12px;
+  font-size: $font-size-md;
+  margin-left: $spacing-md;
+  border: 1px solid $color-primary;
+  background-color: $color-background;
+  color: #2c6e49;
+  border-radius: 25px;
+  transition: all $transition-normal;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+  max-width: 100px;
+  flex-grow: 1;
+  flex-shrink: 1;
+  min-width: 50px;
+  width: 100%;
+
+  &:focus {
+    outline: none;
+    border-color: $color-border;
+    background-color: #e8f5e9;
+    box-shadow: 0 0 10px rgba(129, 199, 132, 0.5);
+  }
 }
 
-/* 移动端适配 */
-@media (max-width: 768px) {
+@include respond-to(tablet) {
   th, td {
-    padding: 8px; /* 减少表格单元格的内边距 */
+    padding: 8px;
   }
 
   .stat-btn {
-    font-size: 14px; /* 调整按钮文字大小 */
-    padding: 12px; /* 增加按钮的内边距 */
+    font-size: $font-size-sm;
+    padding: 12px;
   }
 
   .modal-content {
-    width: 95%; /* 弹窗的宽度更小，适应小屏幕 */
+    width: 95%;
   }
 
   .pagination-controls button {
-    font-size: 14px; /* 分页按钮文字大小调整 */
-    min-width: 100px; /* 调整分页按钮最小宽度 */
+    font-size: $font-size-sm;
+    min-width: 100px;
   }
 
   table {
-    font-size: 14px;  /* 更小的字体 */
+    font-size: $font-size-sm;
     overflow-x: auto;
-    display: block;  /* 使表格可滚动 */
+    display: block;
   }
 
   th, td {
@@ -620,72 +636,31 @@ td {
   }
 }
 
-/* 更小的屏幕适配（如手机） */
-@media (max-width: 480px) {
+@include respond-to(mobile) {
   table {
-    font-size: 12px; /* 调整表格字体大小 */
+    font-size: $font-size-xs;
   }
 
   .pagination-controls button {
-    font-size: 13px; /* 调整分页按钮字体大小 */
-    padding: 6px 14px; /* 调整按钮的内边距 */
+    font-size: 13px;
+    padding: 6px 14px;
   }
 
   .stat-btn {
-    font-size: 15px; /* 调整按钮文字大小 */
-    padding: 6px; /* 调整按钮内边距 */
+    font-size: 15px;
+    padding: 6px;
   }
 
   .close {
-    font-size: 50px; /* 关闭按钮大小调整 */
+    font-size: 50px;
   }
 
   .modal-content {
-    padding: 15px; /* 弹窗内边距调整 */
+    padding: 15px;
   }
-  table {
-    font-size: 12px; /* 更小的字体 */
-  }
-  .search-box{
-    max-width: 50px!important;
-  }
-}
 
-.header-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;  /* 确保两者之间有间距 */
-  margin-bottom: 20px;
-  flex-wrap: nowrap;
-  overflow: hidden; /* 防止溢出 */
-}
-/* 确保 h2 占据其内容宽度 */
-.header-container h2 {
-  white-space: nowrap; /* 防止 h2 换行 */
-  margin: 0;  /* 去掉默认外边距 */
-}
-/* 搜索框样式 */
-.search-box {
-  padding: 6px 12px;
-  font-size: 16px;
-  margin-left: 20px;
-  border: 1px solid #4CAF50;
-  background-color: #f1f8e9;
-  color: #2c6e49;
-  border-radius: 25px;
-  transition: all 0.3s ease;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
-  max-width: 100px;  /* 给搜索框一个默认宽度 */
-  flex-grow: 1;   /* 搜索框可以在有空间时扩展 */
-  flex-shrink: 1; /* 搜索框可以在空间不足时缩小 */
-  min-width: 50px;  /* 设置搜索框的最小宽度 */
-  width: 100%;
-}
-
-.search-box:focus {
-  outline: none;
-  border-color: #81c784;
-  background-color: #e8f5e9;
-  box-shadow: 0 0 10px rgba(129, 199, 132, 0.5);
+  .search-box {
+    max-width: 50px !important;
+  }
 }
 </style>

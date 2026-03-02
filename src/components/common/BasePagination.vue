@@ -116,6 +116,7 @@ export default {
 };
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@import '@/styles/abstracts/variables';
 /* 组件不再包含默认样式，使用父组件或全局样式 */
 </style>

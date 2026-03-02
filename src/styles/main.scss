@@ -1,0 +1,24 @@
+// ============================================
+// Abstracts - 无输出，仅变量和 mixins
+// ============================================
+@import 'abstracts/variables';
+@import 'abstracts/mixins';
+
+// ============================================
+// Components - 组件样式
+// ============================================
+@import 'components/buttons';
+@import 'components/tables';
+@import 'components/forms';
+@import 'components/cards';
+
+// ============================================
+// Utilities - 工具类
+// ============================================
+@import 'utilities/spacing';
+
+// ============================================
+// 临时：保持现有 CSS 导入（Phase 2 后移除）
+// ============================================
+@import '../style.css';
+@import './common.css';
