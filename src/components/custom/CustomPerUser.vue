@@ -70,189 +70,181 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, onMounted } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import api from "../../axios.js";
 import { formatTime } from "../../utils.js";
 import { useCustomStore } from "../../stores";
 
-export default {
-  setup() {
-    const customStore = useCustomStore();
-    return { customStore };
-  },
-  data() {
-    return {
-      users: [],  // 用於存儲從 API 獲取的用戶數據
-      searchQuery: '',  // 用於存儲搜索框的內容
-      currentPage: 1,  // 当前页码
-      pageSize: 30,  // 每页显示的记录数
-      totalPages: 1,  // 总页数
-      sortOrder: {  // 控制排序的对象
-        簡稱: 'asc',
-        音典分區: 'asc',
-        經緯度: 'asc',
-        特徵: 'asc',
-        聲韻調: 'asc',
-        值: 'asc',
-        說明: 'asc',
-        created_at: 'asc',
-      },
-      sortField: '',  // 当前排序字段
-      username: '',  // 当前的用户名
-      selectMode: false, // 控制是否处于选择模式
-      selectedUsers: [],  // 存储被选中的用户id
-      // selectAll: false, // 用于全选/反选
-    };
-  },
-  async mounted() {
-    // console.log(this.selectedUsers.length > 0 && this.selectedUsers.length === this.users.length)
-    const { username } = this.$route.query;  // 从路由参数中获取用户名
-    const { created_at } = this.$route.query;  // 从路由查询参数中获取创建时间
-    if (created_at) {
-      this.searchQuery = created_at;  // 将创建时间填入搜索框
-    }
-    this.username = username;  // 设置当前的用户名
-    try {
-      const response = await api.get(`/custom/user?query=${username}`);
-      this.users = response.data;
-      this.totalPages = Math.ceil(this.users.length / this.pageSize);  // 计算总页数
-    } catch (error) {
-      console.error("API 请求错误:", error);
-    }
-  },
-  computed: {
-    currentPageData() {
-      const startIndex = (this.currentPage - 1) * this.pageSize;
-      return this.filteredUsers.slice(startIndex, startIndex + this.pageSize);  // 根据当前页码和每页显示的数据数量筛选
-    },
-    filteredUsers() {
-      if (!this.searchQuery) {
-        return this.users;
-      }
-      return this.users.filter(user => {
-        const searchTerm = this.searchQuery.toLowerCase();
-        return (
-            (user.簡稱 && user.簡稱.toLowerCase().includes(searchTerm)) ||
-            (user.音典分區 && user.音典分區.toLowerCase().includes(searchTerm)) ||
-            (user.特徵 && user.特徵.toLowerCase().includes(searchTerm)) ||
-            (user.聲韻調 && user.聲韻調.toLowerCase().includes(searchTerm)) ||
-            (user.值 && user.值.toLowerCase().includes(searchTerm)) ||
-            (user.說明 && user.說明.toLowerCase().includes(searchTerm)) ||
-            formatTime(user.created_at).toLowerCase().includes(searchTerm)
-        );
-      });
-    },
-    isAllSelected() {
-      // console.log(this.selectedUsers.length > 0 && this.selectedUsers.length === this.users.length)
-      return this.selectedUsers.length > 0 && this.selectedUsers.length === this.users.length;
-    },
-  },
-  methods: {
-    formatTime,
-    toggleSelectMode() {
-      this.selectMode = !this.selectMode;
-      this.selectedUsers = []; // 重置选中的数据
-    },
-    reverseSelect() {
-      const selectedSet = new Set(this.selectedUsers);
-      this.selectedUsers = this.users
-          .map(user => user.created_at)
-          .filter(created_at => !selectedSet.has(created_at)); // 反选未选中的数据
-    },
+const router = useRouter();
+const route = useRoute();
+const customStore = useCustomStore();
 
-    isSelected(createdAt) {
-      return this.selectedUsers.includes(createdAt);
-    },
-    // 切换选中状态
-    toggleSelection(createdAt) {
-      const index = this.selectedUsers.indexOf(createdAt);
-      if (index === -1) {
-        this.selectedUsers.push(createdAt);
-      } else {
-        this.selectedUsers.splice(index, 1);
-      }
-    },
-    toggleSelectAll() {
+const users = ref([]);
+const searchQuery = ref('');
+const currentPage = ref(1);
+const pageSize = ref(30);
+const totalPages = ref(1);
+const sortOrder = ref({
+  簡稱: 'asc',
+  音典分區: 'asc',
+  經緯度: 'asc',
+  特徵: 'asc',
+  聲韻調: 'asc',
+  值: 'asc',
+  說明: 'asc',
+  created_at: 'asc',
+});
+const sortField = ref('');
+const username = ref('');
+const selectMode = ref(false);
+const selectedUsers = ref([]);
 
-      if (this.selectedUsers.length === this.users.length) {
-        // 如果当前已全选，则取消全选
-        this.selectedUsers = [];
-        // console.log(this.selectedUsers.length > 0 && this.selectedUsers.length === this.users.length)
-      } else {
-        // 否则全选
-        this.selectedUsers = this.users.map(user => user.created_at);
-        // console.log(this.selectedUsers.length > 0 && this.selectedUsers.length === this.users.length)
-      }
-    },
+const filteredUsers = computed(() => {
+  if (!searchQuery.value) {
+    return users.value;
+  }
+  return users.value.filter(user => {
+    const searchTerm = searchQuery.value.toLowerCase();
+    return (
+        (user.簡稱 && user.簡稱.toLowerCase().includes(searchTerm)) ||
+        (user.音典分區 && user.音典分區.toLowerCase().includes(searchTerm)) ||
+        (user.特徵 && user.特徵.toLowerCase().includes(searchTerm)) ||
+        (user.聲韻調 && user.聲韻調.toLowerCase().includes(searchTerm)) ||
+        (user.值 && user.值.toLowerCase().includes(searchTerm)) ||
+        (user.說明 && user.說明.toLowerCase().includes(searchTerm)) ||
+        formatTime(user.created_at).toLowerCase().includes(searchTerm)
+    );
+  });
+});
 
-    getArrowClass(field) {
-      return this.sortOrder[field] === 'asc' ? 'arrow-up' : 'arrow-down';
-    },
-    sortData(field) {
-      const currentOrder = this.sortOrder[field] === 'asc' ? 'desc' : 'asc';
-      this.sortOrder[field] = currentOrder;
+const currentPageData = computed(() => {
+  const startIndex = (currentPage.value - 1) * pageSize.value;
+  return filteredUsers.value.slice(startIndex, startIndex + pageSize.value);
+});
 
-      if (field === 'created_at') {
-        this.users.sort((a, b) => {
-          const timeA = new Date(a.created_at).getTime();
-          const timeB = new Date(b.created_at).getTime();
-          return currentOrder === 'asc' ? timeA - timeB : timeB - timeA;
-        });
-      } else {
-        this.users.sort((a, b) => {
-          const valueA = a[field] || '';
-          const valueB = b[field] || '';
-          return currentOrder === 'asc' ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
-        });
-      }
+const isAllSelected = computed(() => {
+  return selectedUsers.value.length > 0 && selectedUsers.value.length === users.value.length;
+});
 
-      this.totalPages = Math.ceil(this.users.length / this.pageSize);
-      this.currentPage = 1;
-    },
-    prevPage() {
-      if (this.currentPage > 1) {
-        this.currentPage--;
-      }
-    },
-    nextPage() {
-      if (this.currentPage < this.totalPages) {
-        this.currentPage++;
-      }
-    },
-    goToCreateCustom(username) {
-      this.$router.push({
-        name: 'CreateCustom',
-        query: {username: username}
-      });
-    },
-    goToDeleteCustom(username) {
-      // 使用 customStore 存儲選中的數據
-      this.customStore.setSelectedUsers(this.selectedUsers);
-      this.customStore.setCurrentUsername(username);
+const toggleSelectMode = () => {
+  selectMode.value = !selectMode.value;
+  selectedUsers.value = [];
+};
 
-      // 跳转到删除页面
-      this.$router.push({
-        name: 'DeleteCustom',
-        query: {username: username}
-      });
-    },
+const reverseSelect = () => {
+  const selectedSet = new Set(selectedUsers.value);
+  selectedUsers.value = users.value
+      .map(user => user.created_at)
+      .filter(created_at => !selectedSet.has(created_at));
+};
 
-    goToEditCustom(username) {
-      // 使用 customStore 存儲選中的數據
-      this.customStore.setSelectedUsers(this.selectedUsers);
-      this.customStore.setCurrentUsername(username);
+const isSelected = (createdAt) => {
+  return selectedUsers.value.includes(createdAt);
+};
 
-      // 跳转到编辑页面
-      this.$router.push({
-        name: 'EditCustom',
-        query: {username: username}
-      });
-    },
-    goToHome(){
-      this.$router.push({name: 'Home'});
-    },
+const toggleSelection = (createdAt) => {
+  const index = selectedUsers.value.indexOf(createdAt);
+  if (index === -1) {
+    selectedUsers.value.push(createdAt);
+  } else {
+    selectedUsers.value.splice(index, 1);
   }
 };
+
+const toggleSelectAll = () => {
+  if (selectedUsers.value.length === users.value.length) {
+    selectedUsers.value = [];
+  } else {
+    selectedUsers.value = users.value.map(user => user.created_at);
+  }
+};
+
+const getArrowClass = (field) => {
+  return sortOrder.value[field] === 'asc' ? 'arrow-up' : 'arrow-down';
+};
+
+const sortData = (field) => {
+  const currentOrder = sortOrder.value[field] === 'asc' ? 'desc' : 'asc';
+  sortOrder.value[field] = currentOrder;
+
+  if (field === 'created_at') {
+    users.value.sort((a, b) => {
+      const timeA = new Date(a.created_at).getTime();
+      const timeB = new Date(b.created_at).getTime();
+      return currentOrder === 'asc' ? timeA - timeB : timeB - timeA;
+    });
+  } else {
+    users.value.sort((a, b) => {
+      const valueA = a[field] || '';
+      const valueB = b[field] || '';
+      return currentOrder === 'asc' ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
+    });
+  }
+
+  totalPages.value = Math.ceil(users.value.length / pageSize.value);
+  currentPage.value = 1;
+};
+
+const prevPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--;
+  }
+};
+
+const nextPage = () => {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++;
+  }
+};
+
+const goToCreateCustom = (username) => {
+  router.push({
+    name: 'CreateCustom',
+    query: { username: username }
+  });
+};
+
+const goToDeleteCustom = (username) => {
+  customStore.setSelectedUsers(selectedUsers.value);
+  customStore.setCurrentUsername(username);
+
+  router.push({
+    name: 'DeleteCustom',
+    query: { username: username }
+  });
+};
+
+const goToEditCustom = (username) => {
+  customStore.setSelectedUsers(selectedUsers.value);
+  customStore.setCurrentUsername(username);
+
+  router.push({
+    name: 'EditCustom',
+    query: { username: username }
+  });
+};
+
+const goToHome = () => {
+  router.push({ name: 'Home' });
+};
+
+onMounted(async () => {
+  const usernameQuery = route.query.username;
+  const created_at = route.query.created_at;
+  if (created_at) {
+    searchQuery.value = created_at;
+  }
+  username.value = usernameQuery;
+  try {
+    const response = await api.get(`/custom/user?query=${usernameQuery}`);
+    users.value = response.data;
+    totalPages.value = Math.ceil(users.value.length / pageSize.value);
+  } catch (error) {
+    console.error("API 请求错误:", error);
+  }
+});
 </script>
 
 <style scoped lang="scss">

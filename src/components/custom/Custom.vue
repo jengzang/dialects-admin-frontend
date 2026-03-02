@@ -56,134 +56,117 @@
 </template>
 
 
-<script>
+<script setup>
 import { ref, onMounted, computed } from 'vue';
-import api from '../../axios.js'; // 引入API请求配置
+import { useRouter } from 'vue-router';
+import api from '../../axios.js';
 import { BasePagination } from '@/components/common';
-import { formatTime } from "../../utils.js";  // 假设你有一个 utils.js 用来处理时间格式化
+import { formatTime } from "../../utils.js";
 
-export default {
-  name: 'Custom',
-  components: {
-    BasePagination
-  },
-  setup() {
-    const data = ref([]);  // 定义所有数据
-    const currentPage = ref(1);  // 当前页码
-    const searchQuery = ref('');  // 用于绑定搜索框内容
-    const pageSize = 50;  // 每页最多显示 50 行
-    const totalPages = computed(() => {
-      return Math.ceil(data.value.length / pageSize);
-    });
+const router = useRouter();
 
-    // 排序状态
-    const sortField = ref(''); // 当前排序字段
-    const sortOrder = ref('asc'); // 当前排序顺序（升序/降序）
+const data = ref([]);
+const currentPage = ref(1);
+const searchQuery = ref('');
+const pageSize = 50;
 
-    // 获取数据
-    const fetchData = async () => {
-      try {
-        const result = await api.get('/custom/all');  // 使用 await 等待异步请求结果
-        data.value = result.data;  // 把结果赋值给反应式变量
-      } catch (error) {
-        console.error('Error:', error);  // 如果有错误，会在控制台打印
-      }
-    };
+const totalPages = computed(() => {
+  return Math.ceil(data.value.length / pageSize);
+});
 
-    // 当组件加载完成后，请求数据
-    onMounted(() => {
-      fetchData();
-    });
+// 排序状态
+const sortField = ref('');
+const sortOrder = ref('asc');
 
-    // 计算当前页面显示的数据
-    const currentPageData = computed(() => {
-      let filteredData = data.value;
-
-      // 过滤数据
-      if (searchQuery.value) {
-        filteredData = filteredData.filter(item => {
-          const formattedTime = formatTime(item.created_at);  // 获取格式化后的时间
-          return (
-              (item.username && item.username.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
-              (item.簡稱 && item.簡稱.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
-              (item.音典分區 && item.音典分區.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
-              (item.特徵 && item.特徵.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
-              (item.聲韻調 && item.聲韻調.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
-              (item.值 && item.值.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
-              (item.說明 && item.說明.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
-              formattedTime.includes(searchQuery.value)  // 比较用户输入的日期
-          );
-        });
-      }
-
-      // 排序数据
-      let sortedData = [...filteredData];
-      if (sortField.value) {
-        sortedData.sort((a, b) => {
-          const valA = a[sortField.value] || '';
-          const valB = b[sortField.value] || '';
-
-          if (sortOrder.value === 'asc') {
-            return valA < valB ? -1 : valA > valB ? 1 : 0;
-          } else {
-            return valA > valB ? -1 : valA < valB ? 1 : 0;
-          }
-        });
-      }
-
-      // 根据当前页码计算当前页数据
-      const startIndex = (currentPage.value - 1) * pageSize;
-      return sortedData.slice(startIndex, startIndex + pageSize);
-    });
-
-    // 处理分页变化
-    const handlePageChange = (page) => {
-      currentPage.value = page;
-    };
-
-    // 排序方法
-    const sortData = (field) => {
-      if (sortField.value === field) {
-        sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
-      } else {
-        sortField.value = field;
-        sortOrder.value = 'asc';
-      }
-    };
-
-    // 获取排序的箭头图标
-    const getArrowClass = (field) => {
-      return sortField.value === field ? (sortOrder.value === 'asc' ? 'arrow-up' : 'arrow-down') : '';
-    };
-
-    return {
-      data,
-      currentPage,
-      searchQuery,
-      totalPages,
-      currentPageData,
-      handlePageChange,
-      sortData,
-      getArrowClass,
-      formatTime,
-    };
-  },
-  methods:{
-    goToPerUser(user) {
-      const formattedTime = this.formatTime(user.created_at);  // 格式化创建时间
-      this.$router.push({
-        name: 'PerUser',
-        query: {
-          username: user.username,
-          created_at: formattedTime,  // 将创建时间传递给目标页面
-        }
-      });
-    },
-    goToHome(){
-      this.$router.push({name: 'Home'});
-    },
+// 获取数据
+const fetchData = async () => {
+  try {
+    const result = await api.get('/custom/all');
+    data.value = result.data;
+  } catch (error) {
+    console.error('Error:', error);
   }
 };
+
+// 计算当前页面显示的数据
+const currentPageData = computed(() => {
+  let filteredData = data.value;
+
+  // 过滤数据
+  if (searchQuery.value) {
+    filteredData = filteredData.filter(item => {
+      const formattedTime = formatTime(item.created_at);
+      return (
+          (item.username && item.username.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
+          (item.簡稱 && item.簡稱.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
+          (item.音典分區 && item.音典分區.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
+          (item.特徵 && item.特徵.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
+          (item.聲韻調 && item.聲韻調.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
+          (item.值 && item.值.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
+          (item.說明 && item.說明.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
+          formattedTime.includes(searchQuery.value)
+      );
+    });
+  }
+
+  // 排序数据
+  let sortedData = [...filteredData];
+  if (sortField.value) {
+    sortedData.sort((a, b) => {
+      const valA = a[sortField.value] || '';
+      const valB = b[sortField.value] || '';
+
+      if (sortOrder.value === 'asc') {
+        return valA < valB ? -1 : valA > valB ? 1 : 0;
+      } else {
+        return valA > valB ? -1 : valA < valB ? 1 : 0;
+      }
+    });
+  }
+
+  // 根据当前页码计算当前页数据
+  const startIndex = (currentPage.value - 1) * pageSize;
+  return sortedData.slice(startIndex, startIndex + pageSize);
+});
+
+// 处理分页变化
+const handlePageChange = (page) => {
+  currentPage.value = page;
+};
+
+// 排序方法
+const sortData = (field) => {
+  if (sortField.value === field) {
+    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortField.value = field;
+    sortOrder.value = 'asc';
+  }
+};
+
+// 获取排序的箭头图标
+const getArrowClass = (field) => {
+  return sortField.value === field ? (sortOrder.value === 'asc' ? 'arrow-up' : 'arrow-down') : '';
+};
+
+const goToPerUser = (user) => {
+  const formattedTime = formatTime(user.created_at);
+  router.push({
+    name: 'PerUser',
+    query: {
+      username: user.username,
+      created_at: formattedTime,
+    }
+  });
+};
+
+const goToHome = () => {
+  router.push({ name: 'Home' });
+};
+
+onMounted(() => {
+  fetchData();
+});
 </script>
 
 
