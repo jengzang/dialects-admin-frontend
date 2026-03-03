@@ -206,7 +206,7 @@ const goToSessionManagement = () => {
 const viewUserSessions = (user) => {
   router.push({
     name: 'UserSessionManagement',
-    params: { userId: user.id },
+    params: { userId: user.id },  // 使用 id 作为路由参数
     query: {
       username: user.username
     }

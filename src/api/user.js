@@ -28,7 +28,7 @@ export const userAPI = {
    * @returns {Promise} 用戶列表
    */
   getAllUsers() {
-    return api.get('/users/all');
+    return api.get('/users/list');
   },
 
   /**

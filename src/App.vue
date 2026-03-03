@@ -5,12 +5,20 @@
         <component :is="Component" />
       </keep-alive>
     </router-view>
+    <BaseMessage />
+    <BaseDialog />
   </div>
 </template>
 
 <script>
+import { BaseMessage, BaseDialog } from '@/components/common';
+
 export default {
-  name: 'App'
+  name: 'App',
+  components: {
+    BaseMessage,
+    BaseDialog
+  }
 }
 </script>
 

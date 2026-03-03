@@ -1,8 +1,10 @@
 import axios from 'axios';
 import { getToken, removeToken, refreshAccessToken, isTokenExpiringSoon } from './utils/auth';
 import { ElMessage } from 'element-plus';
-window.WEB_BASE = "https://dialects.yzup.top"
-window.ADMIN_BASE = window.WEB_BASE + "/admin";
+
+// 使用环境变量配置 API 地址
+window.WEB_BASE = import.meta.env.VITE_WEB_BASE || "https://dialects.yzup.top";
+window.ADMIN_BASE = import.meta.env.VITE_ADMIN_BASE || (window.WEB_BASE + "/admin");
 
 // 創建 Axios 實例
 const api = axios.create({

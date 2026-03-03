@@ -6,11 +6,11 @@ import api from '../axios.js';
 export const statsAPI = {
   /**
    * 獲取用戶統計信息
-   * @param {string} username - 用戶名
+   * @param {string} username - 用戶名或郵箱
    * @returns {Promise} 用戶統計數據
    */
   getUserStats(username) {
-    return api.get(`/stats/user/${username}`).then(res => res.data);
+    return api.get('/stats/stats', { params: { query: username } }).then(res => res.data);
   },
 
   /**
@@ -23,17 +23,18 @@ export const statsAPI = {
 
   /**
    * 獲取用戶登錄歷史
-   * @param {string} username - 用戶名
+   * @param {string} username - 用戶名或郵箱
    * @returns {Promise} 登錄歷史記錄
    */
   getUserLoginHistory(username) {
-    return api.get(`/stats/login-history/${username}`).then(res => res.data);
+    return api.get('/stats/login-history', { params: { query: username } }).then(res => res.data);
   },
 
   /**
-   * 獲取用戶統計信息（查詢參數版本）
+   * 獲取用戶統計信息（查詢參數版本）- 已廢棄，使用 getUserStats 替代
    * @param {string} username - 用戶名
    * @returns {Promise} 用戶統計數據
+   * @deprecated 使用 getUserStats 替代
    */
   getStatsQuery(username) {
     return api.get('/stats/stats', { params: { query: username } }).then(res => res.data);

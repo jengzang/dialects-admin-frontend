@@ -2,7 +2,7 @@
   <div>
     <div class="header-container">
       <h2>近期 API 使用詳情</h2>
-      <input v-model="searchQuery" type="text" placeholder="搜索..." class="search-box" />
+      <input v-model="searchQuery" @input="handleSearch" type="text" placeholder="搜索..." class="search-box" />
     </div>
 
 <!--    <button @click="goToApiStatsPage" style="max-width: 100px;padding:3px;display: flex;justify-self: center">API統計表</button>-->
@@ -65,7 +65,7 @@
           </thead>
           <tbody>
           <tr v-for="ipStat in filteredIPStats" :key="ipStat.ip">
-            <td @click="handleIPClick(ipStat.ip)" style="cursor: pointer;">{{ ipStat.ip }}</td>
+            <td class="clickable-cell" @click="handleIPClick(ipStat.ip)">{{ ipStat.ip }}</td>
             <td>{{ ipStat.totalDuration.toFixed(3) }}s</td> <!-- 总使用时长 -->
             <td>{{ ipStat.occurrenceCount }}</td> <!-- 出现次数 -->
             <td>{{ ipStat.totalUploadTraffic }}KB</td>  <!-- 上行流量 -->
@@ -121,7 +121,7 @@
       </tr>
       </thead>
       <tbody>
-      <tr v-for="(log, index) in currentPageData" :key="index">
+      <tr v-for="(log, index) in filteredLogs" :key="index">
         <td>{{ log.user || '' }}</td> <!-- 用户 -->
         <td>{{ log.ip }}</td>
         <td>{{ log.path }}</td>
@@ -184,6 +184,8 @@ const uniqueUsersCount = ref(0);
 const uniqueIPsCount = ref(0);
 
 // 排序相关
+const currentSortBy = ref('called_at');  // 当前排序字段
+const currentSortOrder = ref('desc');    // 当前排序方向
 const sortOrder = ref({
   user: 'asc',
   totalDuration: 'desc',
@@ -194,50 +196,33 @@ const sortOrder = ref({
   os: 'asc',
   browser: 'asc',
   called_at: 'desc',
+  uploadTraffic: 'desc',
+  downloadTraffic: 'desc',
+  request_size: 'desc',
+  response_size: 'desc'
 });
 const sortField = ref('');
 const searchQuery = ref('');
+let searchTimeout = null;  // 搜索防抖定时器
 
-// 计算属性 - 实时筛选日志数据
+// 计算属性 - 直接使用 apiLogs（后端已处理搜索）
 const filteredLogs = computed(() => {
-  return apiLogs.value.filter(log => {
-    return (
-      (log.user || '').includes(searchQuery.value) ||
-      (log.ip || '').includes(searchQuery.value) ||
-      (log.path || '').includes(searchQuery.value) ||
-      (log.os || '').includes(searchQuery.value) ||
-      (log.browser || '').includes(searchQuery.value)
-    );
-  });
+  return apiLogs.value;
 });
 
-// 计算属性 - 当前页面的数据
-const currentPageData = computed(() => {
-  const startIndex = (currentPage.value - 1) * pageSize.value;
-  return filteredLogs.value.slice(startIndex, startIndex + pageSize.value);
-});
-
-// 计算属性 - 实时筛选用户统计
+// 计算属性 - 使用后端返回的统计数据
 const filteredUserStats = computed(() => {
-  const displayedUsers = filteredLogs.value.map(log => log.user);
-  return userStats.value.filter(userStat => displayedUsers.includes(userStat.user));
+  return userStats.value;
 });
 
-// 计算属性 - 实时筛选IP统计
+// 计算属性 - 使用后端返回的统计数据
 const filteredIPStats = computed(() => {
-  const displayedIPs = filteredLogs.value.map(log => log.ip);
-  return ipStats.value.filter(ipStat => displayedIPs.includes(ipStat.ip));
+  return ipStats.value;
 });
 
-// 计算属性 - 实时筛选API调用统计
+// 计算属性 - 使用后端返回的统计数据
 const filteredAPICalls = computed(() => {
-  const displayedPaths = filteredLogs.value.map(log => log.path);
-  return Object.keys(apiCalls.value)
-    .filter(path => displayedPaths.includes(path))
-    .reduce((obj, path) => {
-      obj[path] = apiCalls.value[path];
-      return obj;
-    }, {});
+  return apiCalls.value;
 });
 
 // 获取箭头的 CSS 类
@@ -245,55 +230,207 @@ const getArrowClass = (field) => {
   return sortOrder.value[field] === 'asc' ? 'arrow-up' : 'arrow-down';
 };
 
-// 排序方法
-const sortData = (field) => {
+// 排序方法 - 调用后端 API
+const sortData = async (field) => {
+  // 切换排序方向
   const currentOrder = sortOrder.value[field] === 'asc' ? 'desc' : 'asc';
   sortOrder.value[field] = currentOrder;
 
-  // 排序字段为时间的特殊处理
-  if (field === 'called_at') {
-    apiLogs.value.sort((a, b) => {
-      const timeA = new Date(a.called_at).getTime();
-      const timeB = new Date(b.called_at).getTime();
-      return currentOrder === 'asc' ? timeB - timeA : timeA - timeB;
-    });
-  } else if (field === 'user' || field === 'ip' || field === 'path' || field === 'os' || field === 'browser') {
-    // 字符串字段排序
-    apiLogs.value.sort((a, b) => {
-      const valueA = a[field] || '';
-      const valueB = b[field] || '';
-      if (currentOrder === 'asc') {
-        return valueA.localeCompare(valueB);
-      } else {
-        return valueB.localeCompare(valueA);
-      }
-    });
-  } else {
-    // 数字字段排序
-    apiLogs.value.sort((a, b) => {
-      if (currentOrder === 'asc') {
-        return a[field] - b[field];
-      } else {
-        return b[field] - a[field];
-      }
-    });
-  }
+  // 映射前端字段到后端字段
+  const fieldMap = {
+    'uploadTraffic': 'request_size',
+    'downloadTraffic': 'response_size'
+  };
 
-  // 排序之后重新计算分页
-  totalPages.value = Math.ceil(apiLogs.value.length / pageSize.value);
+  currentSortBy.value = fieldMap[field] || field;
+  currentSortOrder.value = currentOrder;
+
+  // 重置到第一页并重新获取数据
   currentPage.value = 1;
+  await fetchPageData(false);  // 排序时不需要重新获取统计
 };
 
 // 处理分页变化
-const handlePageChange = (page) => {
+const handlePageChange = async (page) => {
   currentPage.value = page;
-  fetchPageData();
+  await fetchPageData(false);  // 翻页时不需要重新获取统计
 };
 
-// 更新当前页数据
-const fetchPageData = () => {
-  totalPages.value = Math.ceil(apiLogs.value.length / pageSize.value);
+// 搜索处理（带防抖）
+const handleSearch = () => {
+  if (searchTimeout) {
+    clearTimeout(searchTimeout);
+  }
+
+  searchTimeout = setTimeout(async () => {
+    currentPage.value = 1;  // 搜索时重置到第一页
+    await fetchPageData(true);  // 搜索时需要重新获取统计
+  }, 500);  // 500ms 防抖
 };
+
+// 从后端获取数据
+const fetchPageData = async (includeStats = false) => {
+  try {
+    const params = {
+      skip: (currentPage.value - 1) * pageSize.value,
+      limit: pageSize.value,
+      include_stats: includeStats
+    };
+
+    // 添加搜索参数
+    if (searchQuery.value) {
+      params.search = searchQuery.value;
+    }
+
+    // 添加排序参数
+    if (currentSortBy.value) {
+      params.sort_by = currentSortBy.value;
+      params.sort_order = currentSortOrder.value;
+    }
+
+    const response = await analyticsAPI.getApiUsage(params);
+
+    console.log('API response:', response);
+
+    // 处理返回的数据结构
+    const logs = Array.isArray(response) ? response : (response.data || response.logs || []);
+
+    // 获取总记录数用于分页
+    const totalRecords = response.total || logs.length;
+
+    // 为每个日志添加上行流量和下行流量
+    apiLogs.value = logs.map(log => ({
+      ...log,
+      uploadTraffic: (log.request_size / 1024).toFixed(2),
+      downloadTraffic: (log.response_size / 1024).toFixed(2)
+    }));
+
+    // 计算总页数
+    totalPages.value = Math.ceil(totalRecords / pageSize.value);
+
+    // 如果返回了统计数据，更新统计
+    if (response.statistics) {
+      updateStatsFromBackend(response.statistics);
+    }
+
+  } catch (error) {
+    console.error('Error fetching API usage data', error);
+    console.error('Error details:', error.response?.data || error.message);
+  }
+};
+
+// 使用后端返回的统计数据
+const updateStatsFromBackend = (statistics) => {
+  if (!statistics) return;
+
+  // 更新总览数据
+  if (statistics.summary) {
+    totalAPICalls.value = statistics.summary.total_calls || 0;
+    uniqueUsersCount.value = statistics.summary.unique_users || 0;
+    uniqueIPsCount.value = statistics.summary.unique_ips || 0;
+  }
+
+  // 更新用户统计
+  if (statistics.user_stats) {
+    userStats.value = statistics.user_stats.map(stat => ({
+      user: stat.user || '匿名用户',
+      totalDuration: stat.total_duration || 0,
+      occurrenceCount: stat.call_count || 0,
+      totalUploadTraffic: ((stat.total_upload || 0) / 1024).toFixed(2),
+      totalDownloadTraffic: ((stat.total_download || 0) / (1024 * 1024)).toFixed(2)
+    }));
+  }
+
+  // 更新 IP 统计
+  if (statistics.ip_stats) {
+    ipStats.value = statistics.ip_stats.map(stat => ({
+      ip: stat.ip,
+      totalDuration: stat.total_duration || 0,
+      occurrenceCount: stat.call_count || 0,
+      totalUploadTraffic: ((stat.total_upload || 0) / 1024).toFixed(2),
+      totalDownloadTraffic: ((stat.total_download || 0) / (1024 * 1024)).toFixed(2)
+    }));
+  }
+
+  // 更新 API 路径统计
+  if (statistics.path_stats) {
+    apiCalls.value = statistics.path_stats.reduce((acc, stat) => {
+      acc[stat.path] = {
+        count: stat.call_count || 0,
+        totalDuration: stat.total_duration || 0,
+        totalUploadTraffic: ((stat.total_upload || 0) / 1024) || 0,
+        totalDownloadTraffic: ((stat.total_download || 0) / (1024 * 1024)) || 0
+      };
+      return acc;
+    }, {});
+  }
+};
+
+// 旧的前端统计方法（作为后备）
+const updateStats = () => {
+  // 独特用户统计
+  uniqueUsers.value = [...new Set(apiLogs.value.map(log => log.user || ''))];
+  uniqueUsersCount.value = uniqueUsers.value.length;
+
+  userStats.value = uniqueUsers.value.map(user => {
+    const userLogs = apiLogs.value.filter(log => log.user === user);
+    const totalDuration = userLogs.reduce((acc, log) => acc + log.duration, 0);
+    const occurrenceCount = userLogs.length;
+    const totalUploadTraffic = userLogs.reduce((acc, log) => acc + (log.request_size || 0), 0);
+    const totalDownloadTraffic = userLogs.reduce((acc, log) => acc + (log.response_size || 0), 0);
+    return {
+      user: user || '匿名用户',
+      totalDuration,
+      occurrenceCount,
+      totalUploadTraffic: (totalUploadTraffic / 1024).toFixed(2),
+      totalDownloadTraffic: (totalDownloadTraffic / (1024 * 1024)).toFixed(2)
+    };
+  });
+
+  // 排序：按总使用时长从大到小
+  userStats.value.sort((a, b) => b.totalDuration - a.totalDuration);
+
+  // 独特 IP 地址统计
+  uniqueIPs.value = [...new Set(apiLogs.value.map(log => log.ip))];
+  uniqueIPsCount.value = uniqueIPs.value.length;
+
+  ipStats.value = uniqueIPs.value.map(ip => {
+    const ipLogs = apiLogs.value.filter(log => log.ip === ip);
+    const totalDuration = ipLogs.reduce((acc, log) => acc + log.duration, 0);
+    const occurrenceCount = ipLogs.length;
+    const totalUploadTraffic = ipLogs.reduce((acc, log) => acc + (log.request_size || 0), 0);
+    const totalDownloadTraffic = ipLogs.reduce((acc, log) => acc + (log.response_size || 0), 0);
+    return {
+      ip,
+      totalDuration,
+      occurrenceCount,
+      totalUploadTraffic: (totalUploadTraffic / 1024).toFixed(2),
+      totalDownloadTraffic: (totalDownloadTraffic / (1024 * 1024)).toFixed(2)
+    };
+  });
+
+  // 排序：按总使用时长从大到小
+  ipStats.value.sort((a, b) => b.totalDuration - a.totalDuration);
+
+  // API 调用统计
+  totalAPICalls.value = 0;
+  apiCalls.value = apiLogs.value.reduce((acc, log) => {
+    if (!acc[log.path]) {
+      acc[log.path] = { count: 0, totalDuration: 0, totalUploadTraffic: 0, totalDownloadTraffic: 0 };
+    }
+    acc[log.path].count += 1;
+    acc[log.path].totalDuration += log.duration;
+    acc[log.path].totalUploadTraffic += ((log.request_size / 1024)) || 0;
+    acc[log.path].totalDownloadTraffic += ((log.response_size / (1024 * 1024))) || 0;
+    totalAPICalls.value += 1;
+    return acc;
+  }, {});
+};
+
+// 生命周期钩子
+onMounted(async () => {
+  await fetchPageData(true);  // 首次加载时获取统计数据
+});
 
 // 弹窗控制方法
 const showUniqueUsers = () => {
@@ -333,89 +470,6 @@ const handleIPClick = async (ip) => {
 const goToHome = () => {
   router.push({ name: 'Home' });
 };
-
-// 生命周期钩子
-onMounted(async () => {
-  try {
-    const logs = await analyticsAPI.getApiUsage({
-      skip: currentPage.value,
-      limit: pageSize.value
-    });
-
-    // 为每个日志添加上行流量和下行流量
-    apiLogs.value = logs.map(log => ({
-      ...log,
-      uploadTraffic: (log.request_size / 1024).toFixed(2),
-      downloadTraffic: (log.response_size / 1024).toFixed(2)
-    }));
-
-    // 独特用户统计
-    uniqueUsers.value = [...new Set(apiLogs.value.map(log => log.user || ''))];
-    uniqueUsersCount.value = uniqueUsers.value.length;
-
-    userStats.value = uniqueUsers.value.map(user => {
-      const userLogs = apiLogs.value.filter(log => log.user === user);
-      const totalDuration = userLogs.reduce((acc, log) => acc + log.duration, 0);
-      const occurrenceCount = userLogs.length;
-      const totalUploadTraffic = userLogs.reduce((acc, log) => acc + (log.request_size || 0), 0);
-      const totalDownloadTraffic = userLogs.reduce((acc, log) => acc + (log.response_size || 0), 0);
-      return {
-        user: user || '匿名用户',
-        totalDuration,
-        occurrenceCount,
-        totalUploadTraffic: (totalUploadTraffic / 1024).toFixed(2),
-        totalDownloadTraffic: (totalDownloadTraffic / (1024 * 1024)).toFixed(2)
-      };
-    });
-
-    // 排序：按总使用时长从大到小
-    userStats.value.sort((a, b) => b.totalDuration - a.totalDuration);
-
-    // 独特 IP 地址统计
-    uniqueIPs.value = [...new Set(apiLogs.value.map(log => log.ip))];
-    uniqueIPsCount.value = uniqueIPs.value.length;
-
-    ipStats.value = uniqueIPs.value.map(ip => {
-      const ipLogs = apiLogs.value.filter(log => log.ip === ip);
-      const totalDuration = ipLogs.reduce((acc, log) => acc + log.duration, 0);
-      const occurrenceCount = ipLogs.length;
-      const totalUploadTraffic = ipLogs.reduce((acc, log) => acc + (log.request_size || 0), 0);
-      const totalDownloadTraffic = ipLogs.reduce((acc, log) => acc + (log.response_size || 0), 0);
-      return {
-        ip,
-        totalDuration,
-        occurrenceCount,
-        totalUploadTraffic: (totalUploadTraffic / 1024).toFixed(2),
-        totalDownloadTraffic: (totalDownloadTraffic / (1024 * 1024)).toFixed(2)
-      };
-    });
-
-    // 排序：按总使用时长从大到小
-    ipStats.value.sort((a, b) => b.totalDuration - a.totalDuration);
-
-    // API 调用统计
-    apiCalls.value = apiLogs.value.reduce((acc, log) => {
-      if (!acc[log.path]) {
-        acc[log.path] = { count: 0, totalDuration: 0, totalUploadTraffic: 0, totalDownloadTraffic: 0 };
-      }
-      acc[log.path].count += 1;
-      acc[log.path].totalDuration += log.duration;
-      acc[log.path].totalUploadTraffic += ((log.request_size / 1024)) || 0;
-      acc[log.path].totalDownloadTraffic += ((log.response_size / (1024 * 1024))) || 0;
-      totalAPICalls.value += 1;
-      return acc;
-    }, {});
-
-    // 总页数的计算
-    totalPages.value = Math.ceil(totalAPICalls.value / pageSize.value);
-
-    // 排序数据 - 确保按请求时间倒序初始化
-    sortData('called_at');
-
-  } catch (error) {
-    console.error('Error fetching API usage data', error);
-  }
-});
 </script>
 
 <style scoped lang="scss">
@@ -466,9 +520,73 @@ h1 {
   padding: $spacing-md;
   border-radius: $spacing-xs;
   width: 90%;
-  max-width: 500px;
   max-height: 80%;
   overflow-y: auto;
+
+  // 弹窗中的可点击行样式（用户列表）
+  .clickable {
+    cursor: pointer;
+    transition: all $transition-normal;
+
+    td:first-child {
+      color: $color-primary-dark;
+      font-weight: 500;
+      position: relative;
+
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: 2px;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background-color: $color-primary;
+        transition: width $transition-normal;
+      }
+    }
+
+    &:hover {
+      background-color: $color-primary-light;
+      transform: translateX(2px);
+
+      td:first-child {
+        color: $color-primary-dark;
+
+        &::after {
+          width: 100%;
+        }
+      }
+    }
+  }
+
+  // 可点击单元格样式（IP 地址）
+  .clickable-cell {
+    color: $color-primary;
+    font-weight: 500;
+    cursor: pointer;
+    position: relative;
+    transition: all $transition-normal;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 2px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background-color: $color-primary;
+      transition: width $transition-normal;
+    }
+
+    &:hover {
+      color: $color-primary-dark;
+      transform: translateX(2px);
+
+      &::after {
+        width: 100%;
+      }
+    }
+  }
 }
 
 .close {
@@ -489,7 +607,7 @@ h1 {
   margin-top: $spacing-md;
   flex-wrap: wrap;
 
-  button {
+  :deep(button) {
     @include button-variant($color-primary, #45a049);
     padding: $spacing-sm $spacing-md;
     margin: $spacing-xs;
@@ -503,7 +621,7 @@ h1 {
     }
   }
 
-  span {
+  :deep(span) {
     font-size: $font-size-md;
     align-self: center;
     color: $color-text-primary;
@@ -613,7 +731,7 @@ table {
     width: 95%;
   }
 
-  .pagination-controls button {
+  .pagination-controls :deep(button) {
     font-size: $font-size-sm;
     min-width: 100px;
   }
@@ -634,7 +752,7 @@ table {
     font-size: $font-size-xs;
   }
 
-  .pagination-controls button {
+  .pagination-controls :deep(button) {
     font-size: 13px;
     padding: 6px 14px;
   }

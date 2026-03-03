@@ -6,6 +6,13 @@ export default defineConfig({
   plugins: [vue()],
   resolve: { alias: { '@': path.resolve(__dirname, 'src') } },
   base: '/admin/',
+  css: {
+    preprocessorOptions: {
+      scss: {
+        silenceDeprecations: ['import', 'global-builtin', 'color-functions']
+      }
+    }
+  },
   build: {
     rollupOptions: {
       output: {
