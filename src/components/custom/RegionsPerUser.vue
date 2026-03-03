@@ -216,7 +216,8 @@ onMounted(async () => {
   username.value = usernameQuery;
   try {
     const response = await customRegionsAPI.getUserRegions(usernameQuery);
-    users.value = response.data || response;
+    // API 返回格式: { username, total, regions: [...] }
+    users.value = response.regions || [];
     totalPages.value = Math.ceil(users.value.length / pageSize.value);
   } catch (error) {
     console.error("API 请求错误:", error);

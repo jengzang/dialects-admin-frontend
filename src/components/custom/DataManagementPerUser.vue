@@ -71,7 +71,8 @@ const fetchCounts = async () => {
     customDataCount.value = customData.data?.length || 0;
 
     const regionsData = await customRegionsAPI.getUserRegions(username.value);
-    regionsCount.value = regionsData.data?.length || regionsData.length || 0;
+    // API 返回格式: { username, total, regions: [...] }
+    regionsCount.value = regionsData.total || regionsData.regions?.length || 0;
   } catch (error) {
     console.error('Error fetching counts:', error);
   }

@@ -64,7 +64,8 @@ onMounted(async () => {
   // Fetch selected regions data
   try {
     const response = await customRegionsAPI.getUserRegions(username.value);
-    const allRegions = response.data || response;
+    // API 返回格式: { username, total, regions: [...] }
+    const allRegions = response.regions || [];
     formData.value = allRegions.filter(region => selectedRegions.value.includes(region.id));
   } catch (error) {
     console.error('獲取區域數據失敗:', error);
