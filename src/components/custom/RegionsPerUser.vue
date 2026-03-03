@@ -1,47 +1,50 @@
 <template>
   <div>
-    <h1 v-if="showHeader">{{username}}的數據--共 {{ users.length }} 條</h1>
+    <h1 v-if="showHeader">{{username}}的區域--共 {{ users.length }} 條</h1>
     <div class="top-controls">
-      <button @click="goToCreateCustom(username)" style="margin:10px 10px 0 0">添加數據</button><!-- 需要排布為 2x2 的按鈕 -->
-      <!-- 只有在 selectMode 为 false 时显示 "選擇數據" 按钮 -->
+      <button @click="goToCreateRegion(username)" style="margin:10px 10px 0 0">添加區域</button>
+      <!-- 只有在 selectMode 为 false 时显示 \"選擇區域\" 按钮 -->
       <button v-if="!selectMode" @click="toggleSelectMode" style="background: #1c8dba;">
-        選擇數據
+        選擇區域
       </button>
 
-      <!-- 只有在 selectMode 为 true 时显示 "關閉選擇" 按钮，并显示操作按钮 -->
+      <!-- 只有在 selectMode 为 true 时显示 \"關閉選擇\" 按钮，并显示操作按钮 -->
       <div v-if="selectMode" class="select-mode-buttons">
-        <button @click="goToDeleteCustom(username)" style="background: darkred;">刪除數據</button>
+        <button @click="goToDeleteRegion(username)" style="background: darkred;">刪除區域</button>
         <button @click="toggleSelectMode" style="background: #9e9d24;">
           關閉選擇
         </button>
-        <button @click="goToEditCustom(username)" style="background: darkblue;">編輯數據</button>
+        <button @click="goToEditRegion(username)" style="background: darkblue;">編輯區域</button>
         <button @click="reverseSelect" style="background: #777;">反選</button>
       </div>
 
       <!-- 搜索框 -->
       <div class="search-container">
-        <input v-model="searchQuery" @input="searchUser" type="text" placeholder="搜索用戶名、簡稱、音典分區、特徵、聲韻調、值、說明" />
+        <input v-model="searchQuery" @input="searchUser" type="text" placeholder="搜索區域名、說明" />
       </div>
     </div>
 
     <BaseTable
       v-if="users.length"
-      :columns="customColumns"
+      :columns="regionsColumns"
       :data="currentPageData"
       :selectable="selectMode"
-      :row-key="'created_at'"
+      :row-key="'id'"
       @sort="handleSort"
       @selection-change="handleSelectionChange"
       ref="tableRef"
     >
-      <template #cell-說明="{ value }">
+      <template #cell-locations="{ value }">
+        {{ value.join(', ') }}
+      </template>
+      <template #cell-description="{ value }">
         {{ value || '無' }}
       </template>
       <template #cell-created_at="{ value }">
         {{ formatTime(value) }}
       </template>
     </BaseTable>
-    <h3 v-else>🤷‍♂️<br>{{ username }} 無個人數據</h3>
+    <h3 v-else>🤷‍♂️<br>{{ username }} 無個人區域</h3>
 
     <!-- 分頁控制 -->
     <div class="pagination-controls">
@@ -58,9 +61,9 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import api from "../../axios.js";
-import { formatTime } from "../../utils.js";
-import { useCustomStore } from "../../stores";
+import { customRegionsAPI } from '@/api';
+import { formatTime } from '@/utils';
+import { useCustomRegionsStore } from '@/stores';
 import { BaseTable } from '@/components/common';
 
 const props = defineProps({
@@ -71,16 +74,12 @@ const props = defineProps({
   showHomeButton: {
     type: Boolean,
     default: true
-  },
-  dataType: {
-    type: String,
-    default: 'data' // 'data' or 'regions'
   }
 });
 
 const router = useRouter();
 const route = useRoute();
-const customStore = useCustomStore();
+const customRegionsStore = useCustomRegionsStore();
 
 const users = ref([]);
 const searchQuery = ref('');
@@ -92,14 +91,11 @@ const selectMode = ref(false);
 const selectedUsers = ref([]);
 const tableRef = ref(null);
 
-const customColumns = [
-  { key: '簡稱', label: '簡稱 🌏', sortable: true },
-  { key: '音典分區', label: '音典分區', sortable: true },
-  { key: '經緯度', label: '經緯度', sortable: true },
-  { key: '特徵', label: '特徵', sortable: true },
-  { key: '聲韻調', label: '聲韻調', sortable: true },
-  { key: '值', label: '值 ✔️', sortable: true },
-  { key: '說明', label: '說明 🔔', sortable: true },
+const regionsColumns = [
+  { key: 'region_name', label: '區域名', sortable: true },
+  { key: 'locations', label: '地點列表', sortable: false },
+  { key: 'location_count', label: '地點數量', sortable: true },
+  { key: 'description', label: '說明', sortable: true },
   { key: 'created_at', label: '創建時間', sortable: true }
 ];
 
@@ -110,12 +106,8 @@ const filteredUsers = computed(() => {
   return users.value.filter(user => {
     const searchTerm = searchQuery.value.toLowerCase();
     return (
-        (user.簡稱 && user.簡稱.toLowerCase().includes(searchTerm)) ||
-        (user.音典分區 && user.音典分區.toLowerCase().includes(searchTerm)) ||
-        (user.特徵 && user.特徵.toLowerCase().includes(searchTerm)) ||
-        (user.聲韻調 && user.聲韻調.toLowerCase().includes(searchTerm)) ||
-        (user.值 && user.值.toLowerCase().includes(searchTerm)) ||
-        (user.說明 && user.說明.toLowerCase().includes(searchTerm)) ||
+        (user.region_name && user.region_name.toLowerCase().includes(searchTerm)) ||
+        (user.description && user.description.toLowerCase().includes(searchTerm)) ||
         formatTime(user.created_at).toLowerCase().includes(searchTerm)
     );
   });
@@ -139,17 +131,13 @@ const toggleSelectMode = () => {
 };
 
 const handleSelectionChange = (selection) => {
-  selectedUsers.value = selection.map(row => row.created_at);
+  selectedUsers.value = selection.map(row => row.id);
 };
 
 const reverseSelect = () => {
-  // BaseTable doesn't support reverse selection directly
-  // We need to manually select/deselect rows
-  const allCreatedAts = users.value.map(u => u.created_at);
+  const allIds = users.value.map(u => u.id);
   const currentSelected = new Set(selectedUsers.value);
-  const newSelection = allCreatedAts.filter(ca => !currentSelected.has(ca));
-
-  // Update selectedUsers which will trigger selection change
+  const newSelection = allIds.filter(id => !currentSelected.has(id));
   selectedUsers.value = newSelection;
 };
 
@@ -164,6 +152,8 @@ const handleSort = ({ key, order }) => {
       const timeA = new Date(valueA).getTime();
       const timeB = new Date(valueB).getTime();
       return order === 'asc' ? timeA - timeB : timeB - timeA;
+    } else if (key === 'location_count') {
+      return order === 'asc' ? valueA - valueB : valueB - valueA;
     } else {
       return order === 'asc'
         ? String(valueA).localeCompare(String(valueB))
@@ -186,32 +176,33 @@ const nextPage = () => {
   }
 };
 
-const goToCreateCustom = (username) => {
-  const routeName = props.dataType === 'regions' ? 'CreateRegion' : 'CreateCustom';
+const searchUser = () => {
+  currentPage.value = 1;
+};
+
+const goToCreateRegion = (username) => {
   router.push({
-    name: routeName,
+    name: 'CreateRegion',
     query: { username: username }
   });
 };
 
-const goToDeleteCustom = (username) => {
-  const routeName = props.dataType === 'regions' ? 'DeleteRegion' : 'DeleteCustom';
-  customStore.setSelectedUsers(selectedUsers.value);
-  customStore.setCurrentUsername(username);
+const goToDeleteRegion = (username) => {
+  customRegionsStore.setSelectedRegions(selectedUsers.value);
+  customRegionsStore.setCurrentUsername(username);
 
   router.push({
-    name: routeName,
+    name: 'DeleteRegion',
     query: { username: username }
   });
 };
 
-const goToEditCustom = (username) => {
-  const routeName = props.dataType === 'regions' ? 'EditRegion' : 'EditCustom';
-  customStore.setSelectedUsers(selectedUsers.value);
-  customStore.setCurrentUsername(username);
+const goToEditRegion = (username) => {
+  customRegionsStore.setSelectedRegions(selectedUsers.value);
+  customRegionsStore.setCurrentUsername(username);
 
   router.push({
-    name: routeName,
+    name: 'EditRegion',
     query: { username: username }
   });
 };
@@ -222,14 +213,10 @@ const goToHome = () => {
 
 onMounted(async () => {
   const usernameQuery = route.query.username;
-  const created_at = route.query.created_at;
-  if (created_at) {
-    searchQuery.value = created_at;
-  }
   username.value = usernameQuery;
   try {
-    const response = await api.get(`/custom/user?query=${usernameQuery}`);
-    users.value = response.data;
+    const response = await customRegionsAPI.getUserRegions(usernameQuery);
+    users.value = response.data || response;
     totalPages.value = Math.ceil(users.value.length / pageSize.value);
   } catch (error) {
     console.error("API 请求错误:", error);

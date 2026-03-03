@@ -1,25 +1,31 @@
 <template>
   <div>
-    <h1 v-if="showHeader">所有用戶數據 - 共 {{ data.length }} 條</h1>
+    <h1 v-if="showHeader">所有用戶區域 - 共 {{ data.length }} 條</h1>
     <div class="top-controls">
-<!--      <p>當前共有 {{ data.length }} 條數據</p>-->
       <div v-if="showHomeButton" class="logout-button-container" style="margin-top: 0">
         <button @click="goToHome" style="background:#9e9d24">返回首頁</button>
       </div>
 
       <!-- 搜索框 -->
       <div class="search-container">
-        <input v-model="searchQuery" @input="searchUser" type="text" placeholder="搜索用戶名、簡稱、音典分區、特徵、聲韻調、值、說明" />
+        <input v-model="searchQuery" @input="searchUser" type="text" placeholder="搜索用戶名、區域名、說明" />
       </div>
     </div>
+
     <!-- 表格 -->
     <BaseTable
-      :columns="customColumns"
+      :columns="regionsColumns"
       :data="currentPageData"
       :row-clickable="true"
       @row-click="goToPerUser"
       @sort="handleSort"
     >
+      <template #cell-locations="{ value }">
+        {{ value.join(', ') }}
+      </template>
+      <template #cell-description="{ value }">
+        {{ value || '無' }}
+      </template>
       <template #cell-created_at="{ value }">
         {{ formatTime(value) }}
       </template>
@@ -42,9 +48,9 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import api from '../../axios.js';
+import { customRegionsAPI } from '@/api';
 import { BasePagination, BaseTable } from '@/components/common';
-import { formatTime } from "../../utils.js";
+import { formatTime } from '@/utils';
 
 const props = defineProps({
   showHeader: {
@@ -66,15 +72,12 @@ const currentPage = ref(1);
 const searchQuery = ref('');
 const pageSize = 50;
 
-const customColumns = [
+const regionsColumns = [
   { key: 'username', label: '用戶名', sortable: true },
-  { key: '簡稱', label: '簡稱', sortable: true },
-  { key: '音典分區', label: '音典分區', sortable: true },
-  { key: '經緯度', label: '經緯度', sortable: true },
-  { key: '特徵', label: '特徵', sortable: true },
-  { key: '聲韻調', label: '聲韻調', sortable: true },
-  { key: '值', label: '值', sortable: true },
-  { key: '說明', label: '說明', sortable: true },
+  { key: 'region_name', label: '區域名', sortable: true },
+  { key: 'locations', label: '地點列表', sortable: false },
+  { key: 'location_count', label: '地點數量', sortable: true },
+  { key: 'description', label: '說明', sortable: true },
   { key: 'created_at', label: '創建時間', sortable: true }
 ];
 
@@ -89,11 +92,16 @@ const sortOrder = ref('asc');
 // 获取数据
 const fetchData = async () => {
   try {
-    const result = await api.get('/custom/all');
-    data.value = result.data;
+    const result = await customRegionsAPI.getAll();
+    data.value = result.data || result;
   } catch (error) {
     console.error('Error:', error);
   }
+};
+
+// 搜索用户
+const searchUser = () => {
+  currentPage.value = 1;
 };
 
 // 计算当前页面显示的数据
@@ -105,14 +113,10 @@ const currentPageData = computed(() => {
     filteredData = filteredData.filter(item => {
       const formattedTime = formatTime(item.created_at);
       return (
-          (item.username && item.username.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
-          (item.簡稱 && item.簡稱.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
-          (item.音典分區 && item.音典分區.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
-          (item.特徵 && item.特徵.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
-          (item.聲韻調 && item.聲韻調.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
-          (item.值 && item.值.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
-          (item.說明 && item.說明.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
-          formattedTime.includes(searchQuery.value)
+        (item.username && item.username.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
+        (item.region_name && item.region_name.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
+        (item.description && item.description.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
+        formattedTime.includes(searchQuery.value)
       );
     });
   }
@@ -121,8 +125,15 @@ const currentPageData = computed(() => {
   let sortedData = [...filteredData];
   if (sortField.value) {
     sortedData.sort((a, b) => {
-      const valA = a[sortField.value] || '';
-      const valB = b[sortField.value] || '';
+      let valA, valB;
+
+      if (sortField.value === 'location_count') {
+        valA = a[sortField.value] || 0;
+        valB = b[sortField.value] || 0;
+      } else {
+        valA = a[sortField.value] || '';
+        valB = b[sortField.value] || '';
+      }
 
       if (sortOrder.value === 'asc') {
         return valA < valB ? -1 : valA > valB ? 1 : 0;
@@ -153,13 +164,9 @@ const goToPerUser = (user) => {
     emit('row-click', user);
   } else {
     // Fallback to direct navigation
-    const formattedTime = formatTime(user.created_at);
     router.push({
-      name: 'PerUser',
-      query: {
-        username: user.username,
-        created_at: formattedTime,
-      }
+      name: 'RegionsPerUser',
+      query: { username: user.username }
     });
   }
 };
@@ -296,15 +303,6 @@ tr:hover {
     padding: 8px;
   }
 
-  .stat-btn {
-    font-size: $font-size-sm;
-    padding: 12px;
-  }
-
-  .modal-content {
-    width: 95%;
-  }
-
   .pagination-controls button {
     display: inline;
     font-size: $font-size-sm;
@@ -332,53 +330,12 @@ tr:hover {
     padding: 8px 16px;
   }
 
-  .stat-btn {
-    font-size: $font-size-xs;
-    padding: $spacing-sm;
-  }
-
-  .close {
-    font-size: 50px;
-  }
-
-  .modal-content {
-    padding: 15px;
-  }
-
   td, th {
     max-height: 50px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-
-  td:nth-child(1) {
-    max-width: 90px;
-  }
-
-  td:nth-child(4) {
-    max-width: 100px;
-  }
-
-  td:nth-child(6) {
-    max-width: 50px;
-  }
-
-  td:nth-child(7) {
-    max-width: 100px;
-  }
-
-  td:not(:nth-child(1)):not(:nth-child(4)):not(:nth-child(6)):not(:nth-child(7)) {
-    max-width: 120px;
-  }
-
-  td {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
 }
-
 </style>
-
 

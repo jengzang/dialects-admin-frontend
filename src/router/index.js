@@ -22,6 +22,13 @@ import AnalyticsDashboard from "../components/analytics/AnalyticsDashboard.vue"
 import UserBehaviorDashboard from "../components/user/UserBehaviorDashboard.vue"
 import UserProfileDetail from "../components/user/UserProfileDetail.vue"
 import AnomalyDetectionPanel from "../components/user/AnomalyDetectionPanel.vue"
+import DataManagementAll from "../components/custom/DataManagementAll.vue"
+import DataManagementPerUser from "../components/custom/DataManagementPerUser.vue"
+import RegionsAll from "../components/custom/RegionsAll.vue"
+import RegionsPerUser from "../components/custom/RegionsPerUser.vue"
+import CreateRegion from "../components/custom/CreateRegion.vue"
+import EditRegion from "../components/custom/EditRegion.vue"
+import DeleteRegion from "../components/custom/DeleteRegion.vue"
 
 // 根路徑配置
 const routes = [
@@ -143,6 +150,50 @@ const routes = [
     path: '/anomaly-detection',
     name: 'AnomalyDetectionPanel',
     component: AnomalyDetectionPanel,
+    meta: { requiresAuth: true }
+  },
+  // Data Management Routes (New parent routes with tabs)
+  {
+    path: '/data-management',
+    name: 'DataManagementAll',
+    component: DataManagementAll,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/data-management/per-user',
+    name: 'DataManagementPerUser',
+    component: DataManagementPerUser,
+    meta: { requiresAuth: true }
+  },
+  // Region Routes
+  {
+    path: '/regions',
+    name: 'RegionsAll',
+    component: RegionsAll,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/regions/per-user',
+    name: 'RegionsPerUser',
+    component: RegionsPerUser,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/regions/create',
+    name: 'CreateRegion',
+    component: CreateRegion,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/regions/edit',
+    name: 'EditRegion',
+    component: EditRegion,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/regions/delete',
+    name: 'DeleteRegion',
+    component: DeleteRegion,
     meta: { requiresAuth: true }
   },
 ]
