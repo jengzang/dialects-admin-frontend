@@ -1,6 +1,6 @@
 <template>
-  <div class="table-container" :class="{ 'mobile-scroll': mobileScroll }">
-    <table>
+  <div class="table-container" :class="tableContainerClass">
+    <table :style="tableStyle">
       <thead>
         <tr>
           <!-- Selection column -->
@@ -17,7 +17,8 @@
             v-for="column in columns"
             :key="column.key"
             @click="sortable && column.sortable !== false ? handleSort(column.key) : null"
-            :style="{ cursor: sortable && column.sortable !== false ? 'pointer' : 'default' }"
+            :style="getColumnStyle(column, 'header')"
+            :class="[column.headerClass, getAlignClass(column.align || tableAlign)]"
           >
             <slot :name="`header-${column.key}`" :column="column">
               {{ column.label }}
@@ -49,7 +50,9 @@
               class="table-checkbox"
             />
           </td>
-          <td v-for="column in columns" :key="column.key">
+          <td v-for="column in columns" :key="column.key"
+              :style="getColumnStyle(column, 'cell')"
+              :class="[column.cellClass, getAlignClass(column.align || tableAlign)]">
             <slot :name="`cell-${column.key}`" :row="row" :value="row[column.key]">
               {{ formatCell(row[column.key], column) }}
             </slot>
@@ -88,7 +91,21 @@ const props = defineProps({
   columns: {
     type: Array,
     required: true,
-    // columns: [{ key: 'username', label: '用戶名', sortable: true, formatter: (val) => val }]
+    // columns: [{
+    //   key: 'username',
+    //   label: '用戶名',
+    //   sortable: true,
+    //   formatter: (val) => val,
+    //   width: '100px',      // 固定宽度
+    //   minWidth: '70px',    // 最小宽度
+    //   maxWidth: '200px',   // 最大宽度
+    //   flex: 1.5,           // flex 比例
+    //   align: 'center',     // 对齐方式: 'left' | 'center' | 'right'
+    //   headerClass: '',     // 表头自定义 class
+    //   headerStyle: {},     // 表头自定义 style
+    //   cellClass: '',       // 单元格自定义 class
+    //   cellStyle: {}        // 单元格自定义 style
+    // }]
   },
   data: {
     type: Array,
@@ -117,6 +134,33 @@ const props = defineProps({
   mobileScroll: {
     type: Boolean,
     default: true
+  },
+  // 新增：表格样式控制
+  tableWidth: {
+    type: String,
+    default: '100%'  // 改为 100%，与旧版一致
+  },
+  tableAlign: {
+    type: String,
+    default: 'center',  // 'left' | 'center' | 'right'
+    validator: (value) => ['left', 'center', 'right'].includes(value)
+  },
+  border: {
+    type: Boolean,
+    default: false  // 是否显示单元格边框
+  },
+  stripe: {
+    type: Boolean,
+    default: true  // 是否显示斑马纹
+  },
+  headerBgColor: {
+    type: String,
+    default: ''  // 表头背景色，为空则使用默认
+  },
+  size: {
+    type: String,
+    default: 'medium',  // 'small' | 'medium' | 'large'
+    validator: (value) => ['small', 'medium', 'large'].includes(value)
   }
 })
 
@@ -194,6 +238,64 @@ const handleRowClick = (row) => {
   }
 }
 
+// 获取列样式
+const getColumnStyle = (column, type = 'cell') => {
+  const style = {
+    cursor: type === 'header' && props.sortable && column.sortable !== false ? 'pointer' : 'default'
+  }
+
+  // 宽度控制
+  if (column.width) {
+    style.width = column.width
+  }
+  if (column.minWidth) {
+    style.minWidth = column.minWidth
+  }
+  if (column.maxWidth) {
+    style.maxWidth = column.maxWidth
+  }
+  if (column.flex) {
+    style.flex = column.flex
+  }
+
+  // 自定义样式
+  if (type === 'header' && column.headerStyle) {
+    Object.assign(style, column.headerStyle)
+  }
+  if (type === 'cell' && column.cellStyle) {
+    Object.assign(style, column.cellStyle)
+  }
+
+  return style
+}
+
+// 获取对齐 class
+const getAlignClass = (align) => {
+  if (!align) return ''
+  return `text-${align}`
+}
+
+// 获取表格容器样式
+const tableContainerClass = computed(() => {
+  const classes = []
+  if (props.mobileScroll) classes.push('mobile-scroll')
+  if (props.border) classes.push('table-border')
+  if (props.stripe) classes.push('table-stripe')
+  if (props.size) classes.push(`table-${props.size}`)
+  return classes
+})
+
+// 获取表格样式
+const tableStyle = computed(() => {
+  const style = {
+    width: props.tableWidth
+  }
+  if (props.tableWidth !== '100%') {
+    style.margin = `${props.tableWidth === '80%' ? '0 auto' : '0'}`
+  }
+  return style
+})
+
 // Expose methods for parent component
 defineExpose({
   clearSelection: () => {
@@ -212,6 +314,92 @@ defineExpose({
 .table-container {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+
+  table {
+    border-collapse: collapse;
+    margin-top: $spacing-md;
+    border-radius: $radius-md;
+    overflow: hidden;
+    background-color: $color-background;
+
+    th {
+      padding: 12px 18px;
+      font-weight: 600;
+      color: $color-text-primary;
+      user-select: none;
+      white-space: nowrap;
+      background-color: $color-primary-light;
+    }
+
+    td {
+      padding: 12px 18px;
+      font-size: $font-size-md;
+    }
+
+    tbody {
+      tr {
+        background-color: $color-background;
+
+        &:hover {
+          background-color: rgba(187, 234, 196, 0.34);
+        }
+
+        &:last-child td {
+          border-bottom: none;
+        }
+      }
+    }
+  }
+}
+
+// 边框样式
+.table-container.table-border {
+  table {
+    border: 1px solid #ddd;
+
+    th, td {
+      border: 1px solid #ddd;
+    }
+  }
+}
+
+// 斑马纹样式
+.table-container.table-stripe {
+  table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+}
+
+// 尺寸控制
+.table-container.table-small {
+  table {
+    th, td {
+      padding: 8px 12px;
+      font-size: $font-size-sm;
+    }
+  }
+}
+
+.table-container.table-large {
+  table {
+    th, td {
+      padding: 16px 24px;
+      font-size: $font-size-lg;
+    }
+  }
+}
+
+// 对齐方式
+.text-left {
+  text-align: left !important;
+}
+
+.text-center {
+  text-align: center !important;
+}
+
+.text-right {
+  text-align: right !important;
 }
 
 .table-container.mobile-scroll {
@@ -225,7 +413,7 @@ defineExpose({
 
 .selection-column {
   width: 50px;
-  text-align: center;
+  text-align: center !important;
 }
 
 .table-checkbox {
@@ -236,10 +424,6 @@ defineExpose({
 
 .clickable-row {
   cursor: pointer;
-}
-
-.clickable-row:hover {
-  background-color: var(--color-background);
 }
 
 .sort-arrow {
@@ -255,7 +439,8 @@ defineExpose({
 @include respond-to(tablet) {
   .table-container table {
     th, td {
-      padding: 8px;
+      padding: 8px 12px;
+      font-size: $font-size-sm;
     }
   }
 }
@@ -264,12 +449,14 @@ defineExpose({
   .table-container {
     margin: 0 -12px;
     padding: 0 12px;
-  }
 
-  .table-container table {
-    th, td {
-      padding: 6px;
+    table {
       font-size: $font-size-xs;
+
+      th, td {
+        padding: 6px;
+        font-size: $font-size-xs;
+      }
     }
   }
 
