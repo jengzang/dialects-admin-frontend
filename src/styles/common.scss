@@ -1,0 +1,311 @@
+/**
+ * 通用樣式
+ * 可復用的按鈕、表格、表單樣式
+ */
+
+@import './abstracts/variables';
+@import './abstracts/mixins';
+
+/* ========== 按鈕樣式 ========== */
+.btn {
+  padding: $spacing-sm $spacing-md;
+  border: none;
+  border-radius: $radius-md;
+  cursor: pointer;
+  font-size: $font-size-sm;
+  transition: all $transition-fast;
+  font-weight: 500;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &-primary {
+    @include button-variant($color-primary, $color-primary-dark);
+  }
+
+  &-secondary {
+    background-color: $color-background-light;
+    color: $color-text-primary;
+    border: 1px solid $color-border;
+
+    &:hover {
+      background-color: $color-background;
+    }
+  }
+
+  &-danger {
+    background-color: $color-danger;
+    color: $color-text-white;
+
+    &:hover {
+      background-color: darken($color-danger, 10%);
+    }
+  }
+
+  &-sm {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  &-lg {
+    padding: 12px 24px;
+    font-size: 16px;
+  }
+
+  &-loading {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}
+
+/* ========== 表格樣式 ========== */
+.table-container {
+  background-color: $color-background-white;
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  box-shadow: $shadow-md;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: $color-background-white;
+
+  thead {
+    background-color: $color-background;
+    border-bottom: 2px solid $color-border;
+  }
+
+  th {
+    padding: $spacing-md;
+    text-align: left;
+    font-weight: 600;
+    color: $color-text-primary;
+    cursor: pointer;
+    user-select: none;
+
+    &:hover {
+      background-color: $color-primary-lighter;
+    }
+  }
+
+  td {
+    padding: $spacing-md;
+    border-bottom: 1px solid $color-border-light;
+    color: $color-text-secondary;
+  }
+
+  tbody {
+    tr {
+      &:hover {
+        background-color: $color-background;
+      }
+
+      &:last-child td {
+        border-bottom: none;
+      }
+    }
+  }
+}
+
+/* ========== 表單樣式 ========== */
+.form-group {
+  margin-bottom: $spacing-md;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: $spacing-xs;
+  font-weight: 500;
+  color: $color-text-primary;
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+  width: 100%;
+  padding: $spacing-sm $spacing-md;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-sm;
+  font-size: $font-size-sm;
+  transition: border-color $transition-fast;
+
+  &:focus {
+    outline: none;
+    border-color: $color-primary;
+    box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
+  }
+}
+
+/* ========== 搜索框樣式 ========== */
+.search-input {
+  padding: $spacing-sm $spacing-md;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  background-color: $color-background;
+  font-size: $font-size-sm;
+  transition: all $transition-fast;
+  min-width: 250px;
+
+  &:focus {
+    outline: none;
+    border-color: $color-primary;
+    background-color: $color-background-white;
+  }
+}
+
+/* ========== 分頁樣式 ========== */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-top: $spacing-md;
+
+  &-btn {
+    padding: $spacing-xs $spacing-md;
+    border: 1px solid $color-border;
+    border-radius: $radius-sm;
+    background-color: $color-background-white;
+    cursor: pointer;
+    transition: all $transition-fast;
+
+    &:hover:not(:disabled) {
+      background-color: $color-primary;
+      color: $color-text-white;
+      border-color: $color-primary;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &-info {
+    color: $color-text-secondary;
+    font-size: $font-size-sm;
+  }
+}
+
+/* ========== 統計卡片樣式 ========== */
+.stats-card {
+  background-color: $color-background-white;
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  box-shadow: $shadow-md;
+  text-align: center;
+  transition: transform $transition-fast;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-lg;
+  }
+
+  .number {
+    font-size: $font-size-xl;
+    font-weight: 700;
+    color: $color-primary;
+    margin-bottom: $spacing-xs;
+  }
+
+  .label {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+  }
+}
+
+/* ========== 工具類 ========== */
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+
+.mt-sm { margin-top: $spacing-sm; }
+.mt-md { margin-top: $spacing-md; }
+.mt-lg { margin-top: $spacing-lg; }
+
+.mb-sm { margin-bottom: $spacing-sm; }
+.mb-md { margin-bottom: $spacing-md; }
+.mb-lg { margin-bottom: $spacing-lg; }
+
+.p-sm { padding: $spacing-sm; }
+.p-md { padding: $spacing-md; }
+.p-lg { padding: $spacing-lg; }
+
+/* ========== 移動端響應式 ========== */
+@include respond-to(mobile) {
+  .btn {
+    min-height: 44px;
+    padding: $spacing-sm $spacing-md;
+
+    &-sm {
+      min-height: 40px;
+      padding: 8px 16px;
+    }
+
+    &-lg {
+      min-height: 48px;
+      padding: 14px 28px;
+    }
+  }
+
+  .table-container {
+    padding: $spacing-sm;
+    margin: 0 -12px;
+  }
+
+  table {
+    font-size: $font-size-xs;
+
+    th, td {
+      padding: $spacing-sm;
+    }
+  }
+
+  .form-input,
+  .form-select,
+  .form-textarea {
+    min-height: 44px;
+    font-size: 16px; // 防止 iOS 自動縮放
+  }
+
+  .search-input {
+    min-width: 100%;
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  .stats-card {
+    padding: $spacing-sm;
+
+    .number {
+      font-size: $font-size-lg;
+    }
+  }
+
+  .pagination {
+    gap: $spacing-xs;
+
+    &-btn {
+      min-height: 40px;
+      min-width: 40px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .btn {
+    font-size: $font-size-xs;
+  }
+
+  table {
+    font-size: 12px;
+  }
+
+  .stats-card .number {
+    font-size: $font-size-md;
+  }
+}

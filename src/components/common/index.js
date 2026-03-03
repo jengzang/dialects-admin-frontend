@@ -16,3 +16,10 @@ export { default as BaseTag } from './BaseTag.vue';
 export { default as BaseRow } from './BaseRow.vue';
 export { default as BaseCol } from './BaseCol.vue';
 export { default as BaseChart } from './BaseChart.vue';
+export { default as BaseSelect } from './BaseSelect.vue';
+export { default as BaseCheckbox } from './BaseCheckbox.vue';
+export { default as BaseForm } from './BaseForm.vue';
+export { default as BaseFormItem } from './BaseFormItem.vue';
+export { default as BasePageHeader } from './BasePageHeader.vue';
+export { default as BaseTooltip } from './BaseTooltip.vue';
+
