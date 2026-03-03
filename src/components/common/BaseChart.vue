@@ -46,15 +46,39 @@ export default {
     };
   },
   watch: {
-    data() {
-      this.updateChart();
+    data: {
+      handler() {
+        this.updateChart();
+      },
+      deep: true
     },
-    options() {
-      this.updateChart();
+    options: {
+      handler() {
+        this.updateChart();
+      },
+      deep: true
+    },
+    loading(newVal) {
+      if (!newVal) {
+        // 当 loading 结束时，确保图表正确初始化和调整大小
+        this.$nextTick(() => {
+          if (!this.chart) {
+            this.initChart();
+          } else {
+            this.chart.resize();
+            this.updateChart();
+          }
+        });
+      }
     }
   },
   mounted() {
-    this.initChart();
+    // 延迟初始化，确保容器已经渲染并有正确的尺寸
+    this.$nextTick(() => {
+      if (!this.loading) {
+        this.initChart();
+      }
+    });
     window.addEventListener('resize', this.handleResize);
   },
   beforeUnmount() {
@@ -65,7 +89,24 @@ export default {
   },
   methods: {
     initChart() {
-      if (!this.$refs.chartContainer) return;
+      if (!this.$refs.chartContainer) {
+        console.warn('Chart container not found');
+        return;
+      }
+
+      // 检查容器尺寸
+      const rect = this.$refs.chartContainer.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) {
+        console.warn('Chart container has zero size:', rect);
+        // 延迟重试
+        setTimeout(() => this.initChart(), 100);
+        return;
+      }
+
+      // 如果已经有图表实例，先销毁
+      if (this.chart) {
+        this.chart.dispose();
+      }
 
       this.chart = echarts.init(this.$refs.chartContainer);
       this.updateChart();
@@ -215,7 +256,9 @@ export default {
 .chart-container {
   position: relative;
   width: 100%;
+  min-width: 200px;
   height: v-bind('height + "px"');
+  min-height: 200px;
 }
 
 .chart-loading {
@@ -235,5 +278,7 @@ export default {
 .chart-content {
   width: 100%;
   height: 100%;
+  min-width: 200px;
+  min-height: 200px;
 }
 </style>
