@@ -1,25 +1,26 @@
 <template>
   <div class="data-management-per-user">
-    <!-- Tab switcher -->
-    <div class="tabs">
-      <button
-        :class="{ active: activeTab === 'data' }"
-        @click="activeTab = 'data'"
-      >
-        自定義數據 ({{ customDataCount }})
-      </button>
-      <button
-        :class="{ active: activeTab === 'regions' }"
-        @click="activeTab = 'regions'"
-      >
-        自定義區域 ({{ regionsCount }})
-      </button>
-    </div>
+    <!-- Tab switcher and buttons in same row -->
+    <div class="header-row">
+      <div class="tabs">
+        <button
+          :class="{ active: activeTab === 'data' }"
+          @click="activeTab = 'data'"
+        >
+          自定義數據 ({{ customDataCount }})
+        </button>
+        <button
+          :class="{ active: activeTab === 'regions' }"
+          @click="activeTab = 'regions'"
+        >
+          自定義區域 ({{ regionsCount }})
+        </button>
+      </div>
 
-    <!-- Home button -->
-    <div class="top-controls">
-      <button @click="goToHome" class="home-btn">返回首頁</button>
-      <button @click="goToDataManagementAll" class="back-btn">返回所有數據</button>
+      <div class="action-buttons">
+        <button @click="goToDataManagementAll" class="back-btn">返回所有數據</button>
+        <button @click="goToHome" class="home-btn">返回首頁</button>
+      </div>
     </div>
 
     <!-- Child components -->
@@ -108,11 +109,41 @@ watch(() => route.query.tab, (newTab) => {
   padding: $spacing-md;
 }
 
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+  gap: $spacing-md;
+
+  .action-buttons {
+    display: flex;
+    gap: $spacing-sm;
+    flex-shrink: 0;
+  }
+
+  .home-btn {
+    @include button-variant(#9e9d24, #b8b726);
+    padding: $spacing-sm $spacing-md;
+    font-size: $font-size-md;
+    border-radius: 25px;
+    white-space: nowrap;
+  }
+
+  .back-btn {
+    @include button-variant(#1c8dba, #1a7ba8);
+    padding: $spacing-sm $spacing-md;
+    font-size: $font-size-md;
+    border-radius: 25px;
+    white-space: nowrap;
+  }
+}
+
 .tabs {
   display: flex;
   justify-content: center;
   gap: $spacing-sm;
-  margin-bottom: $spacing-md;
+  flex: 1;
 
   button {
     padding: $spacing-sm $spacing-lg;
@@ -136,40 +167,52 @@ watch(() => route.query.tab, (newTab) => {
   }
 }
 
-.top-controls {
-  display: flex;
-  justify-content: center;
-  gap: $spacing-sm;
-  margin-bottom: $spacing-md;
-
-  .home-btn {
-    @include button-variant(#9e9d24, #b8b726);
-    padding: $spacing-sm $spacing-md;
-    font-size: $font-size-md;
-    border-radius: 25px;
-  }
-
-  .back-btn {
-    @include button-variant(#1c8dba, #1a7ba8);
-    padding: $spacing-sm $spacing-md;
-    font-size: $font-size-md;
-    border-radius: 25px;
-  }
-}
-
 @include respond-to(mobile) {
+  .header-row {
+    flex-direction: column;
+    align-items: stretch;
+
+    .action-buttons {
+      flex-direction: column;
+      width: 100%;
+
+      .home-btn,
+      .back-btn {
+        width: 100%;
+      }
+    }
+  }
+
   .tabs button {
     font-size: $font-size-sm;
     padding: $spacing-xs $spacing-sm;
   }
+}
 
-  .top-controls {
-    flex-direction: column;
+// Ensure pagination styles work for child components
+::v-deep(.pagination-controls) {
+  margin-top: $spacing-md;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: $spacing-sm;
 
-    .home-btn,
-    .back-btn {
-      width: 100%;
+  button {
+    @include button-variant($color-primary, #45a049);
+    padding: 12px 24px;
+    border-radius: 20px;
+    font-size: $font-size-md;
+
+    &:disabled {
+      background-color: rgba(76, 175, 80, 0.5);
+      cursor: not-allowed;
     }
+  }
+
+  span {
+    font-size: $font-size-md;
+    color: $color-text-primary;
   }
 }
 </style>
