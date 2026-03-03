@@ -110,10 +110,11 @@ export default {
           left: 'center'
         },
         grid: {
-          left: 60,
-          right: 30,
-          top: 45,
-          bottom: 40
+          left: 50,
+          right: 20,
+          top: 40,
+          bottom: 30,
+          containLabel: true
         },
         xAxis: {
           type: 'time'
@@ -142,10 +143,11 @@ export default {
           left: 'center'
         },
         grid: {
-          left: 60,
-          right: 30,
-          top: 45,
-          bottom: 40
+          left: 50,
+          right: 20,
+          top: 40,
+          bottom: 30,
+          containLabel: true
         },
         xAxis: {
           type: 'category',
@@ -171,7 +173,7 @@ export default {
         },
         legend: {
           orient: 'vertical',
-          right: 15,
+          right: 10,
           top: 'middle',
           data: data.labels || [],
           textStyle: {
@@ -182,8 +184,8 @@ export default {
           {
             name: '數據',
             type: 'pie',
-            radius: isDoughnut ? ['45%', '75%'] : '70%',
-            center: ['40%', '50%'],
+            radius: isDoughnut ? ['40%', '70%'] : '65%',
+            center: ['35%', '50%'],
             data: seriesData,
             label: {
               fontSize: 11
