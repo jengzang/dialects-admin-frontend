@@ -220,41 +220,32 @@
 
         <el-card shadow="hover" class="session-table">
           <h4>最近會話</h4>
-          <el-table :data="recentSessions" stripe style="width: 100%">
-            <el-table-column prop="session_id" label="會話 ID" width="120">
-              <template #default="{ row }">
-                {{ row.session_id.substring(0, 8) }}...
-              </template>
-            </el-table-column>
-            <el-table-column prop="current_ip" label="IP 地址" width="140" />
-            <el-table-column label="創建時間" width="180">
-              <template #default="{ row }">
-                {{ formatTime(row.created_at) }}
-              </template>
-            </el-table-column>
-            <el-table-column label="最後活動" width="180">
-              <template #default="{ row }">
-                {{ formatTime(row.last_activity_at) }}
-              </template>
-            </el-table-column>
-            <el-table-column label="狀態" width="100">
-              <template #default="{ row }">
-                <el-tag v-if="row.revoked" type="danger" size="small">已撤銷</el-tag>
-                <el-tag v-else-if="row.is_suspicious" type="warning" size="small">可疑</el-tag>
-                <el-tag v-else type="success" size="small">正常</el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column label="IP 變更" width="100">
-              <template #default="{ row }">
-                {{ row.ip_change_count || 0 }}
-              </template>
-            </el-table-column>
-            <el-table-column label="設備變更" width="100">
-              <template #default="{ row }">
-                {{ row.device_change_count || 0 }}
-              </template>
-            </el-table-column>
-          </el-table>
+          <BaseTable
+            :columns="sessionColumns"
+            :data="recentSessions"
+            :sortable="false"
+          >
+            <template #cell-session_id="{ value }">
+              {{ value.substring(0, 8) }}...
+            </template>
+            <template #cell-created_at="{ value }">
+              {{ formatTime(value) }}
+            </template>
+            <template #cell-last_activity_at="{ value }">
+              {{ formatTime(value) }}
+            </template>
+            <template #cell-status="{ row }">
+              <BaseTag v-if="row.revoked" type="danger" size="small">已撤銷</BaseTag>
+              <BaseTag v-else-if="row.is_suspicious" type="warning" size="small">可疑</BaseTag>
+              <BaseTag v-else type="success" size="small">正常</BaseTag>
+            </template>
+            <template #cell-ip_change_count="{ value }">
+              {{ value || 0 }}
+            </template>
+            <template #cell-device_change_count="{ value }">
+              {{ value || 0 }}
+            </template>
+          </BaseTable>
         </el-card>
       </div>
 
@@ -275,7 +266,7 @@
 </template>
 
 <script>
-import { BaseChart, StatsCard } from '@/components/common';
+import { BaseChart, StatsCard, BaseTable, BaseTag } from '@/components/common';
 import { userAPI, statsAPI, sessionAPI, analyticsAPI } from '@/api/index';
 import { useChart, useUserBehavior, useTimeFormat } from '@/composables';
 import { ElMessage } from 'element-plus';
@@ -286,6 +277,8 @@ export default {
   components: {
     BaseChart,
     StatsCard,
+    BaseTable,
+    BaseTag,
     Loading
   },
   setup() {
@@ -324,7 +317,16 @@ export default {
       loginLogs: [],
       dataCount: 0,
       riskScore: 0,
-      riskLevel: { level: 'low', color: '#52c41a', label: '低風險' }
+      riskLevel: { level: 'low', color: '#52c41a', label: '低風險' },
+      sessionColumns: [
+        { key: 'session_id', label: '會話 ID', sortable: false },
+        { key: 'current_ip', label: 'IP 地址', sortable: false },
+        { key: 'created_at', label: '創建時間', sortable: false },
+        { key: 'last_activity_at', label: '最後活動', sortable: false },
+        { key: 'status', label: '狀態', sortable: false },
+        { key: 'ip_change_count', label: 'IP 變更', sortable: false },
+        { key: 'device_change_count', label: '設備變更', sortable: false }
+      ]
     };
   },
   computed: {

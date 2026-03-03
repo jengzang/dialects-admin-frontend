@@ -83,50 +83,44 @@
             </div>
           </div>
 
-          <el-table :data="filteredAnomalousUsers" stripe style="width: 100%">
-            <el-table-column prop="username" label="用戶名" width="150" />
-            <el-table-column label="風險評分" width="120" sortable>
-              <template #default="{ row }">
-                <span :style="{ color: row.riskLevel.color, fontWeight: 'bold' }">
-                  {{ row.riskScore }}
-                </span>
-              </template>
-            </el-table-column>
-            <el-table-column label="風險等級" width="120">
-              <template #default="{ row }">
-                <el-tag :type="getRiskTagType(row.riskLevel.level)" size="small">
-                  {{ row.riskLevel.label }}
-                </el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column label="異常類型" min-width="250">
-              <template #default="{ row }">
-                <el-tag
-                  v-for="anomaly in row.anomalies"
-                  :key="anomaly.type"
-                  size="small"
-                  style="margin-right: 5px;"
-                >
-                  {{ anomaly.icon }} {{ anomaly.label }}
-                </el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column label="最後活動" width="180">
-              <template #default="{ row }">
-                {{ formatTime(row.last_login) }}
-              </template>
-            </el-table-column>
-            <el-table-column label="操作" width="200">
-              <template #default="{ row }">
-                <el-button type="primary" size="small" @click="viewUserProfile(row)">
-                  查看詳情
-                </el-button>
-                <el-button type="danger" size="small" @click="revokeUserSessions(row)">
-                  撤銷會話
-                </el-button>
-              </template>
-            </el-table-column>
-          </el-table>
+          <BaseTable
+            :columns="anomalyColumns"
+            :data="filteredAnomalousUsers"
+            :loading="loading"
+            @sort="handleAnomalySort"
+          >
+            <template #cell-riskScore="{ row }">
+              <span :style="{ color: row.riskLevel.color, fontWeight: 'bold' }">
+                {{ row.riskScore }}
+              </span>
+            </template>
+            <template #cell-riskLevel="{ row }">
+              <BaseTag :type="getRiskTagType(row.riskLevel.level)" size="small">
+                {{ row.riskLevel.label }}
+              </BaseTag>
+            </template>
+            <template #cell-anomalies="{ row }">
+              <BaseTag
+                v-for="anomaly in row.anomalies"
+                :key="anomaly.type"
+                size="small"
+                style="margin-right: 5px;"
+              >
+                {{ anomaly.icon }} {{ anomaly.label }}
+              </BaseTag>
+            </template>
+            <template #cell-last_login="{ value }">
+              {{ formatTime(value) }}
+            </template>
+            <template #actions="{ row }">
+              <button class="btn btn-primary btn-sm" @click="viewUserProfile(row)">
+                查看詳情
+              </button>
+              <button class="btn btn-danger btn-sm" style="margin-left: 5px;" @click="revokeUserSessions(row)">
+                撤銷會話
+              </button>
+            </template>
+          </BaseTable>
         </el-card>
       </div>
     </div>
@@ -134,7 +128,7 @@
 </template>
 
 <script>
-import { BaseChart, StatsCard } from '@/components/common';
+import { BaseChart, StatsCard, BaseTable, BaseTag } from '@/components/common';
 import { userAPI, sessionAPI, statsAPI } from '@/api/index';
 import { useChart, useUserBehavior, useTimeFormat } from '@/composables';
 import { ElMessage, ElMessageBox } from 'element-plus';
@@ -145,6 +139,8 @@ export default {
   components: {
     BaseChart,
     StatsCard,
+    BaseTable,
+    BaseTag,
     RefreshIcon,
     Loading
   },
@@ -186,7 +182,14 @@ export default {
       todayFailedLogins: 0,
       abnormalIPCount: 0,
       filterRiskLevel: 'all',
-      filterAnomalyType: 'all'
+      filterAnomalyType: 'all',
+      anomalyColumns: [
+        { key: 'username', label: '用戶名', sortable: false },
+        { key: 'riskScore', label: '風險評分', sortable: true },
+        { key: 'riskLevel', label: '風險等級', sortable: false },
+        { key: 'anomalies', label: '異常類型', sortable: false },
+        { key: 'last_login', label: '最後活動', sortable: false }
+      ]
     };
   },
   computed: {
@@ -322,6 +325,18 @@ export default {
       this.$router.push({
         name: 'UserProfileDetail',
         params: { username: user.username }
+      });
+    },
+    handleAnomalySort({ key, order }) {
+      this.anomalousUsers.sort((a, b) => {
+        const valueA = a[key];
+        const valueB = b[key];
+
+        if (order === 'asc') {
+          return valueA > valueB ? 1 : -1;
+        } else {
+          return valueA < valueB ? 1 : -1;
+        }
       });
     },
     async revokeUserSessions(user) {
