@@ -42,10 +42,10 @@ export const statsAPI = {
 
   /**
    * 獲取成功登錄日誌
-   * @param {string} username - 用戶名
+   * @param {string} username - 用戶名（可選，不傳則獲取所有用戶）
    * @returns {Promise} 登錄日誌
    */
-  getSuccessLoginLogs(username) {
+  getSuccessLoginLogs(username = '') {
     return api.get('/login-logs/success-login-logs', { params: { query: username } }).then(res => res.data);
   }
 };

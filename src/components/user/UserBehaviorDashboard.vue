@@ -676,26 +676,93 @@ export default {
     async fetchData() {
       this.loading = true;
       try {
-        // 并行加载数据
-        const [usersRes, logsRes] = await Promise.all([
-          userAPI.getAllUsers(),
-          statsAPI.getSuccessLoginLogs()
-        ]);
+        // 1. 获取用户完整信息
+        const usersRes = await userAPI.getAllUsersComplete();
+        const rawUsers = usersRes.data || usersRes || [];
 
-        this.users = usersRes.users || [];
-        this.loginLogs = logsRes.logs || [];
+        // 深拷贝用户数据，避免循环引用
+        this.users = JSON.parse(JSON.stringify(rawUsers));
 
-        // 计算活跃用户数
-        this.dau = this.calculateActiveUsers(this.loginLogs, 1);
-        this.wau = this.calculateActiveUsers(this.loginLogs, 7);
-        this.mau = this.calculateActiveUsers(this.loginLogs, 30);
+        console.log(`Loaded ${this.users.length} users with complete info`);
+
+        if (this.users.length === 0) {
+          ElMessage.warning('沒有用戶數據');
+          return;
+        }
+
+        // 2. 获取分析数据（新增的 analytics API）
+        try {
+          const analyticsRes = await sessionAPI.getAnalytics(30);
+
+          // 使用后端提供的 DAU 数据
+          if (analyticsRes.user_activity && analyticsRes.user_activity.dau) {
+            const dauData = analyticsRes.user_activity.dau;
+            // 获取最近一天的 DAU
+            if (dauData.length > 0) {
+              this.dau = dauData[dauData.length - 1].count;
+            }
+            // 使用后端提供的 WAU（如果有的话）
+            this.wau = analyticsRes.user_activity.wau || 0;
+            // 使用后端提供的 MAU
+            this.mau = analyticsRes.user_activity.mau || 0;
+
+            // 保存 DAU 数据用于趋势图
+            this.loginLogs = dauData.map(d => ({ date: d.date, count: d.count }));
+          }
+
+          // 使用后端提供的热力图数据（已优化为 7x24 二维数组）
+          if (analyticsRes.login_heatmap && Array.isArray(analyticsRes.login_heatmap)) {
+            // 后端现在直接返回 7x24 的二维数组
+            // heatmap[0] = 周日 0-23点
+            // heatmap[1] = 周一 0-23点
+            // ...
+            // heatmap[6] = 周六 0-23点
+            this.heatmapData = analyticsRes.login_heatmap.map(row => [...row]);
+          }
+
+          console.log('Analytics data loaded:', {
+            dau: this.dau,
+            wau: this.wau,
+            mau: this.mau,
+            loginLogsCount: this.loginLogs.length,
+            heatmapSize: this.heatmapData.length
+          });
+        } catch (error) {
+          console.error('Failed to load analytics data:', error);
+          console.error('Error response:', error.response?.data);
+
+          // 如果 analytics API 失败，回退到使用 last_login 计算
+          const now = new Date();
+          this.dau = this.users.filter(u => {
+            if (!u.last_login) return false;
+            const lastLogin = new Date(u.last_login);
+            const daysDiff = (now - lastLogin) / (1000 * 60 * 60 * 24);
+            return daysDiff < 1;
+          }).length;
+
+          this.wau = this.users.filter(u => {
+            if (!u.last_login) return false;
+            const lastLogin = new Date(u.last_login);
+            const daysDiff = (now - lastLogin) / (1000 * 60 * 60 * 24);
+            return daysDiff < 7;
+          }).length;
+
+          this.mau = this.users.filter(u => {
+            if (!u.last_login) return false;
+            const lastLogin = new Date(u.last_login);
+            const daysDiff = (now - lastLogin) / (1000 * 60 * 60 * 24);
+            return daysDiff < 30;
+          }).length;
+
+          this.heatmapData = Array(7).fill(0).map(() => Array(24).fill(0));
+          this.loginLogs = [];
+        }
+
+        console.log(`DAU: ${this.dau}, WAU: ${this.wau}, MAU: ${this.mau}`);
 
         // 计算平均在线时长
         const totalOnlineSeconds = this.users.reduce((sum, u) => sum + (u.total_online_seconds || 0), 0);
         this.avgOnlineTime = this.users.length > 0 ? totalOnlineSeconds / this.users.length : 0;
-
-        // 生成热力图数据
-        this.heatmapData = this.generateHeatmapData(this.loginLogs);
 
         // 加载会话数据（用于风险评分）
         await this.loadSessionsData();
@@ -703,7 +770,7 @@ export default {
         ElMessage.success(`成功載入 ${this.users.length} 個用戶數據`);
       } catch (error) {
         console.error('Failed to fetch user behavior data:', error);
-        ElMessage.error('載入數據失敗');
+        ElMessage.error(`載入數據失敗: ${error.message || '未知錯誤'}`);
       } finally {
         this.loading = false;
       }
