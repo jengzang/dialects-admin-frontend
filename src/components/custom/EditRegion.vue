@@ -68,10 +68,16 @@ onMounted(async () => {
     const response = await customRegionsAPI.getUserRegions(username.value);
     // API 返回格式: { username, total, regions: [...] }
     const allRegions = response.regions || [];
+    // selectedRegions now contains created_at values
     formData.value = allRegions
-      .filter(region => selectedRegions.value.includes(region.id))
+      .filter(region => selectedRegions.value.includes(region.created_at))
       .map(region => ({
         id: region.id,
+        region_name: region.region_name,
+        locations: region.locations.join(', '),
+        description: region.description || '',
+        created_at: region.created_at
+      }));
         region_name: region.region_name,
         locations: region.locations.join(', '),
         description: region.description || ''
@@ -85,8 +91,8 @@ onMounted(async () => {
 const submitData = async () => {
   try {
     const dataToSubmit = formData.value.map(row => ({
-      id: row.id,
       username: username.value,
+      created_at: row.created_at,  // Use created_at to identify the record
       region_name: row.region_name,
       locations: row.locations.split(',').map(loc => loc.trim()).filter(loc => loc),
       description: row.description

@@ -66,7 +66,8 @@ onMounted(async () => {
     const response = await customRegionsAPI.getUserRegions(username.value);
     // API 返回格式: { username, total, regions: [...] }
     const allRegions = response.regions || [];
-    formData.value = allRegions.filter(region => selectedRegions.value.includes(region.id));
+    // selectedRegions now contains created_at values
+    formData.value = allRegions.filter(region => selectedRegions.value.includes(region.created_at));
   } catch (error) {
     console.error('獲取區域數據失敗:', error);
     ElMessage.error('獲取區域數據失敗');
@@ -85,11 +86,11 @@ const confirmDelete = async () => {
       }
     );
 
-    // Delete each region
+    // Delete each region using username + created_at (same as /admin/custom/delete)
     for (const region of formData.value) {
       await customRegionsAPI.delete({
-        id: region.id,
-        username: username.value
+        username: username.value,
+        created_at: region.created_at
       });
     }
 

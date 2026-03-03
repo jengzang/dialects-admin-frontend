@@ -29,7 +29,7 @@
       :columns="regionsColumns"
       :data="currentPageData"
       :selectable="selectMode"
-      :row-key="'id'"
+      :row-key="'created_at'"
       @sort="handleSort"
       @selection-change="handleSelectionChange"
       ref="tableRef"
@@ -131,13 +131,14 @@ const toggleSelectMode = () => {
 };
 
 const handleSelectionChange = (selection) => {
-  selectedUsers.value = selection.map(row => row.id);
+  // Store created_at for deletion (API uses username + created_at)
+  selectedUsers.value = selection.map(row => row.created_at);
 };
 
 const reverseSelect = () => {
-  const allIds = users.value.map(u => u.id);
+  const allCreatedAts = users.value.map(u => u.created_at);
   const currentSelected = new Set(selectedUsers.value);
-  const newSelection = allIds.filter(id => !currentSelected.has(id));
+  const newSelection = allCreatedAts.filter(ca => !currentSelected.has(ca));
   selectedUsers.value = newSelection;
 };
 
