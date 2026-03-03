@@ -34,6 +34,16 @@ export default {
         maxWidth: `${(props.span / 24) * 100}%`
       };
 
+      // Mobile responsive
+      if (props.mobile !== null) {
+        styles['--mobile-width'] = `${(props.mobile / 12) * 100}%`;
+      }
+
+      // Tablet responsive
+      if (props.tablet !== null) {
+        styles['--tablet-width'] = `${(props.tablet / 12) * 100}%`;
+      }
+
       return styles;
     });
 
@@ -49,18 +59,19 @@ export default {
   box-sizing: border-box;
 }
 
-/* Responsive breakpoints */
+/* Mobile: Use mobile prop if provided, otherwise 100% */
 @media (max-width: 480px) {
   .base-col {
-    flex: 0 0 100% !important;
-    max-width: 100% !important;
+    flex: 0 0 var(--mobile-width, 100%) !important;
+    max-width: var(--mobile-width, 100%) !important;
   }
 }
 
+/* Tablet: Use tablet prop if provided */
 @media (min-width: 481px) and (max-width: 768px) {
-  .base-col[data-tablet] {
-    flex: 0 0 var(--tablet-width) !important;
-    max-width: var(--tablet-width) !important;
+  .base-col {
+    flex: 0 0 var(--tablet-width, 100%) !important;
+    max-width: var(--tablet-width, 100%) !important;
   }
 }
 </style>

@@ -17,7 +17,7 @@ export const userAPI = {
 
   /**
    * 獲取所有用戶列表
-   * @returns {Promise} 用戶列表
+   * @returns {Promise} 用戶列表（簡單信息）
    */
   getAll() {
     return api.get('/users');
@@ -25,10 +25,23 @@ export const userAPI = {
 
   /**
    * 獲取所有用戶列表（包含詳細信息）
-   * @returns {Promise} 用戶列表
+   * @returns {Promise} 用戶列表（基本信息）
    */
   getAllUsers() {
     return api.get('/users/list');
+  },
+
+  /**
+   * 獲取所有用戶的完整信息（包含統計數據）
+   * @returns {Promise} 用戶完整信息列表
+   * @description 返回所有用戶的詳細信息，包括：
+   * - 基本信息：id, username, email, role, status, is_verified
+   * - 登錄相關：created_at, last_login, last_login_ip, register_ip, login_count, failed_attempts
+   * - 在線時長：total_online_seconds, current_session_started_at, last_seen
+   * - API 使用統計：usage_summary
+   */
+  getAllUsersComplete() {
+    return api.get('/users/all');
   },
 
   /**

@@ -23,30 +23,29 @@
           />
         </div>
         <div class="action-buttons">
-          <el-button
-            :icon="RefreshIcon"
+          <button
             @click="fetchData"
-            :loading="loading"
-            size="small"
+            :disabled="loading"
+            class="btn btn-primary btn-sm"
           >
-            刷新
-          </el-button>
-          <el-button
-            :icon="DownloadIcon"
+            {{ loading ? '加載中...' : '刷新' }}
+          </button>
+          <button
             @click="exportData"
-            size="small"
+            class="btn btn-primary btn-sm"
           >
             導出
-          </el-button>
+          </button>
         </div>
       </div>
     </div>
 
     <!-- Empty State -->
     <div v-if="!loading && apiLogs.length === 0" class="empty-state">
-      <el-empty description="暫無數據">
-        <el-button type="primary" @click="fetchData">重新載入</el-button>
-      </el-empty>
+      <div class="empty-content">
+        <p>暫無數據</p>
+        <button class="btn btn-primary" @click="fetchData">重新載入</button>
+      </div>
     </div>
 
     <!-- Stats Cards -->
@@ -696,6 +695,54 @@ export default {
   margin: 0;
   font-size: 16px;
   color: var(--color-text-primary, #333);
+}
+
+.empty-content {
+  text-align: center;
+  color: #999;
+}
+
+.empty-content p {
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+
+/* Element Plus 组件绿色主题覆盖 */
+:deep(.el-radio-button__inner) {
+  background-color: #fff;
+  border-color: #4CAF50;
+  color: #4CAF50;
+}
+
+:deep(.el-radio-button__original-radio:checked + .el-radio-button__inner) {
+  background-color: #4CAF50;
+  border-color: #4CAF50;
+  color: #fff;
+  box-shadow: -1px 0 0 0 #4CAF50;
+}
+
+:deep(.el-radio-button__inner:hover) {
+  color: #4CAF50;
+}
+
+:deep(.el-select .el-input__wrapper) {
+  box-shadow: 0 0 0 1px #4CAF50 inset;
+}
+
+:deep(.el-select .el-input__wrapper:hover) {
+  box-shadow: 0 0 0 1px #217825 inset;
+}
+
+:deep(.el-select .el-input.is-focus .el-input__wrapper) {
+  box-shadow: 0 0 0 1px #4CAF50 inset;
+}
+
+:deep(.el-date-editor .el-input__wrapper) {
+  box-shadow: 0 0 0 1px #4CAF50 inset;
+}
+
+:deep(.el-date-editor .el-input__wrapper:hover) {
+  box-shadow: 0 0 0 1px #217825 inset;
 }
 
 /* 响应式设计 */

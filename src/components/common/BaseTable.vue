@@ -30,7 +30,7 @@
               </span>
             </slot>
           </th>
-          <th v-if="$slots.actions">操作</th>
+          <th v-if="$slots.actions" class="actions-column">操作</th>
         </tr>
       </thead>
       <tbody v-if="!loading && data.length > 0">
@@ -57,7 +57,7 @@
               {{ formatCell(row[column.key], column) }}
             </slot>
           </td>
-          <td v-if="$slots.actions">
+          <td v-if="$slots.actions" class="actions-column">
             <slot name="actions" :row="row"></slot>
           </td>
         </tr>
@@ -414,6 +414,13 @@ defineExpose({
 .selection-column {
   width: 50px;
   text-align: center !important;
+}
+
+.actions-column {
+  min-width: 240px;
+  width: 240px;
+  text-align: center !important;
+  white-space: nowrap;
 }
 
 .table-checkbox {

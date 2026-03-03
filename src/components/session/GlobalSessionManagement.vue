@@ -7,7 +7,7 @@
 
     <!-- Statistics Dashboard -->
     <BaseRow :gutter="20" class="stats-dashboard">
-      <BaseCol :span="3" :mobile="12" :tablet="6">
+      <BaseCol :span="3" :mobile="6" :tablet="6">
         <BaseCard shadow="hover">
           <div class="stat-item">
             <img :src="queryGreenIcon" class="stat-icon" />
@@ -16,7 +16,7 @@
           </div>
         </BaseCard>
       </BaseCol>
-      <BaseCol :span="3" :mobile="12" :tablet="6">
+      <BaseCol :span="3" :mobile="6" :tablet="6">
         <BaseCard shadow="hover">
           <div class="stat-item">
             <img :src="queryGreenIcon" class="stat-icon" />
@@ -25,7 +25,7 @@
           </div>
         </BaseCard>
       </BaseCol>
-      <BaseCol :span="3" :mobile="12" :tablet="6">
+      <BaseCol :span="3" :mobile="6" :tablet="6">
         <BaseCard shadow="hover">
           <div class="stat-item">
             <img :src="queryGreenIcon" class="stat-icon" />
@@ -34,7 +34,7 @@
           </div>
         </BaseCard>
       </BaseCol>
-      <BaseCol :span="3" :mobile="12" :tablet="6">
+      <BaseCol :span="3" :mobile="6" :tablet="6">
         <BaseCard shadow="hover">
           <div class="stat-item">
             <img :src="queryGreenIcon" class="stat-icon" />
@@ -43,7 +43,7 @@
           </div>
         </BaseCard>
       </BaseCol>
-      <BaseCol :span="3" :mobile="12" :tablet="6">
+      <BaseCol :span="3" :mobile="6" :tablet="6">
         <BaseCard shadow="hover">
           <div class="stat-item">
             <img :src="queryGreenIcon" class="stat-icon" />
@@ -52,7 +52,7 @@
           </div>
         </BaseCard>
       </BaseCol>
-      <BaseCol :span="3" :mobile="12" :tablet="6">
+      <BaseCol :span="3" :mobile="6" :tablet="6">
         <BaseCard shadow="hover">
           <div class="stat-item">
             <img :src="queryGreenIcon" class="stat-icon" />
@@ -61,7 +61,7 @@
           </div>
         </BaseCard>
       </BaseCol>
-      <BaseCol :span="3" :mobile="12" :tablet="6">
+      <BaseCol :span="3" :mobile="6" :tablet="6">
         <BaseCard shadow="hover">
           <div class="stat-item">
             <img :src="queryGreenIcon" class="stat-icon" />
@@ -70,7 +70,7 @@
           </div>
         </BaseCard>
       </BaseCol>
-      <BaseCol :span="3" :mobile="12" :tablet="6">
+      <BaseCol :span="3" :mobile="6" :tablet="6">
         <BaseCard shadow="hover">
           <div class="stat-item">
             <img :src="queryGreenIcon" class="stat-icon" />
@@ -83,27 +83,58 @@
 
     <!-- Filters -->
     <BaseCard shadow="never" class="filter-card">
-      <BaseForm :inline="true">
+      <!-- 第一行：基础筛选条件 -->
+      <BaseForm :inline="true" class="filter-form-main">
         <BaseFormItem label="用戶名">
-          <BaseInput v-model="filters.username" placeholder="模糊搜索" clearable />
+          <BaseInput v-model="filters.username" placeholder="模糊搜索" clearable style="width: 180px;" />
         </BaseFormItem>
         <BaseFormItem label="IP地址">
-          <BaseInput v-model="filters.ip_address" placeholder="IP地址" clearable />
+          <BaseInput v-model="filters.ip_address" placeholder="IP地址" clearable style="width: 180px;" />
         </BaseFormItem>
         <BaseFormItem label="可疑狀態">
-          <BaseSelect v-model="filters.is_suspicious" :options="suspiciousOptions" placeholder="全部" clearable />
+          <BaseSelect v-model="filters.is_suspicious" :options="suspiciousOptions" placeholder="全部" clearable style="width: 120px;" />
         </BaseFormItem>
         <BaseFormItem label="撤銷狀態">
-          <BaseSelect v-model="filters.revoked" :options="revokedOptions" placeholder="全部" clearable />
+          <BaseSelect v-model="filters.revoked" :options="revokedOptions" placeholder="全部" clearable style="width: 120px;" />
         </BaseFormItem>
         <BaseFormItem label="排序">
-          <BaseSelect v-model="filters.sort_by" :options="sortOptions" placeholder="排序字段" />
-        </BaseFormItem>
-        <BaseFormItem>
-          <button class="btn btn-primary" @click="searchSessions">搜索</button>
-          <button class="btn btn-secondary" @click="resetFilters">重置</button>
+          <BaseSelect v-model="filters.sort_by" :options="sortOptions" placeholder="排序字段" style="width: 140px;" />
         </BaseFormItem>
       </BaseForm>
+
+      <!-- 第二行：时间范围筛选 -->
+      <div class="filter-form-time">
+        <BaseFormItem label="時間範圍">
+          <el-date-picker
+            v-model="dateRange"
+            type="daterange"
+            range-separator="至"
+            start-placeholder="開始日期"
+            end-placeholder="結束日期"
+            value-format="YYYY-MM-DD"
+            clearable
+            style="width: 320px;"
+          />
+        </BaseFormItem>
+
+        <!-- 快捷时间选项 -->
+        <div class="date-shortcuts">
+          <button class="btn btn-sm" @click="setDateRange('today')">今天</button>
+          <button class="btn btn-sm" @click="setDateRange('week')">最近7天</button>
+          <button class="btn btn-sm" @click="setDateRange('month')">最近30天</button>
+          <button class="btn btn-sm" @click="setDateRange('all')">全部</button>
+        </div>
+      </div>
+
+      <!-- 第三行：操作按钮 -->
+      <div class="filter-actions">
+        <button class="btn btn-primary" @click="searchSessions">
+          <i class="el-icon-search"></i> 搜索
+        </button>
+        <button class="btn btn-secondary" @click="resetFilters">
+          <i class="el-icon-refresh"></i> 重置
+        </button>
+      </div>
     </BaseCard>
 
     <!-- Sessions Table -->
@@ -160,11 +191,27 @@
         <!-- 操作列 -->
         <template #actions="{ row }">
           <div class="action-buttons">
+            <button class="btn btn-sm btn-primary" @click="showSessionDetail(row)">詳情</button>
             <button class="btn btn-sm btn-primary" @click="viewUser(row)">查看用戶</button>
+            <button
+              v-if="!row.is_suspicious"
+              class="btn btn-sm btn-warning"
+              @click="flagAsSuspicious(row)"
+            >
+              標記可疑
+            </button>
+            <button
+              v-else
+              class="btn btn-sm btn-success"
+              @click="unflagSuspicious(row)"
+            >
+              取消標記
+            </button>
             <button
               class="btn btn-sm btn-danger"
               @click="revokeSession(row)"
-              :disabled="row.revoked">
+              :disabled="row.revoked"
+            >
               撤銷
             </button>
           </div>
@@ -180,6 +227,49 @@
         container-class="pagination-container"
       />
     </BaseCard>
+
+    <!-- Session Detail Modal -->
+    <SessionDetailModal
+      v-model="showDetailModal"
+      :session-id="selectedSessionId"
+      @refresh="handleRefresh"
+    />
+
+    <!-- Flag Suspicious Dialog -->
+    <BaseModal
+      v-model="showFlagDialog"
+      title="標記可疑會話"
+      width="500px"
+      @confirm="confirmFlag"
+    >
+      <div class="flag-form">
+        <div class="form-group">
+          <label class="form-label">可疑原因</label>
+          <select v-model="flagForm.reason" class="form-select">
+            <option value="">請選擇原因</option>
+            <option value="rapid_ip_change">快速換 IP</option>
+            <option value="unusual_location">異常地點</option>
+            <option value="device_mismatch">設備不匹配</option>
+            <option value="unusual_activity">異常活動模式</option>
+            <option value="other">其他</option>
+          </select>
+        </div>
+        <div v-if="flagForm.reason === 'other'" class="form-group">
+          <label class="form-label">詳細說明</label>
+          <textarea
+            v-model="flagForm.customReason"
+            class="form-textarea"
+            rows="3"
+            placeholder="請輸入詳細說明"
+          ></textarea>
+        </div>
+      </div>
+
+      <template #footer>
+        <button class="btn btn-secondary" @click="showFlagDialog = false">取消</button>
+        <button class="btn btn-primary" @click="confirmFlag">確認</button>
+      </template>
+    </BaseModal>
   </div>
 </template>
 
@@ -187,9 +277,11 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useMessage, useDialog } from '@/composables';
-import { BaseRow, BaseCol, BaseCard, BaseForm, BaseFormItem, BaseInput, BaseSelect, BaseTable, BaseTag, BasePagination } from '@/components/common';
+import { BaseRow, BaseCol, BaseCard, BaseForm, BaseFormItem, BaseInput, BaseSelect, BaseTable, BaseTag, BasePagination, BaseModal } from '@/components/common';
+import SessionDetailModal from './SessionDetailModal.vue';
 import userSessionAPI from '@/api/userSession';
 import queryGreenIcon from '@/assets/query_green.ico';
+import { ElMessage, ElMessageBox } from 'element-plus';
 
 const router = useRouter();
 const { showMessage } = useMessage();
@@ -210,16 +302,27 @@ const filters = ref({
 const currentPage = ref(1);
 const pageSize = ref(20);
 const totalSessions = ref(0);
+const dateRange = ref(null);
+
+// Modal state
+const showDetailModal = ref(false);
+const selectedSessionId = ref('');
+const showFlagDialog = ref(false);
+const currentFlagSession = ref(null);
+const flagForm = ref({
+  reason: '',
+  customReason: ''
+});
 
 // 下拉选项
 const suspiciousOptions = [
-  { label: '僅可疑', value: true },
-  { label: '非可疑', value: false }
+  { label: '僅可疑', value: 1 },
+  { label: '非可疑', value: 0 }
 ];
 
 const revokedOptions = [
-  { label: '活躍', value: false },
-  { label: '已撤銷', value: true }
+  { label: '活躍', value: 0 },
+  { label: '已撤銷', value: 1 }
 ];
 
 const sortOptions = [
@@ -237,7 +340,7 @@ const tableColumns = [
   { key: 'device_info', label: '設備', sortable: false },
   { key: 'created_at', label: '創建時間', sortable: false },
   { key: 'status', label: '狀態', sortable: false },
-  { key: 'stats', label: '統計', sortable: false }
+  { key: 'stats', label: '統計', sortable: false, minWidth: '180px' }
 ];
 
 const totalPages = computed(() => {
@@ -246,7 +349,12 @@ const totalPages = computed(() => {
 
 const loadStats = async () => {
   try {
-    const response = await userSessionAPI.getStats();
+    const params = {};
+    if (dateRange.value && dateRange.value.length === 2) {
+      params.start_date = dateRange.value[0];
+      params.end_date = dateRange.value[1];
+    }
+    const response = await userSessionAPI.getStats(params.start_date, params.end_date);
     stats.value = response || {};
   } catch (error) {
     console.error('Failed to load stats:', error);
@@ -292,6 +400,37 @@ const resetFilters = () => {
     sort_by: 'created_at',
     sort_order: 'desc'
   };
+  dateRange.value = null;
+  searchSessions();
+};
+
+const setDateRange = (range) => {
+  const today = new Date();
+  const formatDate = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  switch (range) {
+    case 'today':
+      dateRange.value = [formatDate(today), formatDate(today)];
+      break;
+    case 'week':
+      const weekAgo = new Date(today);
+      weekAgo.setDate(today.getDate() - 7);
+      dateRange.value = [formatDate(weekAgo), formatDate(today)];
+      break;
+    case 'month':
+      const monthAgo = new Date(today);
+      monthAgo.setDate(today.getDate() - 30);
+      dateRange.value = [formatDate(monthAgo), formatDate(today)];
+      break;
+    case 'all':
+      dateRange.value = null;
+      break;
+  }
   searchSessions();
 };
 
@@ -307,7 +446,7 @@ const handleSelectionChange = (selection) => {
 const revokeSession = async (session) => {
   try {
     await confirm('確定要撤銷此會話嗎？', '確認');
-    await userSessionAPI.revokeSession(session.session_id, 'admin_action');
+    await userSessionAPI.revokeSession(session.id, 'admin_action'); // 使用 id
     showMessage('會話已撤銷', 'success');
     await loadSessions();
   } catch (error) {
@@ -324,7 +463,7 @@ const bulkRevoke = async () => {
       `確定要撤銷選中的 ${selectedSessions.value.length} 個會話嗎？`,
       '確認'
     );
-    const sessionIds = selectedSessions.value.map(s => s.session_id);
+    const sessionIds = selectedSessions.value.map(s => s.id); // 使用 id
     await userSessionAPI.revokeBulk(sessionIds, 'admin_action');
     showMessage('批量撤銷成功', 'success');
     await loadSessions();
@@ -342,6 +481,75 @@ const viewUser = (session) => {
     params: { userId: session.user_id },
     query: { username: session.username }
   });
+};
+
+const showSessionDetail = (session) => {
+  selectedSessionId.value = session.id; // 使用整数 id 而不是 UUID session_id
+  showDetailModal.value = true;
+};
+
+const flagAsSuspicious = (session) => {
+  currentFlagSession.value = session;
+  showFlagDialog.value = true;
+};
+
+const unflagSuspicious = async (session) => {
+  try {
+    await ElMessageBox.confirm('確定要取消可疑標記嗎？', '確認', {
+      type: 'warning',
+      confirmButtonText: '確定',
+      cancelButtonText: '取消'
+    });
+
+    await userSessionAPI.flagSession(session.id, false, '');
+    ElMessage.success('已取消可疑標記');
+    await loadSessions();
+    await loadStats();
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('Failed to unflag session:', error);
+      ElMessage.error('操作失敗');
+    }
+  }
+};
+
+const confirmFlag = async () => {
+  try {
+    if (!flagForm.value.reason) {
+      ElMessage.warning('請選擇可疑原因');
+      return;
+    }
+
+    const reason = flagForm.value.reason === 'other'
+      ? flagForm.value.customReason
+      : flagForm.value.reason;
+
+    if (flagForm.value.reason === 'other' && !reason) {
+      ElMessage.warning('請輸入詳細說明');
+      return;
+    }
+
+    await userSessionAPI.flagSession(
+      currentFlagSession.value.id,
+      true,
+      reason
+    );
+
+    ElMessage.success('已標記為可疑會話');
+    showFlagDialog.value = false;
+    flagForm.value = { reason: '', customReason: '' };
+    currentFlagSession.value = null;
+    await loadSessions();
+    await loadStats();
+  } catch (error) {
+    console.error('Failed to flag session:', error);
+    ElMessage.error('操作失敗');
+  }
+};
+
+const handleRefresh = async () => {
+  await loadSessions();
+  await loadStats();
 };
 
 const formatDateTime = (dateStr) => {
@@ -445,6 +653,37 @@ onMounted(() => {
   margin: $spacing-md 0;
 }
 
+.filter-card {
+  .filter-form-main {
+    margin-bottom: $spacing-md;
+  }
+
+  .filter-form-time {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+    margin-bottom: $spacing-md;
+    flex-wrap: wrap;
+
+    .base-form-item {
+      margin-bottom: 0;
+    }
+  }
+
+  .date-shortcuts {
+    display: flex;
+    gap: $spacing-xs;
+    flex-wrap: wrap;
+  }
+
+  .filter-actions {
+    display: flex;
+    gap: $spacing-sm;
+    padding-top: $spacing-sm;
+    border-top: 1px solid $color-border-light;
+  }
+}
+
 .table-header {
   display: flex;
   justify-content: space-between;
@@ -470,6 +709,13 @@ onMounted(() => {
   display: flex;
   gap: $spacing-xs;
   flex-wrap: wrap;
+  justify-content: center;
+
+  .btn {
+    white-space: nowrap;
+    font-size: $font-size-xs;
+    padding: 4px 8px;
+  }
 }
 
 .pagination-container {
@@ -495,20 +741,46 @@ onMounted(() => {
   }
 
   .filter-card {
-    :deep(.base-form) {
-      display: block;
+    .filter-form-main {
+      :deep(.base-form) {
+        display: block;
+      }
 
-      .base-form-item {
+      :deep(.base-form-item) {
         margin-bottom: $spacing-sm;
+
+        .base-input,
+        .base-select {
+          width: 100% !important;
+        }
       }
     }
-  }
 
-  .action-buttons {
-    flex-direction: column;
+    .filter-form-time {
+      flex-direction: column;
+      align-items: flex-start;
 
-    .btn {
-      width: 100%;
+      .base-form-item {
+        width: 100%;
+
+        :deep(.el-date-editor) {
+          width: 100% !important;
+        }
+      }
+
+      .date-shortcuts {
+        width: 100%;
+
+        .btn {
+          flex: 1;
+        }
+      }
+    }
+
+    .filter-actions {
+      .btn {
+        flex: 1;
+      }
     }
   }
 }
@@ -525,12 +797,27 @@ onMounted(() => {
     height: 24px;
   }
 
+  .stats-dashboard {
+    :deep(.base-col) {
+      margin-bottom: $spacing-sm;
+    }
+  }
+
   .stat-item {
     min-height: 60px;
+    padding: $spacing-xs;
+  }
+
+  .stat-icon {
+    width: 20px;
+    height: 20px;
+    top: 4px;
+    right: 4px;
   }
 
   .stat-value {
     font-size: 18px;
+    margin-bottom: 4px;
   }
 
   .stat-label {
@@ -549,6 +836,45 @@ onMounted(() => {
 
   .stats-cell {
     font-size: 11px;
+  }
+}
+
+// Flag form styles
+.flag-form {
+  .form-group {
+    margin-bottom: $spacing-md;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  .form-label {
+    display: block;
+    margin-bottom: $spacing-xs;
+    font-size: $font-size-sm;
+    font-weight: 500;
+    color: $color-text-primary;
+  }
+
+  .form-select,
+  .form-textarea {
+    width: 100%;
+    padding: $spacing-sm;
+    border: 1px solid $color-border-light;
+    border-radius: $radius-sm;
+    font-size: $font-size-sm;
+    transition: border-color $transition-fast;
+
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+    }
+  }
+
+  .form-textarea {
+    resize: vertical;
+    font-family: inherit;
   }
 }
 </style>

@@ -160,6 +160,72 @@ const userSessionAPI = {
    */
   cleanupExpired() {
     return api.post('/sessions/cleanup-expired').then(res => res.data);
+  },
+
+  /**
+   * Get online users list
+   * @param {number} thresholdMinutes - Online threshold in minutes (1-60, default 30)
+   * @returns {Promise} Online users data
+   * @example
+   * {
+   *   online_count: 50,
+   *   users: [
+   *     {
+   *       user_id: 1,
+   *       username: "alice",
+   *       last_seen: "2026-03-04T10:30:00Z",
+   *       current_ip: "192.168.1.100",
+   *       device_info: "Mozilla/5.0..."
+   *     }
+   *   ]
+   * }
+   */
+  getOnlineUsers(thresholdMinutes = 30) {
+    return api.get('/user-sessions/online-users', {
+      params: { threshold_minutes: thresholdMinutes }
+    }).then(res => res.data);
+  },
+
+  /**
+   * Get session analytics data
+   * @param {number} days - Number of days to analyze (1-90, default 30)
+   * @returns {Promise} Analytics data
+   * @example
+   * {
+   *   login_heatmap: {
+   *     by_hour: [12, 15, 8, ...],  // 24 data points (0-23 hours)
+   *     by_weekday: [100, 120, ...]  // 7 data points (0-6, Sun-Sat)
+   *   },
+   *   user_activity: {
+   *     dau: [
+   *       { date: "2026-03-01", count: 150 },
+   *       { date: "2026-03-02", count: 160 }
+   *     ],
+   *     mau: 1200
+   *   },
+   *   device_distribution: {
+   *     desktop: 500,
+   *     mobile: 300,
+   *     tablet: 50,
+   *     unknown: 10
+   *   },
+   *   geo_distribution: [
+   *     { country: "LAN", count: 500 },
+   *     { country: "123.45.x.x", count: 100 }
+   *   ],
+   *   session_duration_distribution: {
+   *     "0-5min": 100,
+   *     "5-30min": 200,
+   *     "30-60min": 150,
+   *     "1-2h": 80,
+   *     "2h+": 50
+   *   }
+   * }
+   */
+  getAnalytics(days = 30) {
+    return api.get('/user-sessions/analytics', {
+      params: { days }
+    }).then(res => res.data);
   }
 };
 

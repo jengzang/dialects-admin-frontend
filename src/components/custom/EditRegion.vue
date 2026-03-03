@@ -78,10 +78,6 @@ onMounted(async () => {
         description: region.description || '',
         created_at: region.created_at
       }));
-        region_name: region.region_name,
-        locations: region.locations.join(', '),
-        description: region.description || ''
-      }));
   } catch (error) {
     console.error('獲取區域數據失敗:', error);
     ElMessage.error('獲取區域數據失敗');

@@ -4,24 +4,24 @@
       <el-icon class="is-loading"><Loading /></el-icon>
       <span>載入中...</span>
     </div>
-    <canvas v-show="!loading" ref="chartCanvas"></canvas>
+    <div v-show="!loading" ref="chartContainer" class="chart-content"></div>
   </div>
 </template>
 
 <script>
-import { Chart, registerables } from 'chart.js';
-import 'chartjs-adapter-date-fns';
-import { zhCN } from 'date-fns/locale';
-
-Chart.register(...registerables);
+import * as echarts from 'echarts';
+import { Loading } from '@element-plus/icons-vue';
 
 export default {
   name: 'BaseChart',
+  components: {
+    Loading
+  },
   props: {
     type: {
       type: String,
       required: true,
-      validator: (value) => ['line', 'bar', 'pie', 'doughnut', 'radar', 'polarArea'].includes(value)
+      validator: (value) => ['line', 'bar', 'pie', 'doughnut'].includes(value)
     },
     data: {
       type: Object,
@@ -46,122 +46,164 @@ export default {
     };
   },
   watch: {
-    data: {
-      handler() {
-        this.updateChart();
-      },
-      deep: true
+    data() {
+      this.updateChart();
     },
-    options: {
-      handler() {
-        this.updateChart();
-      },
-      deep: true
+    options() {
+      this.updateChart();
     }
   },
   mounted() {
     this.initChart();
+    window.addEventListener('resize', this.handleResize);
   },
   beforeUnmount() {
+    window.removeEventListener('resize', this.handleResize);
     if (this.chart) {
-      this.chart.destroy();
+      this.chart.dispose();
     }
   },
   methods: {
     initChart() {
-      if (!this.$refs.chartCanvas) return;
+      if (!this.$refs.chartContainer) return;
 
-      const ctx = this.$refs.chartCanvas.getContext('2d');
-      const defaultOptions = this.getDefaultOptions();
-      const mergedOptions = this.mergeOptions(defaultOptions, this.options);
-
-      this.chart = new Chart(ctx, {
-        type: this.type,
-        data: this.data,
-        options: mergedOptions
-      });
+      this.chart = echarts.init(this.$refs.chartContainer);
+      this.updateChart();
     },
     updateChart() {
       if (!this.chart) return;
 
-      this.chart.data = this.data;
-      const defaultOptions = this.getDefaultOptions();
-      const mergedOptions = this.mergeOptions(defaultOptions, this.options);
-      this.chart.options = mergedOptions;
-      this.chart.update();
+      const option = this.convertToEChartsOption();
+      this.chart.setOption(option, true);
     },
-    getDefaultOptions() {
-      return {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            display: true,
-            position: 'top',
-            labels: {
-              font: {
-                family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-                size: 12
-              },
-              padding: 15,
-              usePointStyle: true
-            }
-          },
-          tooltip: {
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            padding: 12,
-            titleFont: {
-              size: 14,
-              weight: 'bold'
-            },
-            bodyFont: {
-              size: 13
-            },
-            cornerRadius: 4
-          }
-        },
-        scales: this.getDefaultScales()
-      };
-    },
-    getDefaultScales() {
-      if (['pie', 'doughnut', 'radar', 'polarArea'].includes(this.type)) {
-        return undefined;
+    convertToEChartsOption() {
+      const { type, data, options } = this;
+
+      if (type === 'line') {
+        return this.createLineOption(data, options);
+      } else if (type === 'bar') {
+        return this.createBarOption(data, options);
+      } else if (type === 'pie' || type === 'doughnut') {
+        return this.createPieOption(data, options, type === 'doughnut');
       }
 
-      return {
-        x: {
-          grid: {
-            display: false
-          },
-          ticks: {
-            font: {
-              size: 11
-            }
-          }
-        },
-        y: {
-          beginAtZero: true,
-          grid: {
-            color: 'rgba(0, 0, 0, 0.05)'
-          },
-          ticks: {
-            font: {
-              size: 11
-            }
-          }
+      return {};
+    },
+    createLineOption(data, customOptions) {
+      const series = (data.datasets || []).map(dataset => ({
+        name: dataset.label,
+        type: 'line',
+        data: dataset.data.map(d => [d.x, d.y]),
+        smooth: true,
+        lineStyle: {
+          width: 2
         }
+      }));
+
+      return {
+        tooltip: {
+          trigger: 'axis'
+        },
+        legend: {
+          data: (data.datasets || []).map(d => d.label),
+          top: 5,
+          left: 'center'
+        },
+        grid: {
+          left: 60,
+          right: 30,
+          top: 45,
+          bottom: 40
+        },
+        xAxis: {
+          type: 'time'
+        },
+        yAxis: {
+          type: 'value'
+        },
+        series,
+        ...customOptions
       };
     },
-    mergeOptions(defaults, custom) {
+    createBarOption(data, customOptions) {
+      const series = (data.datasets || []).map(dataset => ({
+        name: dataset.label,
+        type: 'bar',
+        data: dataset.data
+      }));
+
       return {
-        ...defaults,
-        ...custom,
-        plugins: {
-          ...defaults.plugins,
-          ...custom.plugins
+        tooltip: {
+          trigger: 'axis'
         },
-        scales: custom.scales || defaults.scales
+        legend: {
+          data: (data.datasets || []).map(d => d.label),
+          top: 5,
+          left: 'center'
+        },
+        grid: {
+          left: 60,
+          right: 30,
+          top: 45,
+          bottom: 40
+        },
+        xAxis: {
+          type: 'category',
+          data: data.labels || []
+        },
+        yAxis: {
+          type: 'value'
+        },
+        series,
+        ...customOptions
       };
+    },
+    createPieOption(data, customOptions, isDoughnut) {
+      const seriesData = (data.labels || []).map((label, index) => ({
+        name: label,
+        value: data.datasets[0].data[index]
+      }));
+
+      return {
+        tooltip: {
+          trigger: 'item',
+          formatter: '{a} <br/>{b}: {c} ({d}%)'
+        },
+        legend: {
+          orient: 'vertical',
+          right: 15,
+          top: 'middle',
+          data: data.labels || [],
+          textStyle: {
+            fontSize: 12
+          }
+        },
+        series: [
+          {
+            name: '數據',
+            type: 'pie',
+            radius: isDoughnut ? ['45%', '75%'] : '70%',
+            center: ['40%', '50%'],
+            data: seriesData,
+            label: {
+              fontSize: 11
+            },
+            emphasis: {
+              itemStyle: {
+                shadowBlur: 10,
+                shadowOffsetX: 0,
+                shadowColor: 'rgba(0, 0, 0, 0.5)'
+              }
+            }
+          }
+        ],
+        ...customOptions
+      };
+    },
+    handleResize() {
+      if (this.chart) {
+        this.chart.resize();
+      }
     }
   }
 };
@@ -188,8 +230,8 @@ export default {
   font-size: 24px;
 }
 
-canvas {
-  max-width: 100%;
-  max-height: 100%;
+.chart-content {
+  width: 100%;
+  height: 100%;
 }
 </style>

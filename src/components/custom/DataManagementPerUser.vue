@@ -5,13 +5,13 @@
       <div class="tabs">
         <button
           :class="{ active: activeTab === 'data' }"
-          @click="activeTab = 'data'"
+          @click="switchTab('data')"
         >
           自定義數據 ({{ customDataCount }})
         </button>
         <button
           :class="{ active: activeTab === 'regions' }"
-          @click="activeTab = 'regions'"
+          @click="switchTab('regions')"
         >
           自定義區域 ({{ regionsCount }})
         </button>
@@ -84,6 +84,13 @@ const goToHome = () => {
 
 const goToDataManagementAll = () => {
   router.push({ name: 'DataManagementAll' });
+};
+
+const switchTab = (tab) => {
+  router.push({
+    name: 'DataManagementPerUser',
+    query: { username: username.value, tab }
+  });
 };
 
 // Watch for username changes
@@ -174,7 +181,6 @@ watch(() => route.query.tab, (newTab) => {
     align-items: stretch;
 
     .action-buttons {
-      flex-direction: column;
       width: 100%;
 
       .home-btn,

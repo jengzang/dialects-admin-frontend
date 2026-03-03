@@ -69,7 +69,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { ElMessageBox, ElMessage } from 'element-plus';
-import userSessionAPI from '../../api/userSession';
+import userSessionAPI from '../../../api/userSession';
 import { BaseTable } from '@/components/common';
 
 const router = useRouter();

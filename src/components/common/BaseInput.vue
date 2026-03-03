@@ -152,7 +152,6 @@ export default {
 /* Mobile responsive */
 @media (max-width: 768px) {
   .base-input {
-    min-height: 44px;
     font-size: 16px; /* Prevent iOS zoom */
     padding: 10px 14px;
   }

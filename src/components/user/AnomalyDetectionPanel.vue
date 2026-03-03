@@ -273,8 +273,8 @@ export default {
     },
     async loadSessionsData() {
       try {
-        // 加载所有可疑会话
-        const suspiciousRes = await sessionAPI.listSessions({ is_suspicious: true, limit: 1000 });
+        // 加载所有可疑会话（limit 最大 500）
+        const suspiciousRes = await sessionAPI.listSessions({ is_suspicious: 1, limit: 500 });
         this.suspiciousSessionCount = (suspiciousRes.sessions || []).length;
 
         // 为每个用户加载会话数据

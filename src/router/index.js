@@ -14,8 +14,8 @@ import CreateCustom from "../components/custom/CreateCustom.vue"
 import DeleteCustom from "../components/custom/DeleteCustom.vue"
 import EditCustom from "../components/custom/EditCustom.vue"
 import IP from "../components/user/IPQuery.vue"
-import SessionManagement from "../components/session/SessionManagement.vue"
-import UserSessions from "../components/session/UserSessions.vue"
+import SessionManagement from "../components/session/old/SessionManagement.vue"
+import UserSessions from "../components/session/old/UserSessions.vue"
 import UserSessionManagement from "../components/session/UserSessionManagement.vue"
 import GlobalSessionManagement from "../components/session/GlobalSessionManagement.vue"
 import AnalyticsDashboard from "../components/analytics/AnalyticsDashboard.vue"
@@ -29,6 +29,7 @@ import RegionsPerUser from "../components/custom/RegionsPerUser.vue"
 import CreateRegion from "../components/custom/CreateRegion.vue"
 import EditRegion from "../components/custom/EditRegion.vue"
 import DeleteRegion from "../components/custom/DeleteRegion.vue"
+import LeaderboardView from "../components/leaderboard/LeaderboardView.vue"
 
 // 根路徑配置
 const routes = [
@@ -194,6 +195,12 @@ const routes = [
     path: '/regions/delete',
     name: 'DeleteRegion',
     component: DeleteRegion,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/leaderboard',
+    name: 'Leaderboard',
+    component: LeaderboardView,
     meta: { requiresAuth: true }
   },
 ]

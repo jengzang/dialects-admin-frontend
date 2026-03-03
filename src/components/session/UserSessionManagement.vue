@@ -9,50 +9,59 @@
       </template>
     </BasePageHeader>
 
-    <!-- Statistics Cards -->
-    <BaseRow :gutter="20" class="stats-cards">
-      <BaseCol :span="4" :mobile="12" :tablet="8">
+    <!-- Session Statistics Cards -->
+    <BaseRow :gutter="20" class="session-stats-cards">
+      <BaseCol :span="4" :mobile="6" :tablet="8">
         <BaseCard shadow="hover">
           <div class="stat-item">
             <img :src="queryGreenIcon" class="stat-icon" />
-            <div class="stat-value">{{ userStats.login_count || 0 }}</div>
-            <div class="stat-label">登錄次數</div>
+            <div class="stat-value">{{ sessionStats.total || 0 }}</div>
+            <div class="stat-label">總會話數</div>
           </div>
         </BaseCard>
       </BaseCol>
-      <BaseCol :span="4" :mobile="12" :tablet="8">
+      <BaseCol :span="4" :mobile="6" :tablet="8">
         <BaseCard shadow="hover">
           <div class="stat-item">
             <img :src="queryGreenIcon" class="stat-icon" />
-            <div class="stat-value">{{ userStats.failed_attempts || 0 }}</div>
-            <div class="stat-label">登錄失敗次數</div>
+            <div class="stat-value" style="color: #67c23a;">{{ sessionStats.active || 0 }}</div>
+            <div class="stat-label">活躍會話</div>
           </div>
         </BaseCard>
       </BaseCol>
-      <BaseCol :span="4" :mobile="12" :tablet="8">
+      <BaseCol :span="4" :mobile="6" :tablet="8">
         <BaseCard shadow="hover">
           <div class="stat-item">
             <img :src="queryGreenIcon" class="stat-icon" />
-            <div class="stat-value">{{ userStats.register_ip || 'N/A' }}</div>
-            <div class="stat-label">註冊 IP</div>
+            <div class="stat-value" style="color: #f56c6c;">{{ sessionStats.suspicious || 0 }}</div>
+            <div class="stat-label">可疑會話</div>
           </div>
         </BaseCard>
       </BaseCol>
-      <BaseCol :span="4" :mobile="12" :tablet="8">
+      <BaseCol :span="4" :mobile="6" :tablet="8">
         <BaseCard shadow="hover">
           <div class="stat-item">
             <img :src="queryGreenIcon" class="stat-icon" />
-            <div class="stat-value">{{ formatDuration(userStats.total_online_seconds) }}</div>
-            <div class="stat-label">總在線時長</div>
+            <div class="stat-value" style="color: #909399;">{{ sessionStats.revoked || 0 }}</div>
+            <div class="stat-label">已撤銷</div>
           </div>
         </BaseCard>
       </BaseCol>
-      <BaseCol :span="4" :mobile="12" :tablet="8">
+      <BaseCol :span="4" :mobile="6" :tablet="8">
         <BaseCard shadow="hover">
           <div class="stat-item">
             <img :src="queryGreenIcon" class="stat-icon" />
-            <div class="stat-value">{{ formatDate(userStats.last_login) }}</div>
-            <div class="stat-label">最近一次登錄</div>
+            <div class="stat-value">{{ sessionStats.unique_ips || 0 }}</div>
+            <div class="stat-label">使用 IP 數</div>
+          </div>
+        </BaseCard>
+      </BaseCol>
+      <BaseCol :span="4" :mobile="6" :tablet="8">
+        <BaseCard shadow="hover">
+          <div class="stat-item">
+            <img :src="queryGreenIcon" class="stat-icon" />
+            <div class="stat-value">{{ sessionStats.unique_devices || 0 }}</div>
+            <div class="stat-label">使用設備數</div>
           </div>
         </BaseCard>
       </BaseCol>
@@ -127,7 +136,11 @@
         <!-- 操作列 -->
         <template #actions="{ row }">
           <div class="action-buttons">
-            <button class="btn btn-sm btn-primary" @click.stop="showSessionDetail(row)">詳情</button>
+            <button
+              class="btn btn-sm btn-primary"
+              @click.stop="showSessionDetail(row)">
+              詳情
+            </button>
             <button
               class="btn btn-sm btn-danger"
               @click.stop="revokeSession(row)"
@@ -151,11 +164,18 @@
         :sortable="false"
       />
     </BaseCard>
+
+    <!-- Session Detail Modal -->
+    <SessionDetailModal
+      v-model="showDetailModal"
+      :session-id="selectedSessionId"
+      @refresh="loadData"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useMessage, useDialog } from '@/composables';
 import {
@@ -168,6 +188,7 @@ import {
   BaseTag,
   BaseTooltip
 } from '@/components/common';
+import SessionDetailModal from './SessionDetailModal.vue';
 import userSessionAPI from '@/api/userSession';
 import { statsAPI } from '@/api/index';
 import queryGreenIcon from '@/assets/query_green.ico';
@@ -186,6 +207,38 @@ const loading = ref(false);
 const showRevoked = ref(true);
 const onlySuspicious = ref(false);
 
+// Modal state
+const showDetailModal = ref(false);
+const selectedSessionId = ref('');
+
+// Session statistics computed
+const sessionStats = computed(() => {
+  const allSessions = sessions.value;
+  const total = allSessions.length;
+  const active = allSessions.filter(s => !s.revoked && new Date(s.expires_at) > new Date()).length;
+  const suspicious = allSessions.filter(s => s.is_suspicious).length;
+  const revoked = allSessions.filter(s => s.revoked).length;
+
+  // 统计唯一IP数
+  const uniqueIPs = new Set(allSessions.map(s => s.current_ip)).size;
+
+  // 统计唯一设备数（基于device_fingerprint）
+  const uniqueDevices = new Set(
+    allSessions
+      .filter(s => s.device_fingerprint)
+      .map(s => s.device_fingerprint)
+  ).size;
+
+  return {
+    total,
+    active,
+    suspicious,
+    revoked,
+    unique_ips: uniqueIPs,
+    unique_devices: uniqueDevices || allSessions.filter(s => s.device_info).length // fallback to device_info count
+  };
+});
+
 // 表格列定义
 const tableColumns = [
   { key: 'session_id', label: '會話 ID', sortable: false },
@@ -194,7 +247,7 @@ const tableColumns = [
   { key: 'created_at', label: '創建時間', sortable: false },
   { key: 'last_activity_at', label: '最後活動', sortable: false },
   { key: 'status', label: '狀態', sortable: false },
-  { key: 'stats', label: '統計', sortable: false }
+  { key: 'stats', label: '統計', sortable: false, minWidth: '180px' }
 ];
 
 const ipColumns = [
@@ -271,7 +324,7 @@ const refreshData = async () => {
 const revokeSession = async (session) => {
   try {
     await confirm('確定要撤銷此會話嗎？', '確認');
-    await userSessionAPI.revokeSession(session.session_id, 'admin_action');
+    await userSessionAPI.revokeSession(session.id, 'admin_action'); // 使用 id
     showMessage('會話已撤銷', 'success');
     await loadSessions();
   } catch (error) {
@@ -299,15 +352,13 @@ const revokeAllSessions = async () => {
   }
 };
 
-const showSessionDetail = (session) => {
-  router.push({
-    name: 'SessionDetail',
-    params: { sessionId: session.session_id }
-  });
-};
-
 const goBack = () => {
   router.push('/');
+};
+
+const showSessionDetail = (session) => {
+  selectedSessionId.value = session.id; // 使用整数 id
+  showDetailModal.value = true;
 };
 
 const formatDateTime = (dateStr) => {
@@ -368,6 +419,40 @@ onMounted(() => {
   margin: 0 auto;
 }
 
+.session-stats-cards {
+  margin: $spacing-md 0;
+}
+
+.stat-item {
+  text-align: center;
+  position: relative;
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.stat-icon {
+  width: 28px;
+  height: 28px;
+  opacity: 0.15;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: bold;
+  color: $color-primary;
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
 .header-icon {
   width: 24px;
   height: 24px;
@@ -407,6 +492,36 @@ onMounted(() => {
 .stat-label {
   font-size: $font-size-sm;
   color: $color-text-secondary;
+}
+
+// Mobile optimizations
+@include respond-to(mobile) {
+  .session-stats-cards {
+    :deep(.base-col) {
+      margin-bottom: $spacing-sm;
+    }
+  }
+
+  .stat-item {
+    min-height: 60px;
+    padding: $spacing-xs;
+  }
+
+  .stat-icon {
+    width: 20px;
+    height: 20px;
+    top: 4px;
+    right: 4px;
+  }
+
+  .stat-value {
+    font-size: 18px;
+    margin-bottom: 4px;
+  }
+
+  .stat-label {
+    font-size: $font-size-xs;
+  }
 }
 
 .action-bar {
@@ -475,18 +590,9 @@ onMounted(() => {
   .button-group,
   .filter-group {
     width: 100%;
-    flex-direction: column;
 
     .btn,
     .base-checkbox {
-      width: 100%;
-    }
-  }
-
-  .action-buttons {
-    flex-direction: column;
-
-    .btn {
       width: 100%;
     }
   }

@@ -30,158 +30,428 @@
 
     <!-- Main Content -->
     <div v-else>
-      <!-- Stats Cards -->
-      <div class="stats-grid">
-        <StatsCard
-          :number="dau"
-          label="日活躍用戶 (DAU)"
-          :color="COLORS.primary"
-        />
-        <StatsCard
-          :number="wau"
-          label="週活躍用戶 (WAU)"
-          :color="COLORS.info"
-        />
-        <StatsCard
-          :number="mau"
-          label="月活躍用戶 (MAU)"
-          :color="COLORS.warning"
-        />
-        <StatsCard
-          :number="formatOnlineTime(avgOnlineTime)"
-          label="平均在線時長"
-          :color="COLORS.purple"
-        />
-      </div>
-
-      <!-- Charts Row 1: Activity Trend & User Segmentation -->
-      <div class="charts-row">
-        <div class="chart-card">
-          <div class="chart-header">
-            <h3>活躍度趨勢（過去 30 天）</h3>
+      <el-tabs v-model="activeTab" @tab-change="handleTabChange">
+        <!-- Tab 1: Overview -->
+        <el-tab-pane label="概覽" name="overview">
+          <!-- Stats Cards -->
+          <div class="stats-grid">
+            <StatsCard
+              :number="dau"
+              label="日活躍用戶 (DAU)"
+              :color="COLORS.primary"
+            />
+            <StatsCard
+              :number="wau"
+              label="週活躍用戶 (WAU)"
+              :color="COLORS.info"
+            />
+            <StatsCard
+              :number="mau"
+              label="月活躍用戶 (MAU)"
+              :color="COLORS.warning"
+            />
+            <StatsCard
+              :number="formatOnlineTime(avgOnlineTime)"
+              label="平均在線時長"
+              :color="COLORS.purple"
+            />
           </div>
-          <BaseChart
-            type="line"
-            :data="activityTrendData"
-            :options="activityTrendOptions"
-            :loading="loading"
-            :height="300"
-          />
-        </div>
 
-        <div class="chart-card">
-          <div class="chart-header">
-            <h3>用戶分群</h3>
-          </div>
-          <BaseChart
-            type="doughnut"
-            :data="segmentationData"
-            :options="segmentationOptions"
-            :loading="loading"
-            :height="300"
-          />
-        </div>
-      </div>
-
-      <!-- Charts Row 2: Activity Heatmap -->
-      <div class="charts-row">
-        <div class="chart-card full-width">
-          <div class="chart-header">
-            <h3>活躍時段熱力圖</h3>
-            <span class="chart-subtitle">顏色越深表示登錄次數越多</span>
-          </div>
-          <div class="heatmap-container">
-            <div class="heatmap-grid">
-              <div class="heatmap-y-axis">
-                <div v-for="day in weekDays" :key="day" class="y-label">{{ day }}</div>
+          <!-- Charts Row 1: Activity Trend & User Segmentation -->
+          <div class="charts-row">
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>活躍度趨勢（過去 30 天）</h3>
               </div>
-              <div class="heatmap-content">
-                <div class="heatmap-x-axis">
-                  <div v-for="hour in 24" :key="hour" class="x-label">{{ hour - 1 }}</div>
-                </div>
-                <div class="heatmap-cells">
-                  <div v-for="(dayData, dayIndex) in heatmapData" :key="dayIndex" class="heatmap-row">
-                    <div
-                      v-for="(count, hourIndex) in dayData"
-                      :key="hourIndex"
-                      class="heatmap-cell"
-                      :style="{ backgroundColor: getHeatmapColor(count) }"
-                      :title="`${weekDays[dayIndex]} ${hourIndex}:00 - ${count} 次登錄`"
-                    >
-                      <span v-if="count > 0" class="cell-count">{{ count }}</span>
+              <BaseChart
+                type="line"
+                :data="activityTrendData"
+                :options="activityTrendOptions"
+                :loading="loading"
+                :height="300"
+              />
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>用戶分群</h3>
+              </div>
+              <BaseChart
+                type="doughnut"
+                :data="segmentationData"
+                :options="segmentationOptions"
+                :loading="loading"
+                :height="300"
+              />
+            </div>
+          </div>
+
+          <!-- Charts Row 2: Activity Heatmap -->
+          <div class="charts-row">
+            <div class="chart-card full-width">
+              <div class="chart-header">
+                <h3>活躍時段熱力圖</h3>
+                <span class="chart-subtitle">顏色越深表示登錄次數越多</span>
+              </div>
+              <div class="heatmap-container">
+                <div class="heatmap-grid">
+                  <div class="heatmap-y-axis">
+                    <div v-for="day in weekDays" :key="day" class="y-label">{{ day }}</div>
+                  </div>
+                  <div class="heatmap-content">
+                    <div class="heatmap-x-axis">
+                      <div v-for="hour in 24" :key="hour" class="x-label">{{ hour - 1 }}</div>
+                    </div>
+                    <div class="heatmap-cells">
+                      <div v-for="(dayData, dayIndex) in heatmapData" :key="dayIndex" class="heatmap-row">
+                        <div
+                          v-for="(count, hourIndex) in dayData"
+                          :key="hourIndex"
+                          class="heatmap-cell"
+                          :style="{ backgroundColor: getHeatmapColor(count) }"
+                          :title="`${weekDays[dayIndex]} ${hourIndex}:00 - ${count} 次登錄`"
+                        >
+                          <span v-if="count > 0" class="cell-count">{{ count }}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- User List Table -->
-      <div class="table-card">
-        <div class="table-header">
-          <h3>用戶列表</h3>
-          <div class="table-filters">
-            <el-select v-model="filterSegment" placeholder="篩選分群" size="small" style="width: 150px;">
-              <el-option label="全部" value="all" />
-              <el-option label="高活躍" value="high" />
-              <el-option label="中等活躍" value="medium" />
-              <el-option label="低活躍" value="low" />
-              <el-option label="休眠" value="dormant" />
-            </el-select>
-            <el-select v-model="filterRisk" placeholder="篩選風險" size="small" style="width: 150px; margin-left: 10px;">
-              <el-option label="全部" value="all" />
-              <el-option label="高風險" value="high" />
-              <el-option label="中風險" value="medium" />
-              <el-option label="低風險" value="low" />
-            </el-select>
+          <!-- User List Table -->
+          <div class="table-card">
+            <div class="table-header">
+              <h3>用戶列表</h3>
+              <div class="table-filters">
+                <el-select v-model="filterSegment" placeholder="篩選分群" size="small" style="width: 150px;">
+                  <el-option label="全部" value="all" />
+                  <el-option label="高活躍" value="high" />
+                  <el-option label="中等活躍" value="medium" />
+                  <el-option label="低活躍" value="low" />
+                  <el-option label="休眠" value="dormant" />
+                </el-select>
+                <el-select v-model="filterRisk" placeholder="篩選風險" size="small" style="width: 150px; margin-left: 10px;">
+                  <el-option label="全部" value="all" />
+                  <el-option label="高風險" value="high" />
+                  <el-option label="中風險" value="medium" />
+                  <el-option label="低風險" value="low" />
+                </el-select>
+              </div>
+            </div>
+            <BaseTable
+              :columns="userListColumns"
+              :data="filteredUsers"
+              :loading="loading"
+              @sort="handleUserListSort"
+            >
+              <template #cell-role="{ row }">
+                <BaseTag v-if="row.role === 'admin'" type="danger" size="small">管理員</BaseTag>
+                <BaseTag v-else type="info" size="small">普通用戶</BaseTag>
+              </template>
+              <template #cell-last_login="{ value }">
+                {{ formatTime(value) }}
+              </template>
+              <template #cell-segment="{ row }">
+                <BaseTag :type="getSegmentTagType(row.segment)" size="small">
+                  {{ getSegmentLabel(row.segment) }}
+                </BaseTag>
+              </template>
+              <template #cell-riskScore="{ row }">
+                <span :style="{ color: row.riskLevel.color, fontWeight: 'bold' }">
+                  {{ row.riskScore }}
+                </span>
+              </template>
+              <template #cell-riskLevel="{ row }">
+                <BaseTag :type="getRiskTagType(row.riskLevel.level)" size="small">
+                  {{ row.riskLevel.label }}
+                </BaseTag>
+              </template>
+              <template #actions="{ row }">
+                <button class="btn btn-primary btn-sm" @click="viewUserProfile(row)">
+                  查看詳情
+                </button>
+              </template>
+            </BaseTable>
           </div>
-        </div>
-        <BaseTable
-          :columns="userListColumns"
-          :data="filteredUsers"
-          :loading="loading"
-          @sort="handleUserListSort"
-        >
-          <template #cell-role="{ row }">
-            <BaseTag v-if="row.role === 'admin'" type="danger" size="small">管理員</BaseTag>
-            <BaseTag v-else type="info" size="small">普通用戶</BaseTag>
-          </template>
-          <template #cell-last_login="{ value }">
-            {{ formatTime(value) }}
-          </template>
-          <template #cell-segment="{ row }">
-            <BaseTag :type="getSegmentTagType(row.segment)" size="small">
-              {{ getSegmentLabel(row.segment) }}
-            </BaseTag>
-          </template>
-          <template #cell-riskScore="{ row }">
-            <span :style="{ color: row.riskLevel.color, fontWeight: 'bold' }">
-              {{ row.riskScore }}
-            </span>
-          </template>
-          <template #cell-riskLevel="{ row }">
-            <BaseTag :type="getRiskTagType(row.riskLevel.level)" size="small">
-              {{ row.riskLevel.label }}
-            </BaseTag>
-          </template>
-          <template #actions="{ row }">
-            <button class="btn btn-primary btn-sm" @click="viewUserProfile(row)">
-              查看詳情
-            </button>
-          </template>
-        </BaseTable>
-      </div>
+        </el-tab-pane>
+
+        <!-- Tab 2: User Segments -->
+        <el-tab-pane label="用戶分層" name="segments">
+          <div v-if="!userSegments" class="loading-state">
+            <el-icon class="is-loading" :size="40"><Loading /></el-icon>
+            <p>載入用戶分層數據中...</p>
+          </div>
+          <div v-else class="segments-content">
+            <!-- Segment Stats Cards -->
+            <div class="stats-grid">
+              <StatsCard
+                v-for="segment in userSegments.segments"
+                :key="segment.level"
+                :number="segment.user_count"
+                :label="getSegmentLevelLabel(segment.level)"
+                :color="getSegmentLevelColor(segment.level)"
+              />
+            </div>
+
+            <!-- Segment Distribution Chart -->
+            <div class="charts-row">
+              <div class="chart-card">
+                <div class="chart-header">
+                  <h3>用戶分層分布</h3>
+                </div>
+                <BaseChart
+                  type="doughnut"
+                  :data="segmentDistributionData"
+                  :options="segmentationOptions"
+                  :loading="loading"
+                  :height="300"
+                />
+              </div>
+
+              <!-- Segment Details Table -->
+              <div class="chart-card">
+                <div class="chart-header">
+                  <h3>分層詳情</h3>
+                </div>
+                <table class="segment-table">
+                  <thead>
+                    <tr>
+                      <th>分層</th>
+                      <th>用戶數</th>
+                      <th>平均調用次數</th>
+                      <th>平均在線時長</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="segment in userSegments.segments" :key="segment.level">
+                      <td>
+                        <BaseTag :type="getSegmentLevelTagType(segment.level)" size="small">
+                          {{ getSegmentLevelLabel(segment.level) }}
+                        </BaseTag>
+                      </td>
+                      <td>{{ segment.user_count }}</td>
+                      <td>{{ Math.round(segment.avg_call_count) }}</td>
+                      <td>{{ formatOnlineTime(segment.avg_online_seconds) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </el-tab-pane>
+
+        <!-- Tab 3: RFM Analysis -->
+        <el-tab-pane label="RFM 分析" name="rfm">
+          <div v-if="!rfmAnalysis" class="loading-state">
+            <el-icon class="is-loading" :size="40"><Loading /></el-icon>
+            <p>載入 RFM 分析數據中...</p>
+          </div>
+          <div v-else class="rfm-content">
+            <!-- RFM Category Cards -->
+            <div class="stats-grid">
+              <StatsCard
+                v-for="category in rfmAnalysis.categories"
+                :key="category.category"
+                :number="category.user_count"
+                :label="getRFMCategoryLabel(category.category)"
+                :color="getRFMCategoryColor(category.category)"
+              />
+            </div>
+
+            <!-- RFM Distribution Chart -->
+            <div class="charts-row">
+              <div class="chart-card">
+                <div class="chart-header">
+                  <h3>RFM 用戶分類</h3>
+                </div>
+                <BaseChart
+                  type="pie"
+                  :data="rfmDistributionData"
+                  :options="segmentationOptions"
+                  :loading="loading"
+                  :height="300"
+                />
+              </div>
+
+              <!-- RFM Details Table -->
+              <div class="chart-card">
+                <div class="chart-header">
+                  <h3>分類詳情</h3>
+                </div>
+                <table class="segment-table">
+                  <thead>
+                    <tr>
+                      <th>分類</th>
+                      <th>用戶數</th>
+                      <th>平均 R 分數</th>
+                      <th>平均 F 分數</th>
+                      <th>平均 M 分數</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="category in rfmAnalysis.categories" :key="category.category">
+                      <td>
+                        <BaseTag :type="getRFMCategoryTagType(category.category)" size="small">
+                          {{ getRFMCategoryLabel(category.category) }}
+                        </BaseTag>
+                      </td>
+                      <td>{{ category.user_count }}</td>
+                      <td>{{ category.avg_r_score.toFixed(1) }}</td>
+                      <td>{{ category.avg_f_score.toFixed(1) }}</td>
+                      <td>{{ category.avg_m_score.toFixed(1) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </el-tab-pane>
+
+        <!-- Tab 4: API Diversity -->
+        <el-tab-pane label="API 多樣性" name="diversity">
+          <div v-if="!apiDiversity" class="loading-state">
+            <el-icon class="is-loading" :size="40"><Loading /></el-icon>
+            <p>載入 API 多樣性數據中...</p>
+          </div>
+          <div v-else class="diversity-content">
+            <!-- Diversity Stats -->
+            <div class="stats-grid">
+              <StatsCard
+                :number="apiDiversity.explorer_count"
+                label="探索型用戶"
+                :color="COLORS.primary"
+              />
+              <StatsCard
+                :number="apiDiversity.focused_count"
+                label="專注型用戶"
+                :color="COLORS.info"
+              />
+              <StatsCard
+                :number="apiDiversity.avg_diversity.toFixed(2)"
+                label="平均多樣性指數"
+                :color="COLORS.warning"
+              />
+            </div>
+
+            <!-- Diversity Distribution Chart -->
+            <div class="charts-row">
+              <div class="chart-card">
+                <div class="chart-header">
+                  <h3>用戶類型分布</h3>
+                </div>
+                <BaseChart
+                  type="pie"
+                  :data="diversityDistributionData"
+                  :options="segmentationOptions"
+                  :loading="loading"
+                  :height="300"
+                />
+              </div>
+
+              <!-- Top Users Table -->
+              <div class="chart-card">
+                <div class="chart-header">
+                  <h3>Top 10 用戶（按多樣性）</h3>
+                </div>
+                <table class="segment-table">
+                  <thead>
+                    <tr>
+                      <th>用戶名</th>
+                      <th>類型</th>
+                      <th>多樣性指數</th>
+                      <th>調用次數</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="user in apiDiversity.users.slice(0, 10)" :key="user.username">
+                      <td>{{ user.username }}</td>
+                      <td>
+                        <BaseTag :type="user.user_type === 'explorer' ? 'success' : 'info'" size="small">
+                          {{ user.user_type === 'explorer' ? '探索型' : '專注型' }}
+                        </BaseTag>
+                      </td>
+                      <td>{{ user.diversity_index.toFixed(2) }}</td>
+                      <td>{{ user.total_calls }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </el-tab-pane>
+
+        <!-- Tab 5: User Growth -->
+        <el-tab-pane label="用戶增長" name="growth">
+          <div v-if="!userGrowth" class="loading-state">
+            <el-icon class="is-loading" :size="40"><Loading /></el-icon>
+            <p>載入用戶增長數據中...</p>
+          </div>
+          <div v-else class="growth-content">
+            <!-- Growth Stats -->
+            <div class="stats-grid">
+              <StatsCard
+                :number="userGrowth.total_users"
+                label="總用戶數"
+                :color="COLORS.primary"
+              />
+              <StatsCard
+                :number="userGrowth.avg_monthly_growth.toFixed(1)"
+                label="平均月增長率"
+                :color="COLORS.success"
+              />
+              <StatsCard
+                :number="userGrowth.monthly_data[userGrowth.monthly_data.length - 1]?.new_users || 0"
+                label="本月新增用戶"
+                :color="COLORS.warning"
+              />
+            </div>
+
+            <!-- Growth Trend Chart -->
+            <div class="charts-row">
+              <div class="chart-card full-width">
+                <div class="chart-header">
+                  <h3>月度新增用戶趨勢</h3>
+                </div>
+                <BaseChart
+                  type="line"
+                  :data="growthTrendData"
+                  :options="growthTrendOptions"
+                  :loading="loading"
+                  :height="300"
+                />
+              </div>
+            </div>
+
+            <!-- Cumulative Growth Chart -->
+            <div class="charts-row">
+              <div class="chart-card full-width">
+                <div class="chart-header">
+                  <h3>累計用戶增長</h3>
+                </div>
+                <BaseChart
+                  type="line"
+                  :data="cumulativeGrowthData"
+                  :options="cumulativeGrowthOptions"
+                  :loading="loading"
+                  :height="300"
+                />
+              </div>
+            </div>
+          </div>
+        </el-tab-pane>
+      </el-tabs>
     </div>
   </div>
 </template>
 
 <script>
 import { BaseChart, StatsCard, BaseTable, BaseTag } from '@/components/common';
-import { userAPI, statsAPI, sessionAPI } from '@/api/index';
+import { userAPI, statsAPI, sessionAPI, analyticsAPI } from '@/api/index';
 import { useChart, useUserBehavior, useTimeFormat } from '@/composables';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElTabs, ElTabPane } from 'element-plus';
 import { Refresh as RefreshIcon, Loading } from '@element-plus/icons-vue';
 
 export default {
@@ -191,6 +461,8 @@ export default {
     StatsCard,
     BaseTable,
     BaseTag,
+    ElTabs,
+    ElTabPane,
     RefreshIcon,
     Loading
   },
@@ -234,6 +506,7 @@ export default {
   data() {
     return {
       loading: false,
+      activeTab: 'overview',
       users: [],
       loginLogs: [],
       sessionsMap: {},
@@ -245,6 +518,10 @@ export default {
       weekDays: ['週日', '週一', '週二', '週三', '週四', '週五', '週六'],
       filterSegment: 'all',
       filterRisk: 'all',
+      userSegments: null,
+      rfmAnalysis: null,
+      apiDiversity: null,
+      userGrowth: null,
       userListColumns: [
         { key: 'username', label: '用戶名', sortable: false },
         { key: 'role', label: '角色', sortable: false },
@@ -324,6 +601,71 @@ export default {
           return false;
         }
         return true;
+      });
+    },
+    segmentDistributionData() {
+      if (!this.userSegments || !this.userSegments.segments) return null;
+
+      const segments = this.userSegments.segments;
+      const labels = segments.map(s => this.getSegmentLevelLabel(s.level));
+      const data = segments.map(s => s.count);
+      const colors = segments.map(s => this.getSegmentLevelColor(s.level));
+
+      return this.createPieChartData(labels, data, colors);
+    },
+    rfmDistributionData() {
+      if (!this.rfmAnalysis || !this.rfmAnalysis.categories) return null;
+
+      const categories = this.rfmAnalysis.categories;
+      const labels = categories.map(c => this.getRFMCategoryLabel(c.category));
+      const data = categories.map(c => c.count);
+      const colors = categories.map(c => this.getRFMCategoryColor(c.category));
+
+      return this.createPieChartData(labels, data, colors);
+    },
+    diversityDistributionData() {
+      if (!this.apiDiversity || !this.apiDiversity.distribution) return null;
+
+      const dist = this.apiDiversity.distribution;
+      const labels = Object.keys(dist).map(key => `${key} 個 API`);
+      const data = Object.values(dist);
+
+      return this.createPieChartData(labels, data);
+    },
+    growthTrendData() {
+      if (!this.userGrowth || !this.userGrowth.monthly_growth) return null;
+
+      const growth = this.userGrowth.monthly_growth;
+      return this.createLineChartData(
+        growth.map(g => g.month),
+        [{
+          label: '新增用戶',
+          data: growth.map(g => ({ x: g.month, y: g.new_users }))
+        }]
+      );
+    },
+    cumulativeGrowthData() {
+      if (!this.userGrowth || !this.userGrowth.monthly_growth) return null;
+
+      const growth = this.userGrowth.monthly_growth;
+      return this.createLineChartData(
+        growth.map(g => g.month),
+        [{
+          label: '累計用戶',
+          data: growth.map(g => ({ x: g.month, y: g.cumulative_users }))
+        }]
+      );
+    },
+    growthTrendOptions() {
+      return this.createTimeSeriesOptions({
+        timeUnit: 'month',
+        formatValue: this.formatNumber
+      });
+    },
+    cumulativeGrowthOptions() {
+      return this.createTimeSeriesOptions({
+        timeUnit: 'month',
+        formatValue: this.formatNumber
       });
     }
   },
@@ -445,6 +787,95 @@ export default {
           return valueA < valueB ? 1 : -1;
         }
       });
+    },
+    async handleTabChange(tabName) {
+      if (tabName === 'overview') {
+        return; // Overview data already loaded
+      }
+
+      try {
+        if (tabName === 'segments' && !this.userSegments) {
+          this.loading = true;
+          this.userSegments = await analyticsAPI.getUserSegments(false);
+        } else if (tabName === 'rfm' && !this.rfmAnalysis) {
+          this.loading = true;
+          this.rfmAnalysis = await analyticsAPI.getRFMAnalysis(false);
+        } else if (tabName === 'diversity' && !this.apiDiversity) {
+          this.loading = true;
+          this.apiDiversity = await analyticsAPI.getApiDiversity();
+        } else if (tabName === 'growth' && !this.userGrowth) {
+          this.loading = true;
+          this.userGrowth = await analyticsAPI.getUserGrowth(12);
+        }
+      } catch (error) {
+        console.error(`Failed to load ${tabName} data:`, error);
+        ElMessage.error(`載入${tabName}數據失敗`);
+      } finally {
+        this.loading = false;
+      }
+    },
+    getSegmentLevelLabel(level) {
+      const labels = {
+        super_active: '超級活躍',
+        active: '活躍',
+        normal: '普通',
+        low_active: '低活躍',
+        dormant: '休眠'
+      };
+      return labels[level] || level;
+    },
+    getSegmentLevelColor(level) {
+      const colors = {
+        super_active: '#52c41a',
+        active: '#73d13d',
+        normal: '#faad14',
+        low_active: '#ff7a45',
+        dormant: '#f5222d'
+      };
+      return colors[level] || '#d9d9d9';
+    },
+    getSegmentLevelTagType(level) {
+      const types = {
+        super_active: 'success',
+        active: 'success',
+        normal: 'warning',
+        low_active: 'info',
+        dormant: 'danger'
+      };
+      return types[level] || 'info';
+    },
+    getRFMCategoryLabel(category) {
+      const labels = {
+        vip: 'VIP 用戶',
+        potential: '潛力用戶',
+        new: '新用戶',
+        sleeping_high_value: '沉睡高價值',
+        low_value: '低價值',
+        other: '其他'
+      };
+      return labels[category] || category;
+    },
+    getRFMCategoryColor(category) {
+      const colors = {
+        vip: '#722ed1',
+        potential: '#1890ff',
+        new: '#52c41a',
+        sleeping_high_value: '#faad14',
+        low_value: '#ff7a45',
+        other: '#d9d9d9'
+      };
+      return colors[category] || '#d9d9d9';
+    },
+    getRFMCategoryTagType(category) {
+      const types = {
+        vip: 'danger',
+        potential: 'primary',
+        new: 'success',
+        sleeping_high_value: 'warning',
+        low_value: 'info',
+        other: 'info'
+      };
+      return types[category] || 'info';
     }
   }
 };
@@ -639,5 +1070,31 @@ export default {
   .heatmap-grid {
     overflow-x: auto;
   }
+}
+
+.segment-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.segment-table th,
+.segment-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border-light, #eee);
+}
+
+.segment-table th {
+  font-weight: 600;
+  color: var(--color-text-primary, #333);
+  background-color: var(--color-background, #f5f5f5);
+}
+
+.segment-table td {
+  color: var(--color-text-secondary, #666);
+}
+
+.segment-table tbody tr:hover {
+  background-color: var(--color-background, #f9f9f9);
 }
 </style>

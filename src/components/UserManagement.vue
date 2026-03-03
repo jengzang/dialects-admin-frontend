@@ -11,6 +11,7 @@
 <!--        <button @click="goToAnomalyDetection">異常檢測</button>-->
         <button @click="viewAllCustom">所有數據</button>
         <button @click="goToSessionManagement">會話管理</button>
+        <button @click="goToLeaderboard">排行榜</button>
       </div>
       <!-- 搜索框 -->
       <div class="search-container">
@@ -197,6 +198,10 @@ const goToCustomPerUser = (user) => {
 
 const goToSessionManagement = () => {
   router.push({ name: 'GlobalSessionManagement' });
+};
+
+const goToLeaderboard = () => {
+  router.push({ name: 'Leaderboard' });
 };
 
 const viewUserSessions = (user) => {

@@ -532,40 +532,49 @@ export default {
     async fetchData() {
       this.loading = true;
       try {
-        // 并行加载数据
-        const [statsRes, usersRes] = await Promise.all([
-          statsAPI.getUserStats(this.username),
-          userAPI.getAllUsers()
-        ]);
+        // 1. 获取用户基本统计信息（参考 UserStats.vue）
+        this.userStats = await statsAPI.getStatsQuery(this.username);
 
-        this.userStats = statsRes.user || {};
-        const user = (usersRes.users || []).find(u => u.username === this.username);
+        // 2. 获取用户完整信息（用于获取 user.id 和 data_count）
+        const usersRes = await userAPI.getAllUsersComplete();
+        const users = usersRes.data || usersRes || [];
+        const user = users.find(u => u.username === this.username);
 
-        if (user) {
-          this.dataCount = user.data_count || 0;
+        if (!user) {
+          ElMessage.error('未找到用戶信息');
+          this.goBack();
+          return;
+        }
 
-          // 加载会话数据
+        this.dataCount = user.data_count || 0;
+
+        // 3. 加载会话数据
+        try {
           const sessionsRes = await sessionAPI.getUserHistory(user.id, true);
           this.sessions = sessionsRes.sessions || [];
 
           // 计算风险评分
           this.riskScore = this.calculateRiskScore(this.userStats, this.sessions);
           this.riskLevel = this.getRiskLevel(this.riskScore);
+        } catch (error) {
+          console.error('Failed to load sessions:', error);
+          this.sessions = [];
         }
 
-        // 加载 API 日志
+        // 4. 加载 API 日志（参考 UserStats.vue）
         try {
           const apiRes = await analyticsAPI.getApiDetail(this.username);
-          this.apiLogs = apiRes.logs || [];
+          // 注意：返回格式是 { user, api_logs }
+          this.apiLogs = apiRes.api_logs || [];
         } catch (error) {
           console.error('Failed to load API logs:', error);
           this.apiLogs = [];
         }
 
-        // 加载登录日志
+        // 5. 加载登录日志
         try {
           const loginRes = await statsAPI.getSuccessLoginLogs(this.username);
-          this.loginLogs = loginRes.logs || [];
+          this.loginLogs = loginRes || [];
         } catch (error) {
           console.error('Failed to load login logs:', error);
           this.loginLogs = [];
@@ -574,7 +583,7 @@ export default {
         ElMessage.success('數據載入成功');
       } catch (error) {
         console.error('Failed to fetch user profile data:', error);
-        ElMessage.error('載入數據失敗');
+        ElMessage.error(`載入數據失敗: ${error.message || '未知錯誤'}`);
       } finally {
         this.loading = false;
       }

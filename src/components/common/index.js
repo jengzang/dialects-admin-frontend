@@ -22,4 +22,5 @@ export { default as BaseForm } from './BaseForm.vue';
 export { default as BaseFormItem } from './BaseFormItem.vue';
 export { default as BasePageHeader } from './BasePageHeader.vue';
 export { default as BaseTooltip } from './BaseTooltip.vue';
+export { default as BaseModal } from './BaseModal.vue';
 

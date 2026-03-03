@@ -5,13 +5,13 @@
       <div class="tabs">
         <button
           :class="{ active: activeTab === 'data' }"
-          @click="activeTab = 'data'"
+          @click="switchTab('data')"
         >
           自定義數據 ({{ customDataCount }})
         </button>
         <button
           :class="{ active: activeTab === 'regions' }"
-          @click="activeTab = 'regions'"
+          @click="switchTab('regions')"
         >
           自定義區域 ({{ regionsCount }})
         </button>
@@ -38,16 +38,25 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, computed, onMounted, watch } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import CustomAll from './CustomAll.vue';
 import RegionsAll from './RegionsAll.vue';
 import { customAPI, customRegionsAPI } from '@/api';
 
 const router = useRouter();
+const route = useRoute();
 const activeTab = ref('data');
 const customDataCount = ref(0);
 const regionsCount = ref(0);
+
+// Initialize tab from query parameter
+onMounted(() => {
+  if (route.query.tab) {
+    activeTab.value = route.query.tab;
+  }
+  fetchCounts();
+});
 
 // Fetch counts
 const fetchCounts = async () => {
@@ -85,6 +94,20 @@ const handleRegionRowClick = (user) => {
 const goToHome = () => {
   router.push({ name: 'Home' });
 };
+
+const switchTab = (tab) => {
+  router.push({
+    name: 'DataManagementAll',
+    query: { tab }
+  });
+};
+
+// Watch for tab changes
+watch(() => route.query.tab, (newTab) => {
+  if (newTab) {
+    activeTab.value = newTab;
+  }
+});
 
 onMounted(() => {
   fetchCounts();
