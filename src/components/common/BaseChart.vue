@@ -21,11 +21,11 @@ export default {
     type: {
       type: String,
       required: true,
-      validator: (value) => ['line', 'bar', 'pie', 'doughnut'].includes(value)
+      validator: (value) => ['line', 'bar', 'pie', 'doughnut', 'radar'].includes(value)
     },
     data: {
       type: Object,
-      required: true
+      default: null
     },
     options: {
       type: Object,
@@ -114,11 +114,25 @@ export default {
     updateChart() {
       if (!this.chart) return;
 
+      // 检查 data 是否有效
+      if (!this.data || typeof this.data !== 'object') {
+        console.warn('Invalid chart data:', this.data);
+        return;
+      }
+
       const option = this.convertToEChartsOption();
-      this.chart.setOption(option, true);
+      if (option && Object.keys(option).length > 0) {
+        this.chart.setOption(option, true);
+      }
     },
     convertToEChartsOption() {
       const { type, data, options } = this;
+
+      // 验证数据
+      if (!data || typeof data !== 'object') {
+        console.warn('Invalid data for chart:', data);
+        return {};
+      }
 
       if (type === 'line') {
         return this.createLineOption(data, options);
@@ -131,10 +145,15 @@ export default {
       return {};
     },
     createLineOption(data, customOptions) {
-      const series = (data.datasets || []).map(dataset => ({
+      if (!data || !data.datasets || !Array.isArray(data.datasets)) {
+        console.warn('Invalid line chart data:', data);
+        return {};
+      }
+
+      const series = data.datasets.map(dataset => ({
         name: dataset.label,
         type: 'line',
-        data: dataset.data.map(d => [d.x, d.y]),
+        data: (dataset.data || []).map(d => [d.x, d.y]),
         smooth: true,
         lineStyle: {
           width: 2
@@ -146,7 +165,7 @@ export default {
           trigger: 'axis'
         },
         legend: {
-          data: (data.datasets || []).map(d => d.label),
+          data: data.datasets.map(d => d.label),
           top: 5,
           left: 'center'
         },
@@ -168,10 +187,15 @@ export default {
       };
     },
     createBarOption(data, customOptions) {
-      const series = (data.datasets || []).map(dataset => ({
+      if (!data || !data.datasets || !Array.isArray(data.datasets)) {
+        console.warn('Invalid bar chart data:', data);
+        return {};
+      }
+
+      const series = data.datasets.map(dataset => ({
         name: dataset.label,
         type: 'bar',
-        data: dataset.data
+        data: dataset.data || []
       }));
 
       return {
@@ -179,7 +203,7 @@ export default {
           trigger: 'axis'
         },
         legend: {
-          data: (data.datasets || []).map(d => d.label),
+          data: data.datasets.map(d => d.label),
           top: 5,
           left: 'center'
         },
@@ -202,9 +226,14 @@ export default {
       };
     },
     createPieOption(data, customOptions, isDoughnut) {
-      const seriesData = (data.labels || []).map((label, index) => ({
+      if (!data || !data.labels || !Array.isArray(data.labels) || !data.datasets || !data.datasets[0]) {
+        console.warn('Invalid pie chart data:', data);
+        return {};
+      }
+
+      const seriesData = data.labels.map((label, index) => ({
         name: label,
-        value: data.datasets[0].data[index]
+        value: data.datasets[0].data[index] || 0
       }));
 
       return {
@@ -216,7 +245,7 @@ export default {
           orient: 'vertical',
           right: 10,
           top: 'middle',
-          data: data.labels || [],
+          data: data.labels,
           textStyle: {
             fontSize: 12
           }
