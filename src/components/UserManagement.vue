@@ -8,6 +8,7 @@
         <button class="btn btn-primary" @click="apidetail">近期api調用</button>
         <button class="btn btn-primary" @click="goToAnalytics">數據分析</button>
         <button class="btn btn-primary" @click="goToUserBehavior">用戶行為</button>
+        <button class="btn btn-primary" @click="goToAnomalyDetection">異常檢測</button>
         <button class="btn btn-primary" @click="viewAllCustom">所有數據</button>
         <button class="btn btn-primary" @click="goToSessionManagement">會話管理</button>
       </div>
@@ -186,6 +187,10 @@ const goToAnalytics = () => {
 
 const goToUserBehavior = () => {
   router.push({ name: 'UserBehaviorDashboard' });
+};
+
+const goToAnomalyDetection = () => {
+  router.push({ name: 'AnomalyDetectionPanel' });
 };
 
 const goToCreateUser = () => {

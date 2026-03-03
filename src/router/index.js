@@ -8,7 +8,7 @@ import UserStats from '../components/user/UserStats.vue'
 import Login from '../components/Login.vue'
 import CreateUser from '../components/user/CreateUser.vue'
 import ApiDetail from "../components/ApiDetail.vue"
-import Custom from "../components/custom/Custom.vue"
+import Custom from "../components/custom/CustomAll.vue"
 import CustomPerUser from "../components/custom/CustomPerUser.vue"
 import CreateCustom from "../components/custom/CreateCustom.vue"
 import DeleteCustom from "../components/custom/DeleteCustom.vue"
@@ -20,6 +20,8 @@ import UserSessionManagement from "../components/session/UserSessionManagement.v
 import GlobalSessionManagement from "../components/session/GlobalSessionManagement.vue"
 import AnalyticsDashboard from "../components/analytics/AnalyticsDashboard.vue"
 import UserBehaviorDashboard from "../components/user/UserBehaviorDashboard.vue"
+import UserProfileDetail from "../components/user/UserProfileDetail.vue"
+import AnomalyDetectionPanel from "../components/user/AnomalyDetectionPanel.vue"
 
 // 根路徑配置
 const routes = [
@@ -129,6 +131,18 @@ const routes = [
     path: '/user-behavior',
     name: 'UserBehaviorDashboard',
     component: UserBehaviorDashboard,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/user-profile/:username',
+    name: 'UserProfileDetail',
+    component: UserProfileDetail,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/anomaly-detection',
+    name: 'AnomalyDetectionPanel',
+    component: AnomalyDetectionPanel,
     meta: { requiresAuth: true }
   },
 ]
