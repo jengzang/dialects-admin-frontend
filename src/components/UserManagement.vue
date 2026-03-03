@@ -79,26 +79,26 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { userAPI, statsAPI } from '../api/index';
 import { BasePagination, BaseSearchInput } from '@/components/common';
+import { useMessage } from '@/composables';
 
 const router = useRouter();
+const { showMessage } = useMessage();
 
 const users = ref([]);
 const searchQuery = ref('');
-const searchResultIndex = ref(-1);
 const filteredUsers = ref([]);
-const confirmUser = ref(null);
-const newUser = ref({ username: '', email: '' });
 const currentPage = ref(1);
 const pageSize = ref(30);
 const totalPages = ref(1);
+const loading = ref(false);
 const sortOrder = ref({
   username: 'asc',
   email: 'asc',
   data_count: 'asc',
 });
-const username = ref('');
 
 const fetchUserData = async () => {
+  loading.value = true;
   try {
     const response = await userAPI.getAllUsers();
     const usersData = response.data;
@@ -114,7 +114,10 @@ const fetchUserData = async () => {
     users.value = usersData;
     totalPages.value = Math.ceil(users.value.length / pageSize.value);
   } catch (error) {
+    showMessage('獲取用戶數據失敗', 'error');
     console.error('Failed to fetch user data:', error);
+  } finally {
+    loading.value = false;
   }
 };
 
@@ -123,14 +126,14 @@ const getUsers = async () => {
     await fetchUserData();
   } catch (error) {
     if (error.response && error.response.status === 401) {
-      alert('Token 無效或已過期，請重新登錄');
+      showMessage('Token 無效或已過期，請重新登錄', 'warning');
 
       setTimeout(async () => {
         try {
           await fetchUserData();
         } catch (retryError) {
           console.error('Retry failed', retryError);
-          alert('重試失敗，請重新登錄');
+          showMessage('重試失敗，請重新登錄', 'error');
           router.push({ name: 'Login' });
         }
       }, 500);
