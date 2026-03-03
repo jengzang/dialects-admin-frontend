@@ -32,30 +32,27 @@
     </div>
 
     <div class="table-container">
-      <table v-if="!loading && filteredSessions.length > 0">
-        <thead>
-          <tr>
-            <th>用戶</th>
-            <th>設備信息</th>
-            <th>登錄時間</th>
-            <th>過期時間</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="session in paginatedSessions" :key="session.id">
-            <td>{{ session.username }}</td>
-            <td>{{ session.device_info || 'Unknown' }}</td>
-            <td>{{ formatTime(session.created_at) }}</td>
-            <td>{{ formatExpireTime(session.expires_at) }}</td>
-            <td>
-              <button @click="revokeSession(session.id, session.username)" class="revoke-btn">
-                撤銷
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <BaseTable
+        v-if="!loading && filteredSessions.length > 0"
+        :columns="sessionColumns"
+        :data="paginatedSessions"
+        :sortable="false"
+      >
+        <template #cell-device_info="{ value }">
+          {{ value || 'Unknown' }}
+        </template>
+        <template #cell-created_at="{ value }">
+          {{ formatTime(value) }}
+        </template>
+        <template #cell-expires_at="{ value }">
+          {{ formatExpireTime(value) }}
+        </template>
+        <template #actions="{ row }">
+          <button @click="revokeSession(row.id, row.username)" class="revoke-btn">
+            撤銷
+          </button>
+        </template>
+      </BaseTable>
 
       <div v-else-if="loading" class="loading">
         加載中...
@@ -87,7 +84,7 @@ import { ref, computed, onMounted, onActivated } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { ElMessageBox, ElMessage } from 'element-plus';
 import userSessionAPI from '../../api/userSession';
-import { BasePagination, BaseSearchInput } from '@/components/common';
+import { BasePagination, BaseSearchInput, BaseTable } from '@/components/common';
 
 const router = useRouter();
 const route = useRoute();
@@ -99,6 +96,13 @@ const currentPage = ref(1);
 const pageSize = ref(30);
 const loading = ref(false);
 const userId = ref(null);
+
+const sessionColumns = [
+  { key: 'username', label: '用戶', sortable: false },
+  { key: 'device_info', label: '設備信息', sortable: false },
+  { key: 'created_at', label: '登錄時間', sortable: false },
+  { key: 'expires_at', label: '過期時間', sortable: false }
+];
 
 const filteredSessions = computed(() => {
   if (!searchQuery.value) {

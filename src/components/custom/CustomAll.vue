@@ -13,34 +13,17 @@
       </div>
     </div>
     <!-- 表格 -->
-    <table>
-      <thead>
-      <tr>
-        <th @click="sortData('username')">用戶名 <span :class="getArrowClass('username')"></span></th>
-        <th @click="sortData('簡稱')" style="min-width: 70px">簡稱 <span :class="getArrowClass('簡稱')"></span></th>
-        <th @click="sortData('音典分區')">音典分區 <span :class="getArrowClass('音典分區')"></span></th>
-        <th @click="sortData('經緯度')">經緯度 <span :class="getArrowClass('經緯度')"></span></th>
-        <th @click="sortData('特徵')">特徵 <span :class="getArrowClass('特徵')"></span></th>
-        <th @click="sortData('聲韻調')">聲韻調 <span :class="getArrowClass('聲韻調')"></span></th>
-        <th @click="sortData('值')">值 <span :class="getArrowClass('值')"></span></th>
-        <th @click="sortData('說明')" style="min-width: 120px">說明 <span :class="getArrowClass('說明')"></span></th>
-        <th @click="sortData('time')">創建時間 <span :class="getArrowClass('time')"></span></th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr v-for="item in currentPageData" :key="item.id" @click="goToPerUser(item)">
-        <td>{{ item.username }}</td>
-        <td>{{ item.簡稱 }}</td>
-        <td>{{ item.音典分區 }}</td>
-        <td>{{ item.經緯度 }}</td>
-        <td>{{ item.特徵 }}</td>
-        <td>{{ item.聲韻調 }}</td>
-        <td>{{ item.值 }}</td>
-        <td>{{ item.說明 }}</td>
-        <td>{{ formatTime(item.created_at) }}</td>
-      </tr>
-      </tbody>
-    </table>
+    <BaseTable
+      :columns="customColumns"
+      :data="currentPageData"
+      :row-clickable="true"
+      @row-click="goToPerUser"
+      @sort="handleSort"
+    >
+      <template #cell-created_at="{ value }">
+        {{ formatTime(value) }}
+      </template>
+    </BaseTable>
 
     <!-- 分頁控制 -->
     <BasePagination
@@ -60,7 +43,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../../axios.js';
-import { BasePagination } from '@/components/common';
+import { BasePagination, BaseTable } from '@/components/common';
 import { formatTime } from "../../utils.js";
 
 const router = useRouter();
@@ -69,6 +52,18 @@ const data = ref([]);
 const currentPage = ref(1);
 const searchQuery = ref('');
 const pageSize = 50;
+
+const customColumns = [
+  { key: 'username', label: '用戶名', sortable: true },
+  { key: '簡稱', label: '簡稱', sortable: true },
+  { key: '音典分區', label: '音典分區', sortable: true },
+  { key: '經緯度', label: '經緯度', sortable: true },
+  { key: '特徵', label: '特徵', sortable: true },
+  { key: '聲韻調', label: '聲韻調', sortable: true },
+  { key: '值', label: '值', sortable: true },
+  { key: '說明', label: '說明', sortable: true },
+  { key: 'created_at', label: '創建時間', sortable: true }
+];
 
 const totalPages = computed(() => {
   return Math.ceil(data.value.length / pageSize);
@@ -135,18 +130,9 @@ const handlePageChange = (page) => {
 };
 
 // 排序方法
-const sortData = (field) => {
-  if (sortField.value === field) {
-    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
-  } else {
-    sortField.value = field;
-    sortOrder.value = 'asc';
-  }
-};
-
-// 获取排序的箭头图标
-const getArrowClass = (field) => {
-  return sortField.value === field ? (sortOrder.value === 'asc' ? 'arrow-up' : 'arrow-down') : '';
+const handleSort = ({ key, order }) => {
+  sortField.value = key;
+  sortOrder.value = order;
 };
 
 const goToPerUser = (user) => {

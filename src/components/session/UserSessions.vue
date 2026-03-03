@@ -18,39 +18,37 @@
     </div>
 
     <div class="table-container">
-      <table v-if="!loading && sessions.length > 0">
-        <thead>
-          <tr>
-            <th>設備信息</th>
-            <th>登錄時間</th>
-            <th>過期時間</th>
-            <th>狀態</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="session in sessions" :key="session.id">
-            <td>{{ session.device_info || 'Unknown' }}</td>
-            <td>{{ formatTime(session.created_at) }}</td>
-            <td>{{ formatExpireTime(session.expires_at) }}</td>
-            <td>
-              <span :class="['status-badge', getStatusClass(session)]">
-                {{ getStatusText(session) }}
-              </span>
-            </td>
-            <td>
-              <button
-                v-if="!session.is_revoked && !isExpired(session)"
-                @click="revokeSession(session.id)"
-                class="revoke-btn"
-              >
-                撤銷
-              </button>
-              <span v-else>-</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <BaseTable
+        v-if="!loading && sessions.length > 0"
+        :columns="sessionColumns"
+        :data="sessions"
+        :sortable="false"
+      >
+        <template #cell-device_info="{ value }">
+          {{ value || 'Unknown' }}
+        </template>
+        <template #cell-created_at="{ value }">
+          {{ formatTime(value) }}
+        </template>
+        <template #cell-expires_at="{ value }">
+          {{ formatExpireTime(value) }}
+        </template>
+        <template #cell-status="{ row }">
+          <span :class="['status-badge', getStatusClass(row)]">
+            {{ getStatusText(row) }}
+          </span>
+        </template>
+        <template #actions="{ row }">
+          <button
+            v-if="!row.is_revoked && !isExpired(row)"
+            @click="revokeSession(row.id)"
+            class="revoke-btn"
+          >
+            撤銷
+          </button>
+          <span v-else>-</span>
+        </template>
+      </BaseTable>
 
       <div v-else-if="loading" class="loading">
         加載中...
@@ -72,6 +70,7 @@ import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { ElMessageBox, ElMessage } from 'element-plus';
 import userSessionAPI from '../../api/userSession';
+import { BaseTable } from '@/components/common';
 
 const router = useRouter();
 const route = useRoute();
@@ -81,6 +80,13 @@ const stats = ref({});
 const loading = ref(false);
 const userId = ref(null);
 const username = ref('');
+
+const sessionColumns = [
+  { key: 'device_info', label: '設備信息', sortable: false },
+  { key: 'created_at', label: '登錄時間', sortable: false },
+  { key: 'expires_at', label: '過期時間', sortable: false },
+  { key: 'status', label: '狀態', sortable: false }
+];
 
 const fetchUserSessions = async () => {
   loading.value = true;
