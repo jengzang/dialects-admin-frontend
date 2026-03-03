@@ -205,7 +205,7 @@ defineExpose({
 })
 </script>
 
-<style scoped lang="scss">
+<style lang="scss">
 @import '@/styles/abstracts/variables';
 @import '@/styles/abstracts/mixins';
 
@@ -253,7 +253,7 @@ defineExpose({
 
 /* Mobile responsive */
 @include respond-to(tablet) {
-  table {
+  .table-container table {
     th, td {
       padding: 8px;
     }
@@ -266,7 +266,7 @@ defineExpose({
     padding: 0 12px;
   }
 
-  table {
+  .table-container table {
     th, td {
       padding: 6px;
       font-size: $font-size-xs;
