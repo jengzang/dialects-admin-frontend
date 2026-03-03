@@ -3,28 +3,54 @@
     <!-- Header -->
     <div class="dashboard-header">
       <h2>API 使用分析</h2>
-      <div class="time-range-selector">
-        <el-radio-group v-model="timeRange" @change="handleTimeRangeChange">
-          <el-radio-button label="today">今天</el-radio-button>
-          <el-radio-button label="week">本週</el-radio-button>
-          <el-radio-button label="month">本月</el-radio-button>
-          <el-radio-button label="custom">自定義</el-radio-button>
-        </el-radio-group>
-        <el-date-picker
-          v-if="timeRange === 'custom'"
-          v-model="customDateRange"
-          type="daterange"
-          range-separator="至"
-          start-placeholder="開始日期"
-          end-placeholder="結束日期"
-          @change="handleCustomDateChange"
-          style="margin-left: 10px;"
-        />
+      <div class="header-actions">
+        <div class="time-range-selector">
+          <el-radio-group v-model="timeRange" @change="handleTimeRangeChange">
+            <el-radio-button label="today">今天</el-radio-button>
+            <el-radio-button label="week">本週</el-radio-button>
+            <el-radio-button label="month">本月</el-radio-button>
+            <el-radio-button label="custom">自定義</el-radio-button>
+          </el-radio-group>
+          <el-date-picker
+            v-if="timeRange === 'custom'"
+            v-model="customDateRange"
+            type="daterange"
+            range-separator="至"
+            start-placeholder="開始日期"
+            end-placeholder="結束日期"
+            @change="handleCustomDateChange"
+            style="margin-left: 10px;"
+          />
+        </div>
+        <div class="action-buttons">
+          <el-button
+            :icon="RefreshIcon"
+            @click="fetchData"
+            :loading="loading"
+            size="small"
+          >
+            刷新
+          </el-button>
+          <el-button
+            :icon="DownloadIcon"
+            @click="exportData"
+            size="small"
+          >
+            導出
+          </el-button>
+        </div>
       </div>
     </div>
 
+    <!-- Empty State -->
+    <div v-if="!loading && apiLogs.length === 0" class="empty-state">
+      <el-empty description="暫無數據">
+        <el-button type="primary" @click="fetchData">重新載入</el-button>
+      </el-empty>
+    </div>
+
     <!-- Stats Cards -->
-    <div class="stats-grid">
+    <div v-if="apiLogs.length > 0" class="stats-grid">
       <StatsCard
         :number="stats.totalCalls"
         label="總 API 調用"
@@ -48,7 +74,7 @@
     </div>
 
     <!-- Charts Row 1: Time Series -->
-    <div class="charts-row">
+    <div v-if="apiLogs.length > 0" class="charts-row">
       <div class="chart-card">
         <div class="chart-header">
           <h3>API 調用趨勢</h3>
@@ -89,7 +115,7 @@
     </div>
 
     <!-- Charts Row 2: Distribution -->
-    <div class="charts-row">
+    <div v-if="apiLogs.length > 0" class="charts-row">
       <div class="chart-card">
         <div class="chart-header">
           <h3>用戶 API 使用分布</h3>
@@ -118,7 +144,7 @@
     </div>
 
     <!-- Charts Row 3: Performance -->
-    <div class="charts-row">
+    <div v-if="apiLogs.length > 0" class="charts-row">
       <div class="chart-card full-width">
         <div class="chart-header">
           <h3>API 性能分析</h3>
@@ -135,7 +161,7 @@
     </div>
 
     <!-- Top Users Table -->
-    <div class="table-card">
+    <div v-if="apiLogs.length > 0" class="table-card">
       <div class="table-header">
         <h3>用戶流量消耗排名</h3>
       </div>
@@ -174,12 +200,15 @@ import { BaseChart, StatsCard } from '@/components/common';
 import { analyticsAPI } from '@/api/index';
 import { useChart, useApiStats } from '@/composables';
 import { ElMessage } from 'element-plus';
+import { Refresh as RefreshIcon, Download as DownloadIcon } from '@element-plus/icons-vue';
 
 export default {
   name: 'AnalyticsDashboard',
   components: {
     BaseChart,
-    StatsCard
+    StatsCard,
+    RefreshIcon,
+    DownloadIcon
   },
   setup() {
     const {
@@ -204,7 +233,9 @@ export default {
       formatNumber,
       createTimeSeriesOptions,
       aggregateByTime,
-      calculateAllStats
+      calculateAllStats,
+      RefreshIcon,
+      DownloadIcon
     };
   },
   data() {
@@ -442,8 +473,21 @@ export default {
       this.loading = true;
       try {
         const response = await analyticsAPI.getApiUsage();
-        this.apiLogs = response.logs || [];
+        // 数据验证和清洗
+        this.apiLogs = (response.logs || []).filter(log => {
+          return log &&
+                 log.called_at &&
+                 !isNaN(new Date(log.called_at).getTime());
+        }).map(log => ({
+          ...log,
+          request_size: Math.max(0, log.request_size || 0),
+          response_size: Math.max(0, log.response_size || 0),
+          duration: Math.max(0, log.duration || 0)
+        }));
         this.calculateStats();
+        if (this.apiLogs.length > 0) {
+          ElMessage.success(`成功載入 ${this.apiLogs.length} 條記錄`);
+        }
       } catch (error) {
         console.error('Failed to fetch API usage data:', error);
         ElMessage.error('載入數據失敗');
@@ -487,6 +531,43 @@ export default {
         name: 'UserStats',
         params: { username: user.username }
       });
+    },
+    exportData() {
+      try {
+        // 准备导出数据
+        const exportData = this.topUsers.map(user => ({
+          '用戶名': user.username,
+          'API 調用': user.apiCalls,
+          '上行流量': this.formatBytes(user.upload),
+          '下行流量': this.formatBytes(user.download),
+          '總流量': this.formatBytes(user.upload + user.download)
+        }));
+
+        // 转换为 CSV
+        const headers = Object.keys(exportData[0]);
+        const csvContent = [
+          headers.join(','),
+          ...exportData.map(row => headers.map(h => row[h]).join(','))
+        ].join('\n');
+
+        // 添加 BOM 以支持中文
+        const BOM = '\uFEFF';
+        const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+
+        link.setAttribute('href', url);
+        link.setAttribute('download', `API使用分析_${new Date().toLocaleDateString('zh-CN')}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        ElMessage.success('導出成功');
+      } catch (error) {
+        console.error('Export failed:', error);
+        ElMessage.error('導出失敗');
+      }
     }
   }
 };
@@ -502,6 +583,8 @@ export default {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 15px;
 }
 
 .dashboard-header h2 {
@@ -510,9 +593,28 @@ export default {
   color: var(--color-text-primary, #333);
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
 .time-range-selector {
   display: flex;
   align-items: center;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.empty-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
 }
 
 .stats-grid {
@@ -573,5 +675,26 @@ export default {
   margin: 0;
   font-size: 16px;
   color: var(--color-text-primary, #333);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .header-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .time-range-selector {
+    width: 100%;
+  }
+
+  .charts-row {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
