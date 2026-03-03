@@ -18,6 +18,7 @@ import SessionManagement from "../components/session/SessionManagement.vue"
 import UserSessions from "../components/session/UserSessions.vue"
 import UserSessionManagement from "../components/session/UserSessionManagement.vue"
 import GlobalSessionManagement from "../components/session/GlobalSessionManagement.vue"
+import AnalyticsDashboard from "../components/analytics/AnalyticsDashboard.vue"
 
 // 根路徑配置
 const routes = [
@@ -115,6 +116,12 @@ const routes = [
     path: '/sessions/global',
     name: 'GlobalSessionManagement',
     component: GlobalSessionManagement,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/analytics',
+    name: 'AnalyticsDashboard',
+    component: AnalyticsDashboard,
     meta: { requiresAuth: true }
   },
 ]

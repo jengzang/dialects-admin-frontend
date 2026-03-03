@@ -7,6 +7,7 @@
       <div class="button-container0">
         <button @click="goToCreateUser">創建新用戶</button>
         <button @click="apidetail">近期api調用</button>
+        <button @click="goToAnalytics">數據分析</button>
         <button @click="viewAllCustom">所有數據</button>
         <button @click="goToSessionManagement">會話管理</button>
         <button @click="checkServerStatus">寶塔</button>
@@ -173,6 +174,10 @@ const handlePageChange = (page) => {
 
 const apidetail = async (user) => {
   router.push({ name: 'ApiDetail' });
+};
+
+const goToAnalytics = () => {
+  router.push({ name: 'AnalyticsDashboard' });
 };
 
 const goToCreateUser = () => {

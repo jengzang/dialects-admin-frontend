@@ -1,6 +1,6 @@
 /**
  * 通用組件統一導出
- * 使用方式：import { BasePagination, BaseInput, BaseCard, BaseTag, BaseRow, BaseCol } from '@/components/common';
+ * 使用方式：import { BasePagination, BaseInput, BaseCard, BaseTag, BaseRow, BaseCol, BaseChart } from '@/components/common';
  */
 
 export { default as BasePagination } from './BasePagination.vue';
@@ -15,3 +15,4 @@ export { default as BaseCard } from './BaseCard.vue';
 export { default as BaseTag } from './BaseTag.vue';
 export { default as BaseRow } from './BaseRow.vue';
 export { default as BaseCol } from './BaseCol.vue';
+export { default as BaseChart } from './BaseChart.vue';
