@@ -1,18 +1,18 @@
 <template>
-  <div class="user-management">
-    <h2 class="page-title">用戶管理系統</h2>
+  <div>
+    <h2 style="margin:0 20px 10px;">用戶管理系統</h2>
 
     <div class="top-controls">
-      <div class="button-group">
-        <button class="btn btn-primary" @click="goToCreateUser">創建新用戶</button>
-        <button class="btn btn-primary" @click="apidetail">近期api調用</button>
-        <button class="btn btn-primary" @click="goToAnalytics">數據分析</button>
-        <button class="btn btn-primary" @click="goToUserBehavior">用戶行為</button>
-        <button class="btn btn-primary" @click="goToAnomalyDetection">異常檢測</button>
-        <button class="btn btn-primary" @click="viewAllCustom">所有數據</button>
-        <button class="btn btn-primary" @click="goToSessionManagement">會話管理</button>
+      <div class="button-container0">
+        <button @click="goToCreateUser">創建新用戶</button>
+        <button @click="apidetail">近期api調用</button>
+        <button @click="goToAnalytics">數據分析</button>
+        <button @click="goToUserBehavior">用戶行為</button>
+        <button @click="goToAnomalyDetection">異常檢測</button>
+        <button @click="viewAllCustom">所有數據</button>
+        <button @click="goToSessionManagement">會話管理</button>
       </div>
-
+      <!-- 搜索框 -->
       <div class="search-container">
         <BaseSearchInput
           v-model="searchQuery"
@@ -22,39 +22,41 @@
       </div>
     </div>
 
-    <!-- 使用 BaseTable -->
-    <BaseTable
-      v-if="users.length"
-      :columns="tableColumns"
-      :data="currentPageData"
-      :loading="loading"
-      @sort="handleSort"
-    >
-      <!-- 用戶名列 -->
-      <template #cell-username="{ row }">
-        <span v-if="row.role === 'admin'" style="font-weight: bold;" title="管理员">🛠️</span>
-        <span :style="{ fontWeight: row.role === 'admin' ? 'bold' : 'normal' }">
-          {{ row.username }}
-        </span>
-      </template>
+    <table v-if="users.length">
+      <thead>
+      <tr>
+        <th @click="sortData('username')">用戶名 <span :class="getArrowClass('username')"></span></th>
+        <th @click="sortData('email')">Email <span :class="getArrowClass('email')"></span></th>
+        <th @click="sortData('data_count')" style="font-size:12px;padding:0">數據總數 <span :class="getArrowClass('data_count')" ></span></th>
+        <th style="justify-items: center">管理員操作</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr v-for="user in currentPageData" :key="user.id">
+        <!-- 根據 role 判斷背景顏色，如果是 admin，就將背景色設置為暗紅色 -->
+        <td>
+          <span v-if="user.role === 'admin'" style="font-weight: bold;" title="管理员">🛠️</span>
+          <span :style="{ fontWeight: user.role === 'admin' ? 'bold' : 'normal' }" :title="user.role === 'admin' ? '管理员' : ''">
+            {{ user.username }}
+          </span>
+        </td>
 
-      <!-- 數據總數列 -->
-      <template #cell-data_count="{ value }">
-        {{ value }}條
-      </template>
 
-      <!-- 操作列 -->
-      <template #actions="{ row }">
-        <div class="action-buttons">
-          <button class="btn btn-sm btn-primary" @click="goToCustomPerUser(row)">用戶數據</button>
-          <button class="btn btn-sm btn-primary" @click="viewUserStats(row)">api統計</button>
-          <button class="btn btn-sm btn-primary" @click="viewUserSessions(row)">查看會話</button>
-          <button class="btn btn-sm btn-secondary" @click="editUser(row)">編輯賬號</button>
-        </div>
-      </template>
-    </BaseTable>
+        <td>{{ user.email }}</td>
+        <td>{{ user.data_count }}條</td> <!-- 顯示用戶的數據總數 -->
+        <td>
+          <div class="button-container">
+            <button @click="goToCustomPerUser(user)">用戶數據</button>
+            <button @click="viewUserStats(user)">api統計</button>
+            <button @click="viewUserSessions(user)">查看會話</button>
+            <button @click="editUser(user)">編輯賬號</button>
+          </div>
+        </td>
+      </tr>
+      </tbody>
+    </table>
 
-    <h3 v-else class="empty-state">🤷‍♂️<br>無用戶數據</h3>
+    <h3 v-else>🤷‍♂️<br>無用戶數據</h3>
 
     <!-- 分頁控制 -->
     <BasePagination
@@ -68,7 +70,7 @@
     />
 
     <div class="logout-button-container">
-      <button class="btn btn-secondary" @click="logout">返回網站</button>
+      <button @click="logout">返回網站</button>
     </div>
   </div>
 </template>
@@ -76,29 +78,27 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { userAPI, statsAPI } from '../api/index';
-import { BasePagination, BaseSearchInput, BaseTable } from '@/components/common';
-import { useMessage } from '@/composables';
+import { BasePagination, BaseSearchInput } from '@/components/common';
 
 const router = useRouter();
-const { showMessage } = useMessage();
 
 const users = ref([]);
 const searchQuery = ref('');
+const searchResultIndex = ref(-1);
 const filteredUsers = ref([]);
+const confirmUser = ref(null);
+const newUser = ref({ username: '', email: '' });
 const currentPage = ref(1);
 const pageSize = ref(30);
 const totalPages = ref(1);
-const loading = ref(false);
-
-// 表格列定义
-const tableColumns = [
-  { key: 'username', label: '用戶名', sortable: true },
-  { key: 'email', label: 'Email', sortable: true },
-  { key: 'data_count', label: '數據總數', sortable: true }
-];
+const sortOrder = ref({
+  username: 'asc',
+  email: 'asc',
+  data_count: 'asc',
+});
+const username = ref('');
 
 const fetchUserData = async () => {
-  loading.value = true;
   try {
     const response = await userAPI.getAllUsers();
     const usersData = response.data;
@@ -114,10 +114,7 @@ const fetchUserData = async () => {
     users.value = usersData;
     totalPages.value = Math.ceil(users.value.length / pageSize.value);
   } catch (error) {
-    showMessage('獲取用戶數據失敗', 'error');
     console.error('Failed to fetch user data:', error);
-  } finally {
-    loading.value = false;
   }
 };
 
@@ -126,14 +123,14 @@ const getUsers = async () => {
     await fetchUserData();
   } catch (error) {
     if (error.response && error.response.status === 401) {
-      showMessage('Token 無效或已過期，請重新登錄', 'warning');
+      alert('Token 無效或已過期，請重新登錄');
 
       setTimeout(async () => {
         try {
           await fetchUserData();
         } catch (retryError) {
           console.error('Retry failed', retryError);
-          showMessage('重試失敗，請重新登錄', 'error');
+          alert('重試失敗，請重新登錄');
           router.push({ name: 'Login' });
         }
       }, 500);
@@ -153,24 +150,28 @@ const searchUser = () => {
   totalPages.value = Math.ceil(filteredUsers.value.length / pageSize.value);
 };
 
-// 处理 BaseTable 的排序事件
-const handleSort = ({ key, order }) => {
-  const currentData = searchQuery.value ? filteredUsers.value : users.value;
+const sortData = (field) => {
+  const currentOrder = sortOrder.value[field] === 'asc' ? 'desc' : 'asc';
+  sortOrder.value[field] = currentOrder;
 
-  currentData.sort((a, b) => {
-    const valueA = a[key] || '';
-    const valueB = b[key] || '';
+  if (field === 'username' || field === 'email') {
+    users.value.sort((a, b) => {
+      const valueA = a[field] || '';
+      const valueB = b[field] || '';
+      return currentOrder === 'asc' ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
+    });
+  } else if (field === 'data_count') {
+    users.value.sort((a, b) => {
+      return currentOrder === 'asc' ? a[field] - b[field] : b[field] - a[field];
+    });
+  }
 
-    if (key === 'data_count') {
-      return order === 'asc' ? valueA - valueB : valueB - valueA;
-    } else {
-      return order === 'asc'
-        ? String(valueA).localeCompare(String(valueB))
-        : String(valueB).localeCompare(String(valueA));
-    }
-  });
-
+  totalPages.value = Math.ceil(users.value.length / pageSize.value);
   currentPage.value = 1;
+};
+
+const getArrowClass = (field) => {
+  return sortOrder.value[field] === 'asc' ? 'arrow-up' : 'arrow-down';
 };
 
 const handlePageChange = (page) => {
