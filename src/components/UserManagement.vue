@@ -6,9 +6,9 @@
       <div class="button-container0">
         <button @click="goToCreateUser">創建新用戶</button>
         <button @click="apidetail">近期api調用</button>
-        <button @click="goToAnalytics">數據分析</button>
+<!--        <button @click="goToAnalytics">數據分析</button>-->
         <button @click="goToUserBehavior">用戶行為</button>
-        <button @click="goToAnomalyDetection">異常檢測</button>
+<!--        <button @click="goToAnomalyDetection">異常檢測</button>-->
         <button @click="viewAllCustom">所有數據</button>
         <button @click="goToSessionManagement">會話管理</button>
       </div>
@@ -26,7 +26,6 @@
       v-if="users.length"
       :columns="userColumns"
       :data="currentPageData"
-      :loading="loading"
       @sort="handleSort"
     >
       <template #cell-username="{ row }">
@@ -82,7 +81,6 @@ const filteredUsers = ref([]);
 const currentPage = ref(1);
 const pageSize = ref(30);
 const totalPages = ref(1);
-const loading = ref(false);
 
 const userColumns = [
   { key: 'username', label: '用戶名', sortable: true },
@@ -91,27 +89,19 @@ const userColumns = [
 ];
 
 const fetchUserData = async () => {
-  loading.value = true;
-  try {
-    const response = await userAPI.getAllUsers();
-    const usersData = response.data;
+  const response = await userAPI.getAllUsers();
+  const usersData = response.data;
 
-    const dataCounts = await statsAPI.getDataCounts();
+  const dataCounts = await statsAPI.getDataCounts();
 
-    // 将数据总数与用户列表合并
-    usersData.forEach(user => {
-      const userData = dataCounts.find(item => item.username === user.username);
-      user.data_count = userData ? userData.data_count : 0;
-    });
+  // 将数据总数与用户列表合并
+  usersData.forEach(user => {
+    const userData = dataCounts.find(item => item.username === user.username);
+    user.data_count = userData ? userData.data_count : 0;
+  });
 
-    users.value = usersData;
-    totalPages.value = Math.ceil(users.value.length / pageSize.value);
-  } catch (error) {
-    showMessage('獲取用戶數據失敗', 'error');
-    console.error('Failed to fetch user data:', error);
-  } finally {
-    loading.value = false;
-  }
+  users.value = usersData;
+  totalPages.value = Math.ceil(users.value.length / pageSize.value);
 };
 
 const getUsers = async () => {
@@ -194,7 +184,7 @@ const viewUserStats = (user) => {
 };
 
 const viewAllCustom = () => {
-  router.push({ name: 'Custom' });
+  router.push({ name: 'DataManagementAll' });
 };
 
 const editUser = (user) => {
@@ -202,7 +192,7 @@ const editUser = (user) => {
 };
 
 const goToCustomPerUser = (user) => {
-  router.push({ name: 'PerUser', query: { username: user.username } });
+  router.push({ name: 'DataManagementPerUser', query: { username: user.username } });
 };
 
 const goToSessionManagement = () => {
@@ -237,55 +227,106 @@ onMounted(() => {
 @import '@/styles/abstracts/variables';
 @import '@/styles/abstracts/mixins';
 
-.user-management {
-  padding: $spacing-md;
-  max-width: 1400px;
-  margin: 0 auto;
+.button-container {
+  display: flex;
+  justify-content: center;
+  gap: $spacing-xs;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  width: 100%;
+  white-space: nowrap;
+
+  button {
+    @include button-variant($color-primary, $color-primary-dark);
+    padding: 8px 12px;
+    font-size: $font-size-sm;
+    border-radius: $radius-md;
+  }
 }
 
-.page-title {
-  margin: 0 0 $spacing-md 0;
-  text-align: center;
-  color: $color-text-primary;
+.button-container0 {
+  display: flex;
+  justify-content: center;
+  gap: $spacing-sm;
+  flex-wrap: wrap;
+  max-width: 650px;
+  width: 100%;
+
+  button {
+    @include button-variant($color-primary, $color-primary-dark);
+    padding: $spacing-sm $spacing-md;
+    font-size: $font-size-md;
+    border-radius: $radius-md;
+    margin: 0;
+  }
+}
+
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  margin-top: $spacing-md;
+
+  :deep(button),
+  :deep(.pagination-btn) {
+    @include button-variant($color-primary, $color-primary-dark);
+    padding: 12px 24px;
+    margin: 0 12px;
+    border-radius: 20px;
+    font-size: $font-size-md;
+    max-width: 120px;
+
+    &:disabled {
+      background-color: rgba(42, 175, 53, 0.34);
+    }
+  }
+
+  :deep(span) {
+    font-size: $font-size-md;
+    color: $color-text-primary;
+    align-self: center;
+  }
 }
 
 .top-controls {
   display: flex;
-  justify-content: center;
+  justify-content: center !important;
   align-items: center;
-  gap: $spacing-md;
-  flex-wrap: wrap;
-  margin-bottom: $spacing-lg;
-}
-
-.button-group {
-  display: flex;
   gap: $spacing-sm;
   flex-wrap: wrap;
-  justify-content: center;
+  width: 100%;
 }
 
 .search-container {
-  flex: 1;
-  max-width: 400px;
-  min-width: 250px;
-}
-
-.action-buttons {
   display: flex;
-  gap: $spacing-xs;
-  flex-wrap: wrap;
   justify-content: center;
-}
+  align-items: center;
+  flex-grow: 1;
+  max-width: 400px;
+  flex-shrink: 0;
+  justify-self: center;
 
-.empty-state {
-  text-align: center;
-  color: $color-text-secondary;
-  margin: $spacing-xl 0;
-}
+  :deep(input) {
+    width: 100%;
+    padding: 12px 20px;
+    font-size: $font-size-md;
+    border-radius: 25px;
+    border: 1px solid #d1d1d1;
+    background: linear-gradient(145deg, #f0f0f0, #e0e0e0);
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.1), -4px -4px 10px rgba(255, 255, 255, 0.1);
+    transition: all $transition-normal;
 
-.pagination-controls {
-  margin-top: $spacing-lg;
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+      box-shadow: 0 0 10px $color-primary-dark;
+      background: linear-gradient(145deg, #e0e0e0, #f0f0f0);
+    }
+
+    &::placeholder {
+      color: #aaa;
+      opacity: 1;
+    }
+  }
 }
 
 .logout-button-container {
@@ -294,54 +335,14 @@ onMounted(() => {
   margin-top: $spacing-xl;
 }
 
-/* 移動端響應式 */
 @include respond-to(tablet) {
   .top-controls {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .button-group {
-    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
   }
 
   .search-container {
     max-width: 100%;
-  }
-
-  .action-buttons {
-    flex-direction: column;
-
-    .btn {
-      width: 100%;
-    }
-  }
-}
-
-@include respond-to(mobile) {
-  .user-management {
-    padding: $spacing-sm;
-  }
-
-  .page-title {
-    font-size: $font-size-lg;
-  }
-
-  .button-group {
-    flex-direction: column;
-
-    .btn {
-      width: 100%;
-    }
-  }
-
-  .action-buttons {
-    gap: $spacing-xs;
-
-    .btn-sm {
-      font-size: $font-size-xs;
-      padding: 6px 8px;
-    }
   }
 }
 </style>

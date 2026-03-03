@@ -67,7 +67,7 @@ const fetchCounts = async () => {
 
   try {
     const customData = await customAPI.getUserData(username.value);
-    customDataCount.value = customData.length;
+    customDataCount.value = customData.data?.length || 0;
 
     const regionsData = await customRegionsAPI.getUserRegions(username.value);
     regionsCount.value = regionsData.data?.length || regionsData.length || 0;

@@ -54,7 +54,7 @@ const regionsCount = ref(0);
 const fetchCounts = async () => {
   try {
     const customData = await customAPI.getAll();
-    customDataCount.value = customData.length;
+    customDataCount.value = customData.data?.length || 0;
 
     const regionsData = await customRegionsAPI.getAll();
     regionsCount.value = regionsData.total || regionsData.data?.length || regionsData.length || 0;
