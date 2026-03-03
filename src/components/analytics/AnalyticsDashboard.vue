@@ -146,8 +146,23 @@
     <div v-if="apiLogs.length > 0" class="charts-row">
       <div class="chart-card full-width">
         <div class="chart-header">
-          <h3>API 性能分析</h3>
-          <span class="chart-subtitle">響應時間分布（毫秒）</span>
+          <div>
+            <h3>API 性能分析</h3>
+            <span class="chart-subtitle">響應時間分布（毫秒）</span>
+          </div>
+          <div class="performance-controls">
+            <el-select v-model="trendGranularity" size="small" style="width: 100px;" @change="fetchRecentTrends">
+              <el-option label="小時" value="hour" />
+              <el-option label="天" value="day" />
+            </el-select>
+          </div>
+        </div>
+        <div v-if="apiPerformanceData && apiPerformanceData.slow_request_percentage !== undefined" class="performance-stats">
+          <StatsCard
+            :number="(apiPerformanceData.slow_request_percentage * 100).toFixed(2) + '%'"
+            label="慢請求比例"
+            :color="apiPerformanceData.slow_request_percentage > 0.1 ? COLORS.danger : COLORS.success"
+          />
         </div>
         <BaseChart
           type="bar"
@@ -240,7 +255,10 @@ export default {
       customDateRange: null,
       callsTrendPeriod: 'day',
       trafficTrendPeriod: 'day',
+      trendGranularity: 'day',
       apiLogs: [],
+      apiPerformanceData: null,
+      recentTrendsData: null,
       stats: {
         totalCalls: 0,
         totalUpload: 0,
@@ -408,6 +426,36 @@ export default {
       };
     },
     performanceData() {
+      // 优先使用后端性能数据
+      if (this.apiPerformanceData && this.apiPerformanceData.apis) {
+        const backendData = this.apiPerformanceData.apis
+          .sort((a, b) => b.avg_duration - a.avg_duration)
+          .slice(0, 10);
+
+        return this.createBarChartData(
+          backendData.map(d => d.path),
+          [
+            {
+              label: '平均響應時間',
+              data: backendData.map(d => d.avg_duration)
+            },
+            {
+              label: 'P50',
+              data: backendData.map(d => d.p50 || 0)
+            },
+            {
+              label: 'P95',
+              data: backendData.map(d => d.p95 || 0)
+            },
+            {
+              label: 'P99',
+              data: backendData.map(d => d.p99 || 0)
+            }
+          ]
+        );
+      }
+
+      // 回退到前端计算
       const apiPerformance = {};
       this.filteredLogs.forEach(log => {
         const path = log.path || 'Unknown';
@@ -423,6 +471,7 @@ export default {
         .map(([path, durations]) => ({
           path,
           avg: durations.reduce((a, b) => a + b, 0) / durations.length,
+          p50: this.calculatePercentile(durations, 50),
           p95: this.calculatePercentile(durations, 95),
           p99: this.calculatePercentile(durations, 99)
         }))
@@ -435,6 +484,10 @@ export default {
           {
             label: '平均響應時間',
             data: avgPerformance.map(d => d.avg)
+          },
+          {
+            label: 'P50',
+            data: avgPerformance.map(d => d.p50)
           },
           {
             label: 'P95',
@@ -474,9 +527,15 @@ export default {
     async fetchData() {
       this.loading = true;
       try {
-        const response = await analyticsAPI.getApiUsage();
+        // 并行加载所有数据
+        const [apiUsageResponse] = await Promise.all([
+          analyticsAPI.getApiUsage(),
+          this.fetchApiPerformance(),
+          this.fetchRecentTrends()
+        ]);
+
         // 数据验证和清洗
-        this.apiLogs = (response.logs || []).filter(log => {
+        this.apiLogs = (apiUsageResponse.logs || []).filter(log => {
           return log &&
                  log.called_at &&
                  !isNaN(new Date(log.called_at).getTime());
@@ -495,6 +554,26 @@ export default {
         ElMessage.error('載入數據失敗');
       } finally {
         this.loading = false;
+      }
+    },
+    async fetchApiPerformance() {
+      try {
+        const response = await analyticsAPI.getApiPerformance();
+        this.apiPerformanceData = response;
+      } catch (error) {
+        console.error('Failed to fetch API performance data:', error);
+        // 静默失败，回退到前端计算
+        this.apiPerformanceData = null;
+      }
+    },
+    async fetchRecentTrends() {
+      try {
+        const response = await analyticsAPI.getRecentTrends(this.trendGranularity, 7);
+        this.recentTrendsData = response;
+      } catch (error) {
+        console.error('Failed to fetch recent trends data:', error);
+        // 静默失败
+        this.recentTrendsData = null;
       }
     },
     calculateStats() {
@@ -678,6 +757,18 @@ export default {
 .chart-subtitle {
   font-size: 12px;
   color: var(--color-text-secondary, #666);
+}
+
+.performance-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.performance-stats {
+  margin-bottom: 15px;
+  display: flex;
+  gap: 15px;
 }
 
 .table-card {

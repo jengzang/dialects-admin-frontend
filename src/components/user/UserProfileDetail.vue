@@ -136,6 +136,19 @@
       <div class="api-section">
         <h3>API 使用偏好</h3>
         <div class="charts-row">
+          <!-- API Category Radar Chart (Backend Data) -->
+          <div v-if="apiCategoryRadarData" class="chart-card">
+            <div class="chart-header">
+              <h4>API 類別分布</h4>
+            </div>
+            <BaseChart
+              type="radar"
+              :data="apiCategoryRadarData"
+              :options="riskRadarOptions"
+              :height="300"
+            />
+          </div>
+
           <div class="chart-card">
             <div class="chart-header">
               <h4>最常用 API (Top 5)</h4>
@@ -160,12 +173,70 @@
             />
           </div>
         </div>
+
+        <!-- Traffic Pattern (Backend Data) -->
+        <div v-if="userPreferences?.traffic_pattern" class="traffic-section">
+          <BaseCard shadow="hover">
+            <h4>流量模式</h4>
+            <div class="traffic-stats">
+              <div class="traffic-item">
+                <span class="traffic-label">上傳流量：</span>
+                <el-progress
+                  :percentage="uploadPercentage"
+                  :color="COLORS.primary"
+                  :stroke-width="20"
+                >
+                  <span class="progress-text">{{ formatBytes(userPreferences.traffic_pattern.upload) }}</span>
+                </el-progress>
+              </div>
+              <div class="traffic-item">
+                <span class="traffic-label">下載流量：</span>
+                <el-progress
+                  :percentage="downloadPercentage"
+                  :color="COLORS.info"
+                  :stroke-width="20"
+                >
+                  <span class="progress-text">{{ formatBytes(userPreferences.traffic_pattern.download) }}</span>
+                </el-progress>
+              </div>
+            </div>
+          </BaseCard>
+        </div>
+
+        <!-- Top APIs Table (Backend Data) -->
+        <div v-if="userPreferences?.top_apis" class="top-apis-section">
+          <BaseCard shadow="hover">
+            <h4>最常用 API 詳情</h4>
+            <BaseTable
+              :columns="topApiColumns"
+              :data="userPreferences.top_apis.slice(0, 5)"
+              :sortable="false"
+            >
+              <template #cell-avg_duration="{ value }">
+                {{ value ? value.toFixed(2) + 'ms' : 'N/A' }}
+              </template>
+            </BaseTable>
+          </BaseCard>
+        </div>
       </div>
 
       <!-- Device & Browser Distribution -->
       <div class="device-section">
         <h3>設備與瀏覽器分布</h3>
         <div class="charts-row">
+          <!-- Device Types -->
+          <div v-if="deviceTypeChartData" class="chart-card">
+            <div class="chart-header">
+              <h4>設備類型分布</h4>
+            </div>
+            <BaseChart
+              type="doughnut"
+              :data="deviceTypeChartData"
+              :options="distributionOptions"
+              :height="250"
+            />
+          </div>
+
           <div class="chart-card">
             <div class="chart-header">
               <h4>操作系統分布</h4>
@@ -253,7 +324,23 @@
       <div class="geo-section">
         <h3>地理位置分布</h3>
         <BaseCard shadow="hover">
-          <div class="geo-stats">
+          <!-- Backend Data: City-level distribution -->
+          <div v-if="geoDistribution?.locations && geoDistribution.locations.length > 0" class="geo-stats">
+            <h4>城市分布 (Top 10)</h4>
+            <BaseTable
+              :columns="geoColumns"
+              :data="geoDistribution.locations.slice(0, 10)"
+              :sortable="false"
+            >
+              <template #cell-percentage="{ value }">
+                {{ value.toFixed(2) }}%
+              </template>
+            </BaseTable>
+          </div>
+
+          <!-- Fallback: IP-based distribution -->
+          <div v-else class="geo-stats">
+            <h4>登錄 IP 統計</h4>
             <div class="geo-item" v-for="(count, ip) in topIPs" :key="ip">
               <span class="ip">{{ ip }}</span>
               <span class="count">{{ count }} 次登錄</span>
@@ -319,6 +406,9 @@ export default {
       dataCount: 0,
       riskScore: 0,
       riskLevel: { level: 'low', color: '#52c41a', label: '低風險' },
+      userPreferences: null,
+      geoDistribution: null,
+      deviceDistribution: null,
       sessionColumns: [
         { key: 'session_id', label: '會話 ID', sortable: false },
         { key: 'current_ip', label: 'IP 地址', sortable: false },
@@ -327,6 +417,17 @@ export default {
         { key: 'status', label: '狀態', sortable: false },
         { key: 'ip_change_count', label: 'IP 變更', sortable: false },
         { key: 'device_change_count', label: '設備變更', sortable: false }
+      ],
+      topApiColumns: [
+        { key: 'path', label: 'API 路徑', sortable: false },
+        { key: 'count', label: '調用次數', sortable: false },
+        { key: 'avg_duration', label: '平均耗時', sortable: false }
+      ],
+      geoColumns: [
+        { key: 'country', label: '國家', sortable: false },
+        { key: 'city', label: '城市', sortable: false },
+        { key: 'count', label: '次數', sortable: false },
+        { key: 'percentage', label: '佔比', sortable: false }
       ]
     };
   },
@@ -394,7 +495,62 @@ export default {
         }
       };
     },
+    apiCategoryRadarData() {
+      if (!this.userPreferences?.api_categories) return null;
+
+      const categories = this.userPreferences.api_categories;
+      const labels = Object.keys(categories);
+      const data = Object.values(categories);
+
+      return {
+        labels,
+        datasets: [{
+          label: 'API 類別使用',
+          data,
+          backgroundColor: 'rgba(82, 196, 26, 0.2)',
+          borderColor: '#52c41a',
+          borderWidth: 2
+        }]
+      };
+    },
+    deviceTypeChartData() {
+      if (!this.deviceDistribution?.devices) return null;
+
+      const devices = this.deviceDistribution.devices;
+      return this.createPieChartData(
+        devices.map(d => d.type),
+        devices.map(d => d.count)
+      );
+    },
+    browserChartData() {
+      if (!this.deviceDistribution?.browsers) return null;
+
+      const browsers = this.deviceDistribution.browsers;
+      return this.createPieChartData(
+        browsers.map(b => b.name),
+        browsers.map(b => b.count)
+      );
+    },
+    osChartData() {
+      if (!this.deviceDistribution?.os) return null;
+
+      const os = this.deviceDistribution.os;
+      return this.createPieChartData(
+        os.map(o => o.name),
+        os.map(o => o.count)
+      );
+    },
     apiPreferenceData() {
+      // Use backend data if available
+      if (this.userPreferences?.top_apis) {
+        const topApis = this.userPreferences.top_apis.slice(0, 5);
+        return this.createPieChartData(
+          topApis.map(api => api.path),
+          topApis.map(api => api.count)
+        );
+      }
+
+      // Fallback to frontend calculation
       const apiCounts = {};
       this.apiLogs.forEach(log => {
         const path = log.path || 'Unknown';
@@ -449,6 +605,12 @@ export default {
       };
     },
     osDistributionData() {
+      // Use backend data if available
+      if (this.osChartData) {
+        return this.osChartData;
+      }
+
+      // Fallback to frontend calculation
       const osCounts = {};
       this.apiLogs.forEach(log => {
         const os = log.os || 'Unknown';
@@ -463,6 +625,12 @@ export default {
       );
     },
     browserDistributionData() {
+      // Use backend data if available
+      if (this.browserChartData) {
+        return this.browserChartData;
+      }
+
+      // Fallback to frontend calculation
       const browserCounts = {};
       this.apiLogs.forEach(log => {
         const browser = log.browser || 'Unknown';
@@ -517,6 +685,18 @@ export default {
         .slice(0, 5);
 
       return Object.fromEntries(sorted);
+    },
+    uploadPercentage() {
+      if (!this.userPreferences?.traffic_pattern) return 0;
+      const { upload, download } = this.userPreferences.traffic_pattern;
+      const total = upload + download;
+      return total > 0 ? Math.round((upload / total) * 100) : 0;
+    },
+    downloadPercentage() {
+      if (!this.userPreferences?.traffic_pattern) return 0;
+      const { upload, download } = this.userPreferences.traffic_pattern;
+      const total = upload + download;
+      return total > 0 ? Math.round((download / total) * 100) : 0;
     }
   },
   mounted() {
@@ -548,36 +728,76 @@ export default {
 
         this.dataCount = user.data_count || 0;
 
-        // 3. 加载会话数据
-        try {
-          const sessionsRes = await sessionAPI.getUserHistory(user.id, true);
-          this.sessions = sessionsRes.sessions || [];
+        // 3. 并行加载所有数据
+        const [sessionsRes, apiRes, loginRes, preferencesRes, geoRes, deviceRes] = await Promise.allSettled([
+          // 会话数据
+          sessionAPI.getUserHistory(user.id, true),
+          // API 日志
+          analyticsAPI.getApiDetail(this.username),
+          // 登录日志
+          statsAPI.getSuccessLoginLogs(this.username),
+          // 用户偏好（新增）
+          analyticsAPI.getUserPreferences(user.id.toString()),
+          // 地理分布（新增）
+          analyticsAPI.getGeoDistribution('city'),
+          // 设备分布（新增）
+          analyticsAPI.getDeviceDistribution()
+        ]);
 
+        // 处理会话数据
+        if (sessionsRes.status === 'fulfilled') {
+          this.sessions = sessionsRes.value.sessions || [];
           // 计算风险评分
           this.riskScore = this.calculateRiskScore(this.userStats, this.sessions);
           this.riskLevel = this.getRiskLevel(this.riskScore);
-        } catch (error) {
-          console.error('Failed to load sessions:', error);
+        } else {
+          console.error('Failed to load sessions:', sessionsRes.reason);
           this.sessions = [];
         }
 
-        // 4. 加载 API 日志（参考 UserStats.vue）
-        try {
-          const apiRes = await analyticsAPI.getApiDetail(this.username);
-          // 注意：返回格式是 { user, api_logs }
-          this.apiLogs = apiRes.api_logs || [];
-        } catch (error) {
-          console.error('Failed to load API logs:', error);
+        // 处理 API 日志
+        if (apiRes.status === 'fulfilled') {
+          this.apiLogs = apiRes.value.api_logs || [];
+        } else {
+          console.error('Failed to load API logs:', apiRes.reason);
           this.apiLogs = [];
         }
 
-        // 5. 加载登录日志
-        try {
-          const loginRes = await statsAPI.getSuccessLoginLogs(this.username);
-          this.loginLogs = loginRes || [];
-        } catch (error) {
-          console.error('Failed to load login logs:', error);
+        // 处理登录日志
+        if (loginRes.status === 'fulfilled') {
+          this.loginLogs = loginRes.value || [];
+        } else {
+          console.error('Failed to load login logs:', loginRes.reason);
           this.loginLogs = [];
+        }
+
+        // 处理用户偏好（新增）
+        if (preferencesRes.status === 'fulfilled') {
+          const data = preferencesRes.value;
+          // 查找当前用户的偏好数据
+          if (data.user_preferences && Array.isArray(data.user_preferences)) {
+            const userPref = data.user_preferences.find(p => p.user_id === user.id);
+            this.userPreferences = userPref || null;
+          }
+        } else {
+          console.error('Failed to load user preferences:', preferencesRes.reason);
+          this.userPreferences = null;
+        }
+
+        // 处理地理分布（新增）
+        if (geoRes.status === 'fulfilled') {
+          this.geoDistribution = geoRes.value;
+        } else {
+          console.error('Failed to load geo distribution:', geoRes.reason);
+          this.geoDistribution = null;
+        }
+
+        // 处理设备分布（新增）
+        if (deviceRes.status === 'fulfilled') {
+          this.deviceDistribution = deviceRes.value;
+        } else {
+          console.error('Failed to load device distribution:', deviceRes.reason);
+          this.deviceDistribution = null;
         }
 
         ElMessage.success('數據載入成功');
@@ -770,6 +990,55 @@ export default {
 
 .geo-item .count {
   color: var(--color-text-secondary, #666);
+}
+
+.traffic-section {
+  margin-top: 20px;
+}
+
+.traffic-section h4 {
+  margin: 0 0 15px 0;
+  font-size: 14px;
+  color: var(--color-text-primary, #333);
+}
+
+.traffic-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.traffic-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.traffic-label {
+  font-size: 13px;
+  color: var(--color-text-secondary, #666);
+  font-weight: 500;
+}
+
+.progress-text {
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.top-apis-section {
+  margin-top: 20px;
+}
+
+.top-apis-section h4 {
+  margin: 0 0 15px 0;
+  font-size: 14px;
+  color: var(--color-text-primary, #333);
+}
+
+.geo-stats h4 {
+  margin: 0 0 15px 0;
+  font-size: 14px;
+  color: var(--color-text-primary, #333);
 }
 
 @media (max-width: 768px) {
