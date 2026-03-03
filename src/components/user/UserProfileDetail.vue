@@ -49,7 +49,7 @@
         </div>
 
         <div class="info-cards">
-          <el-card shadow="hover">
+          <BaseCard shadow="hover">
             <div class="info-item">
               <span class="label">用戶名：</span>
               <span class="value">{{ username }}</span>
@@ -72,7 +72,7 @@
               <span class="label">最後登錄：</span>
               <span class="value">{{ formatTime(userStats.last_login) }}</span>
             </div>
-          </el-card>
+          </BaseCard>
         </div>
       </div>
 
@@ -93,7 +93,7 @@
           </div>
 
           <div class="risk-details">
-            <el-card shadow="hover">
+            <BaseCard shadow="hover">
               <h4>風險詳情</h4>
               <div class="risk-item">
                 <span class="risk-label">登錄失敗率：</span>
@@ -127,7 +127,7 @@
                   :stroke-width="12"
                 />
               </div>
-            </el-card>
+            </BaseCard>
           </div>
         </div>
       </div>
@@ -218,7 +218,7 @@
           />
         </div>
 
-        <el-card shadow="hover" class="session-table">
+        <BaseCard shadow="hover" class="session-table">
           <h4>最近會話</h4>
           <BaseTable
             :columns="sessionColumns"
@@ -246,27 +246,27 @@
               {{ value || 0 }}
             </template>
           </BaseTable>
-        </el-card>
+        </BaseCard>
       </div>
 
       <!-- Geographic Distribution -->
       <div class="geo-section">
         <h3>地理位置分布</h3>
-        <el-card shadow="hover">
+        <BaseCard shadow="hover">
           <div class="geo-stats">
             <div class="geo-item" v-for="(count, ip) in topIPs" :key="ip">
               <span class="ip">{{ ip }}</span>
               <span class="count">{{ count }} 次登錄</span>
             </div>
           </div>
-        </el-card>
+        </BaseCard>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { BaseChart, StatsCard, BaseTable, BaseTag } from '@/components/common';
+import { BaseChart, StatsCard, BaseTable, BaseTag, BaseCard } from '@/components/common';
 import { userAPI, statsAPI, sessionAPI, analyticsAPI } from '@/api/index';
 import { useChart, useUserBehavior, useTimeFormat } from '@/composables';
 import { ElMessage } from 'element-plus';
@@ -279,6 +279,7 @@ export default {
     StatsCard,
     BaseTable,
     BaseTag,
+    BaseCard,
     Loading
   },
   setup() {

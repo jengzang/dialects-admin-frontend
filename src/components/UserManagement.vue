@@ -22,39 +22,31 @@
       </div>
     </div>
 
-    <table v-if="users.length">
-      <thead>
-      <tr>
-        <th @click="sortData('username')">用戶名 <span :class="getArrowClass('username')"></span></th>
-        <th @click="sortData('email')">Email <span :class="getArrowClass('email')"></span></th>
-        <th @click="sortData('data_count')" style="font-size:12px;padding:0">數據總數 <span :class="getArrowClass('data_count')" ></span></th>
-        <th style="justify-items: center">管理員操作</th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr v-for="user in currentPageData" :key="user.id">
-        <!-- 根據 role 判斷背景顏色，如果是 admin，就將背景色設置為暗紅色 -->
-        <td>
-          <span v-if="user.role === 'admin'" style="font-weight: bold;" title="管理员">🛠️</span>
-          <span :style="{ fontWeight: user.role === 'admin' ? 'bold' : 'normal' }" :title="user.role === 'admin' ? '管理员' : ''">
-            {{ user.username }}
-          </span>
-        </td>
-
-
-        <td>{{ user.email }}</td>
-        <td>{{ user.data_count }}條</td> <!-- 顯示用戶的數據總數 -->
-        <td>
-          <div class="button-container">
-            <button @click="goToCustomPerUser(user)">用戶數據</button>
-            <button @click="viewUserStats(user)">api統計</button>
-            <button @click="viewUserSessions(user)">查看會話</button>
-            <button @click="editUser(user)">編輯賬號</button>
-          </div>
-        </td>
-      </tr>
-      </tbody>
-    </table>
+    <BaseTable
+      v-if="users.length"
+      :columns="userColumns"
+      :data="currentPageData"
+      :loading="loading"
+      @sort="handleSort"
+    >
+      <template #cell-username="{ row }">
+        <span v-if="row.role === 'admin'" style="font-weight: bold;" title="管理员">🛠️</span>
+        <span :style="{ fontWeight: row.role === 'admin' ? 'bold' : 'normal' }">
+          {{ row.username }}
+        </span>
+      </template>
+      <template #cell-data_count="{ value }">
+        {{ value }}條
+      </template>
+      <template #actions="{ row }">
+        <div class="button-container">
+          <button @click="goToCustomPerUser(row)">用戶數據</button>
+          <button @click="viewUserStats(row)">api統計</button>
+          <button @click="viewUserSessions(row)">查看會話</button>
+          <button @click="editUser(row)">編輯賬號</button>
+        </div>
+      </template>
+    </BaseTable>
 
     <h3 v-else>🤷‍♂️<br>無用戶數據</h3>
 
@@ -78,7 +70,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { userAPI, statsAPI } from '../api/index';
-import { BasePagination, BaseSearchInput } from '@/components/common';
+import { BasePagination, BaseSearchInput, BaseTable } from '@/components/common';
 import { useMessage } from '@/composables';
 
 const router = useRouter();
@@ -91,11 +83,12 @@ const currentPage = ref(1);
 const pageSize = ref(30);
 const totalPages = ref(1);
 const loading = ref(false);
-const sortOrder = ref({
-  username: 'asc',
-  email: 'asc',
-  data_count: 'asc',
-});
+
+const userColumns = [
+  { key: 'username', label: '用戶名', sortable: true },
+  { key: 'email', label: 'Email', sortable: true },
+  { key: 'data_count', label: '數據總數', sortable: true }
+];
 
 const fetchUserData = async () => {
   loading.value = true;
@@ -153,28 +146,23 @@ const searchUser = () => {
   totalPages.value = Math.ceil(filteredUsers.value.length / pageSize.value);
 };
 
-const sortData = (field) => {
-  const currentOrder = sortOrder.value[field] === 'asc' ? 'desc' : 'asc';
-  sortOrder.value[field] = currentOrder;
+const handleSort = ({ key, order }) => {
+  const currentData = searchQuery.value ? filteredUsers.value : users.value;
 
-  if (field === 'username' || field === 'email') {
-    users.value.sort((a, b) => {
-      const valueA = a[field] || '';
-      const valueB = b[field] || '';
-      return currentOrder === 'asc' ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
-    });
-  } else if (field === 'data_count') {
-    users.value.sort((a, b) => {
-      return currentOrder === 'asc' ? a[field] - b[field] : b[field] - a[field];
-    });
-  }
+  currentData.sort((a, b) => {
+    const valueA = a[key] || '';
+    const valueB = b[key] || '';
 
-  totalPages.value = Math.ceil(users.value.length / pageSize.value);
+    if (key === 'data_count') {
+      return order === 'asc' ? valueA - valueB : valueB - valueA;
+    } else {
+      return order === 'asc'
+        ? String(valueA).localeCompare(String(valueB))
+        : String(valueB).localeCompare(String(valueA));
+    }
+  });
+
   currentPage.value = 1;
-};
-
-const getArrowClass = (field) => {
-  return sortOrder.value[field] === 'asc' ? 'arrow-up' : 'arrow-down';
 };
 
 const handlePageChange = (page) => {

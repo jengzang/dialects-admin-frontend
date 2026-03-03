@@ -1,73 +1,58 @@
 <template>
-  <div :class="['base-card', `shadow-${shadow}`]">
-    <div v-if="$slots.header" class="card-header">
-      <slot name="header"></slot>
-    </div>
-    <div class="card-body">
-      <slot></slot>
-    </div>
+  <div :class="['base-card', shadowClass]">
+    <slot></slot>
   </div>
 </template>
 
-<script>
-export default {
-  name: 'BaseCard',
-  props: {
-    shadow: {
-      type: String,
-      default: 'always', // 'always', 'hover', 'never'
-      validator: (value) => ['always', 'hover', 'never'].includes(value)
-    }
+<script setup>
+defineOptions({
+  name: 'BaseCard'
+})
+
+const props = defineProps({
+  shadow: {
+    type: String,
+    default: 'always',
+    validator: (value) => ['always', 'hover', 'never'].includes(value)
   }
-};
+})
+
+const shadowClass = computed(() => {
+  return `base-card--shadow-${props.shadow}`
+})
 </script>
 
-<style scoped>
+<script>
+import { computed } from 'vue'
+export default {
+  name: 'BaseCard'
+}
+</script>
+
+<style scoped lang="scss">
+@import '@/styles/abstracts/variables';
+
 .base-card {
   background: white;
-  border-radius: var(--radius-md, 8px);
-  border: 1px solid var(--color-border, #e4e7ed);
-  overflow: hidden;
-  transition: box-shadow 0.3s;
-}
-
-.base-card.shadow-always {
-  box-shadow: var(--shadow-md, 0 2px 8px rgba(0, 0, 0, 0.1));
-}
-
-.base-card.shadow-hover {
-  box-shadow: none;
-}
-
-.base-card.shadow-hover:hover {
-  box-shadow: var(--shadow-md, 0 2px 8px rgba(0, 0, 0, 0.1));
-}
-
-.base-card.shadow-never {
-  box-shadow: none;
-}
-
-.card-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--color-border, #e4e7ed);
-  font-weight: 600;
-  font-size: 16px;
-  color: #303133;
-}
-
-.card-body {
+  border-radius: $radius-lg;
   padding: 20px;
+  transition: all $transition-fast;
 }
 
-/* Mobile responsive */
-@media (max-width: 768px) {
-  .card-header {
-    padding: 12px 16px;
-    font-size: 15px;
-  }
+.base-card--shadow-always {
+  box-shadow: $shadow-sm;
+}
 
-  .card-body {
-    padding: 16px;
+.base-card--shadow-hover {
+  box-shadow: $shadow-sm;
+  
+  &:hover {
+    box-shadow: $shadow-md;
   }
+}
+
+.base-card--shadow-never {
+  box-shadow: none;
+  border: 1px solid $color-border-light;
 }
 </style>

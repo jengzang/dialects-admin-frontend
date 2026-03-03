@@ -49,7 +49,7 @@
 
       <!-- Anomaly Trend Chart -->
       <div class="chart-section">
-        <el-card shadow="hover">
+        <BaseCard shadow="hover">
           <div class="chart-header">
             <h3>異常事件趨勢（過去 7 天）</h3>
           </div>
@@ -59,12 +59,12 @@
             :options="anomalyTrendOptions"
             :height="250"
           />
-        </el-card>
+        </BaseCard>
       </div>
 
       <!-- Anomalous Users Table -->
       <div class="table-section">
-        <el-card shadow="hover">
+        <BaseCard shadow="hover">
           <div class="table-header">
             <h3>異常用戶列表</h3>
             <div class="table-filters">
@@ -121,14 +121,14 @@
               </button>
             </template>
           </BaseTable>
-        </el-card>
+        </BaseCard>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { BaseChart, StatsCard, BaseTable, BaseTag } from '@/components/common';
+import { BaseChart, StatsCard, BaseTable, BaseTag, BaseCard } from '@/components/common';
 import { userAPI, sessionAPI, statsAPI } from '@/api/index';
 import { useChart, useUserBehavior, useTimeFormat } from '@/composables';
 import { ElMessage, ElMessageBox } from 'element-plus';
@@ -141,6 +141,7 @@ export default {
     StatsCard,
     BaseTable,
     BaseTag,
+    BaseCard,
     RefreshIcon,
     Loading
   },
