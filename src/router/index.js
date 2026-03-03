@@ -19,6 +19,7 @@ import UserSessions from "../components/session/UserSessions.vue"
 import UserSessionManagement from "../components/session/UserSessionManagement.vue"
 import GlobalSessionManagement from "../components/session/GlobalSessionManagement.vue"
 import AnalyticsDashboard from "../components/analytics/AnalyticsDashboard.vue"
+import UserBehaviorDashboard from "../components/user/UserBehaviorDashboard.vue"
 
 // 根路徑配置
 const routes = [
@@ -122,6 +123,12 @@ const routes = [
     path: '/analytics',
     name: 'AnalyticsDashboard',
     component: AnalyticsDashboard,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/user-behavior',
+    name: 'UserBehaviorDashboard',
+    component: UserBehaviorDashboard,
     meta: { requiresAuth: true }
   },
 ]

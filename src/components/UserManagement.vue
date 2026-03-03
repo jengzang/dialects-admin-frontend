@@ -1,18 +1,17 @@
-
 <template>
-  <div>
-    <h2 style="margin:0 20px 10px;">用戶管理系統</h2>
+  <div class="user-management">
+    <h2 class="page-title">用戶管理系統</h2>
 
     <div class="top-controls">
-      <div class="button-container0">
-        <button @click="goToCreateUser">創建新用戶</button>
-        <button @click="apidetail">近期api調用</button>
-        <button @click="goToAnalytics">數據分析</button>
-        <button @click="viewAllCustom">所有數據</button>
-        <button @click="goToSessionManagement">會話管理</button>
-        <button @click="checkServerStatus">寶塔</button>
+      <div class="button-group">
+        <button class="btn btn-primary" @click="goToCreateUser">創建新用戶</button>
+        <button class="btn btn-primary" @click="apidetail">近期api調用</button>
+        <button class="btn btn-primary" @click="goToAnalytics">數據分析</button>
+        <button class="btn btn-primary" @click="goToUserBehavior">用戶行為</button>
+        <button class="btn btn-primary" @click="viewAllCustom">所有數據</button>
+        <button class="btn btn-primary" @click="goToSessionManagement">會話管理</button>
       </div>
-      <!-- 搜索框 -->
+
       <div class="search-container">
         <BaseSearchInput
           v-model="searchQuery"
@@ -22,41 +21,40 @@
       </div>
     </div>
 
-    <table v-if="users.length">
-      <thead>
-      <tr>
-        <th @click="sortData('username')">用戶名 <span :class="getArrowClass('username')"></span></th>
-        <th @click="sortData('email')">Email <span :class="getArrowClass('email')"></span></th>
-        <th @click="sortData('data_count')" style="font-size:12px;padding:0">數據總數 <span :class="getArrowClass('data_count')" ></span></th>
-        <th style="justify-items: center">管理員操作</th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr v-for="user in currentPageData" :key="user.id">
-        <!-- 根據 role 判斷背景顏色，如果是 admin，就將背景色設置為暗紅色 -->
-        <td>
-          <span v-if="user.role === 'admin'" style="font-weight: bold;" title="管理员">🛠️</span>
-          <span :style="{ fontWeight: user.role === 'admin' ? 'bold' : 'normal' }" :title="user.role === 'admin' ? '管理员' : ''">
-            {{ user.username }}
-          </span>
-        </td>
+    <!-- 使用 BaseTable -->
+    <BaseTable
+      v-if="users.length"
+      :columns="tableColumns"
+      :data="currentPageData"
+      :loading="loading"
+      @sort="handleSort"
+    >
+      <!-- 用戶名列 -->
+      <template #cell-username="{ row }">
+        <span v-if="row.role === 'admin'" style="font-weight: bold;" title="管理员">🛠️</span>
+        <span :style="{ fontWeight: row.role === 'admin' ? 'bold' : 'normal' }">
+          {{ row.username }}
+        </span>
+      </template>
 
+      <!-- 數據總數列 -->
+      <template #cell-data_count="{ value }">
+        {{ value }}條
+      </template>
 
-        <td>{{ user.email }}</td>
-        <td>{{ user.data_count }}條</td> <!-- 顯示用戶的數據總數 -->
-        <td>
-          <div class="button-container">
-            <button @click="goToCustomPerUser(user)">用戶數據</button>
-            <button @click="viewUserStats(user)">api統計</button>
-            <button @click="viewUserSessions(user)">查看會話</button>
-            <button @click="editUser(user)">編輯賬號</button>
-          </div>
-        </td>
-      </tr>
-      </tbody>
-    </table>
+      <!-- 操作列 -->
+      <template #actions="{ row }">
+        <div class="action-buttons">
+          <button class="btn btn-sm btn-primary" @click="goToCustomPerUser(row)">用戶數據</button>
+          <button class="btn btn-sm btn-primary" @click="viewUserStats(row)">api統計</button>
+          <button class="btn btn-sm btn-primary" @click="viewUserSessions(row)">查看會話</button>
+          <button class="btn btn-sm btn-secondary" @click="editUser(row)">編輯賬號</button>
+        </div>
+      </template>
+    </BaseTable>
 
-    <h3 v-else>🤷‍♂️<br>無用戶數據</h3>
+    <h3 v-else class="empty-state">🤷‍♂️<br>無用戶數據</h3>
+
     <!-- 分頁控制 -->
     <BasePagination
       :current-page="currentPage"
@@ -69,7 +67,7 @@
     />
 
     <div class="logout-button-container">
-      <button @click="logout">返回網站</button>
+      <button class="btn btn-secondary" @click="logout">返回網站</button>
     </div>
   </div>
 </template>
@@ -77,40 +75,49 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { userAPI, statsAPI } from '../api/index';
-import { BasePagination, BaseSearchInput } from '@/components/common';
+import { BasePagination, BaseSearchInput, BaseTable } from '@/components/common';
+import { useMessage } from '@/composables';
 
 const router = useRouter();
+const { showMessage } = useMessage();
 
 const users = ref([]);
 const searchQuery = ref('');
-const searchResultIndex = ref(-1);
 const filteredUsers = ref([]);
-const confirmUser = ref(null);
-const newUser = ref({ username: '', email: '' });
 const currentPage = ref(1);
 const pageSize = ref(30);
 const totalPages = ref(1);
-const sortOrder = ref({
-  username: 'asc',
-  email: 'asc',
-  data_count: 'asc',
-});
-const username = ref('');
+const loading = ref(false);
+
+// 表格列定义
+const tableColumns = [
+  { key: 'username', label: '用戶名', sortable: true },
+  { key: 'email', label: 'Email', sortable: true },
+  { key: 'data_count', label: '數據總數', sortable: true }
+];
 
 const fetchUserData = async () => {
-  const response = await userAPI.getAllUsers();
-  const usersData = response.data;
+  loading.value = true;
+  try {
+    const response = await userAPI.getAllUsers();
+    const usersData = response.data;
 
-  const dataCounts = await statsAPI.getDataCounts();
+    const dataCounts = await statsAPI.getDataCounts();
 
-  // 将数据总数与用户列表合并
-  usersData.forEach(user => {
-    const userData = dataCounts.find(item => item.username === user.username);
-    user.data_count = userData ? userData.data_count : 0;
-  });
+    // 将数据总数与用户列表合并
+    usersData.forEach(user => {
+      const userData = dataCounts.find(item => item.username === user.username);
+      user.data_count = userData ? userData.data_count : 0;
+    });
 
-  users.value = usersData;
-  totalPages.value = Math.ceil(users.value.length / pageSize.value);
+    users.value = usersData;
+    totalPages.value = Math.ceil(users.value.length / pageSize.value);
+  } catch (error) {
+    showMessage('獲取用戶數據失敗', 'error');
+    console.error('Failed to fetch user data:', error);
+  } finally {
+    loading.value = false;
+  }
 };
 
 const getUsers = async () => {
@@ -118,22 +125,19 @@ const getUsers = async () => {
     await fetchUserData();
   } catch (error) {
     if (error.response && error.response.status === 401) {
-      alert('Token 无效或已过期，请重新登录');
+      showMessage('Token 無效或已過期，請重新登錄', 'warning');
 
       setTimeout(async () => {
         try {
           await fetchUserData();
         } catch (retryError) {
           console.error('Retry failed', retryError);
+          showMessage('重試失敗，請重新登錄', 'error');
           router.push({ name: 'Login' });
         }
       }, 500);
     }
   }
-};
-
-const getArrowClass = (field) => {
-  return sortOrder.value[field] === 'asc' ? 'arrow-up' : 'arrow-down';
 };
 
 const searchUser = () => {
@@ -148,23 +152,23 @@ const searchUser = () => {
   totalPages.value = Math.ceil(filteredUsers.value.length / pageSize.value);
 };
 
-const sortData = (field) => {
-  const currentOrder = sortOrder.value[field] === 'asc' ? 'desc' : 'asc';
-  sortOrder.value[field] = currentOrder;
+// 处理 BaseTable 的排序事件
+const handleSort = ({ key, order }) => {
+  const currentData = searchQuery.value ? filteredUsers.value : users.value;
 
-  if (field === 'username' || field === 'email') {
-    users.value.sort((a, b) => {
-      const valueA = a[field] || '';
-      const valueB = b[field] || '';
-      return currentOrder === 'asc' ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
-    });
-  } else if (field === 'data_count') {
-    users.value.sort((a, b) => {
-      return currentOrder === 'asc' ? a[field] - b[field] : b[field] - a[field];
-    });
-  }
+  currentData.sort((a, b) => {
+    const valueA = a[key] || '';
+    const valueB = b[key] || '';
 
-  totalPages.value = Math.ceil(users.value.length / pageSize.value);
+    if (key === 'data_count') {
+      return order === 'asc' ? valueA - valueB : valueB - valueA;
+    } else {
+      return order === 'asc'
+        ? String(valueA).localeCompare(String(valueB))
+        : String(valueB).localeCompare(String(valueA));
+    }
+  });
+
   currentPage.value = 1;
 };
 
@@ -172,7 +176,7 @@ const handlePageChange = (page) => {
   currentPage.value = page;
 };
 
-const apidetail = async (user) => {
+const apidetail = () => {
   router.push({ name: 'ApiDetail' });
 };
 
@@ -180,23 +184,23 @@ const goToAnalytics = () => {
   router.push({ name: 'AnalyticsDashboard' });
 };
 
+const goToUserBehavior = () => {
+  router.push({ name: 'UserBehaviorDashboard' });
+};
+
 const goToCreateUser = () => {
   router.push({ name: 'CreateUser' });
 };
 
-const checkServerStatus = () => {
-  window.open('https://47.115.57.138:40260/home', '_blank');
-};
-
-const viewUserStats = async (user) => {
+const viewUserStats = (user) => {
   router.push({ name: 'UserStats', query: { username: user.username } });
 };
 
-const viewAllCustom = async () => {
+const viewAllCustom = () => {
   router.push({ name: 'Custom' });
 };
 
-const editUser = async (user) => {
+const editUser = (user) => {
   router.push({ name: 'EditUser', query: { username: user.username, email: user.email } });
 };
 
@@ -211,10 +215,8 @@ const goToSessionManagement = () => {
 const viewUserSessions = (user) => {
   router.push({
     name: 'UserSessionManagement',
-    params: { userId: user.id },  // 使用 id 作为路由参数
-    query: {
-      username: user.username
-    }
+    params: { userId: user.id },
+    query: { username: user.username }
   });
 };
 
@@ -238,209 +240,111 @@ onMounted(() => {
 @import '@/styles/abstracts/variables';
 @import '@/styles/abstracts/mixins';
 
-form div {
-  margin-bottom: 15px;
+.user-management {
+  padding: $spacing-md;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
-.button-container {
-  display: flex;
-  justify-content: center;
-  gap: $spacing-xs;
-  flex-wrap: nowrap;
-  overflow: hidden;
-  width: 100%;
-  white-space: nowrap;
-
-  button {
-    @include button-variant($color-primary, $color-primary-dark);
-    padding: 8px 12px;
-    font-size: $font-size-sm;
-    border-radius: $radius-md;
-  }
-}
-
-.button-container0 {
-  display: flex;
-  justify-content: center;
-  gap: $spacing-sm;
-  flex-wrap: wrap;
-  max-width: 650px;
-  width: 100%;
-
-  button {
-    @include button-variant($color-primary, $color-primary-dark);
-    padding: $spacing-sm $spacing-md;
-    font-size: $font-size-md;
-    border-radius: $radius-md;
-    margin: 0;
-  }
-}
-
-input {
-  padding: $spacing-sm;
-  margin-top: $spacing-xs;
-  width: 100%;
-  border-radius: $radius-md;
-  border: 1px solid #ccc;
-  background-color: #f9f9f9;
-  font-size: $font-size-md;
-  transition: border-color $transition-normal;
-
-  &:focus {
-    border-color: $color-primary-dark;
-    outline: none;
-  }
-}
-
-table {
-  width: 80%;
-  border-collapse: collapse;
-  margin: $spacing-md auto 0;
-  border-radius: $radius-md;
-  overflow: hidden;
-  background-color: $color-background;
-  border: 1px solid $color-border;
-
-  th, td {
-    padding: 12px 18px;
-    text-align: left;
-    font-size: $font-size-md;
-  }
-
-  th {
-    background-color: $color-primary-light;
-    color: $color-text-primary;
-    font-weight: 600;
-    white-space: nowrap;
-  }
-
-  tr:nth-child(even) {
-    background-color: #f9f9f9;
-  }
-
-  tr:hover {
-    background-color: rgba(187, 234, 196, 0.34);
-  }
-}
-
-.arrow-up::after {
-  content: '↑';
-  margin-left: $spacing-xs;
-  font-size: $font-size-sm;
-}
-
-.arrow-down::after {
-  content: '↓';
-  margin-left: $spacing-xs;
-  font-size: $font-size-sm;
-}
-
-.pagination-controls {
-  display: flex;
-  justify-content: center;
-  margin-top: $spacing-md;
-
-  :deep(button),
-  :deep(.pagination-btn) {
-    @include button-variant($color-primary, $color-primary-dark);
-    padding: 12px 24px;
-    margin: 0 12px;
-    border-radius: 20px;
-    font-size: $font-size-md;
-    max-width: 120px;
-
-    &:disabled {
-      background-color: rgba(42, 175, 53, 0.34);
-    }
-  }
-
-  :deep(span) {
-    font-size: $font-size-md;
-    color: $color-text-primary;
-    align-self: center;
-  }
+.page-title {
+  margin: 0 0 $spacing-md 0;
+  text-align: center;
+  color: $color-text-primary;
 }
 
 .top-controls {
   display: flex;
-  justify-content: center !important;
+  justify-content: center;
   align-items: center;
+  gap: $spacing-md;
+  flex-wrap: wrap;
+  margin-bottom: $spacing-lg;
+}
+
+.button-group {
+  display: flex;
   gap: $spacing-sm;
   flex-wrap: wrap;
-  width: 100%;
+  justify-content: center;
 }
 
 .search-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-grow: 1;
+  flex: 1;
   max-width: 400px;
-  flex-shrink: 0;
-  justify-self: center;
-
-  input {
-    width: 100%;
-    padding: 12px 20px;
-    font-size: $font-size-md;
-    border-radius: 25px;
-    border: 1px solid #d1d1d1;
-    background: linear-gradient(145deg, #f0f0f0, #e0e0e0);
-    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.1), -4px -4px 10px rgba(255, 255, 255, 0.1);
-    transition: all $transition-normal;
-
-    &:focus {
-      outline: none;
-      border-color: $color-primary;
-      box-shadow: 0 0 10px $color-primary-dark;
-      background: linear-gradient(145deg, #e0e0e0, #f0f0f0);
-    }
-
-    &::placeholder {
-      color: #aaa;
-      opacity: 1;
-    }
-  }
+  min-width: 250px;
 }
 
+.action-buttons {
+  display: flex;
+  gap: $spacing-xs;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.empty-state {
+  text-align: center;
+  color: $color-text-secondary;
+  margin: $spacing-xl 0;
+}
+
+.pagination-controls {
+  margin-top: $spacing-lg;
+}
+
+.logout-button-container {
+  display: flex;
+  justify-content: center;
+  margin-top: $spacing-xl;
+}
+
+/* 移動端響應式 */
 @include respond-to(tablet) {
-  table {
-    width: 100%;
-    overflow-x: auto;
-    display: block;
-  }
-
-  th, td {
-    padding: 8px 12px;
-    font-size: $font-size-sm;
-  }
-
-  .pagination-controls button {
-    padding: 8px 16px;
-    font-size: $font-size-sm;
-  }
-
-  .confirm-dialog {
-    width: 90%;
-  }
-
   .top-controls {
-    flex-wrap: wrap;
-    justify-content: center;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .button-group {
+    width: 100%;
   }
 
   .search-container {
     max-width: 100%;
   }
+
+  .action-buttons {
+    flex-direction: column;
+
+    .btn {
+      width: 100%;
+    }
+  }
 }
 
 @include respond-to(mobile) {
-  table {
-    font-size: $font-size-xs;
+  .user-management {
+    padding: $spacing-sm;
   }
 
-  .pagination-controls button {
-    font-size: $font-size-xs;
+  .page-title {
+    font-size: $font-size-lg;
+  }
+
+  .button-group {
+    flex-direction: column;
+
+    .btn {
+      width: 100%;
+    }
+  }
+
+  .action-buttons {
+    gap: $spacing-xs;
+
+    .btn-sm {
+      font-size: $font-size-xs;
+      padding: 6px 8px;
+    }
   }
 }
 </style>
