@@ -24,38 +24,23 @@
       </div>
     </div>
 
-    <table v-if="users.length" border="1">
-      <thead>
-      <tr>
-        <th v-if="selectMode">
-          <input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll" />
-        </th>
-        <th @click="sortData('簡稱')">簡稱 🌏<span :class="getArrowClass('簡稱')"></span></th>
-        <th @click="sortData('音典分區')">音典分區 <span :class="getArrowClass('音典分區')"></span></th>
-        <th @click="sortData('經緯度')">經緯度 <span :class="getArrowClass('經緯度')"></span></th>
-        <th @click="sortData('特徵')">特徵 <span :class="getArrowClass('特徵')"></span></th>
-        <th @click="sortData('聲韻調')">聲韻調 <span :class="getArrowClass('聲韻調')"></span></th>
-        <th @click="sortData('值')"> 值 ✔️<span :class="getArrowClass('值')"></span></th>
-        <th @click="sortData('說明')" style="min-width: 120px">說明 🔔<span :class="getArrowClass('說明')"></span></th>
-        <th @click="sortData('created_at')">創建時間 <span :class="getArrowClass('created_at')"></span></th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr v-for="user in currentPageData" :key="user.id">
-        <td v-if="selectMode">
-          <input type="checkbox" :checked="isSelected(user.created_at)" @change="toggleSelection(user.created_at)" />
-        </td>
-        <td>{{ user.簡稱 }}</td>
-        <td>{{ user.音典分區 }}</td>
-        <td>{{ user.經緯度 }}</td>
-        <td>{{ user.特徵 }}</td>
-        <td>{{ user.聲韻調 }}</td>
-        <td>{{ user.值 }}</td>
-        <td>{{ user.說明 || '無' }}</td> <!-- 如果說明為 null 或 undefined，顯示 '無' -->
-        <td>{{ formatTime(user.created_at) }}</td>
-      </tr>
-      </tbody>
-    </table>
+    <BaseTable
+      v-if="users.length"
+      :columns="customColumns"
+      :data="currentPageData"
+      :selectable="selectMode"
+      :row-key="'created_at'"
+      @sort="handleSort"
+      @selection-change="handleSelectionChange"
+      ref="tableRef"
+    >
+      <template #cell-說明="{ value }">
+        {{ value || '無' }}
+      </template>
+      <template #cell-created_at="{ value }">
+        {{ formatTime(value) }}
+      </template>
+    </BaseTable>
     <h3 v-else>🤷‍♂️<br>{{ username }} 無個人數據</h3>
 
     <!-- 分頁控制 -->
@@ -76,6 +61,7 @@ import { useRouter, useRoute } from 'vue-router';
 import api from "../../axios.js";
 import { formatTime } from "../../utils.js";
 import { useCustomStore } from "../../stores";
+import { BaseTable } from '@/components/common';
 
 const router = useRouter();
 const route = useRoute();
@@ -86,20 +72,21 @@ const searchQuery = ref('');
 const currentPage = ref(1);
 const pageSize = ref(30);
 const totalPages = ref(1);
-const sortOrder = ref({
-  簡稱: 'asc',
-  音典分區: 'asc',
-  經緯度: 'asc',
-  特徵: 'asc',
-  聲韻調: 'asc',
-  值: 'asc',
-  說明: 'asc',
-  created_at: 'asc',
-});
-const sortField = ref('');
 const username = ref('');
 const selectMode = ref(false);
 const selectedUsers = ref([]);
+const tableRef = ref(null);
+
+const customColumns = [
+  { key: '簡稱', label: '簡稱 🌏', sortable: true },
+  { key: '音典分區', label: '音典分區', sortable: true },
+  { key: '經緯度', label: '經緯度', sortable: true },
+  { key: '特徵', label: '特徵', sortable: true },
+  { key: '聲韻調', label: '聲韻調', sortable: true },
+  { key: '值', label: '值 ✔️', sortable: true },
+  { key: '說明', label: '說明 🔔', sortable: true },
+  { key: 'created_at', label: '創建時間', sortable: true }
+];
 
 const filteredUsers = computed(() => {
   if (!searchQuery.value) {
@@ -130,60 +117,45 @@ const isAllSelected = computed(() => {
 
 const toggleSelectMode = () => {
   selectMode.value = !selectMode.value;
+  if (!selectMode.value && tableRef.value) {
+    tableRef.value.clearSelection();
+  }
   selectedUsers.value = [];
 };
 
+const handleSelectionChange = (selection) => {
+  selectedUsers.value = selection.map(row => row.created_at);
+};
+
 const reverseSelect = () => {
-  const selectedSet = new Set(selectedUsers.value);
-  selectedUsers.value = users.value
-      .map(user => user.created_at)
-      .filter(created_at => !selectedSet.has(created_at));
+  // BaseTable doesn't support reverse selection directly
+  // We need to manually select/deselect rows
+  const allCreatedAts = users.value.map(u => u.created_at);
+  const currentSelected = new Set(selectedUsers.value);
+  const newSelection = allCreatedAts.filter(ca => !currentSelected.has(ca));
+
+  // Update selectedUsers which will trigger selection change
+  selectedUsers.value = newSelection;
 };
 
-const isSelected = (createdAt) => {
-  return selectedUsers.value.includes(createdAt);
-};
+const handleSort = ({ key, order }) => {
+  const currentData = searchQuery.value ? filteredUsers.value : users.value;
 
-const toggleSelection = (createdAt) => {
-  const index = selectedUsers.value.indexOf(createdAt);
-  if (index === -1) {
-    selectedUsers.value.push(createdAt);
-  } else {
-    selectedUsers.value.splice(index, 1);
-  }
-};
+  currentData.sort((a, b) => {
+    const valueA = a[key] || '';
+    const valueB = b[key] || '';
 
-const toggleSelectAll = () => {
-  if (selectedUsers.value.length === users.value.length) {
-    selectedUsers.value = [];
-  } else {
-    selectedUsers.value = users.value.map(user => user.created_at);
-  }
-};
+    if (key === 'created_at') {
+      const timeA = new Date(valueA).getTime();
+      const timeB = new Date(valueB).getTime();
+      return order === 'asc' ? timeA - timeB : timeB - timeA;
+    } else {
+      return order === 'asc'
+        ? String(valueA).localeCompare(String(valueB))
+        : String(valueB).localeCompare(String(valueA));
+    }
+  });
 
-const getArrowClass = (field) => {
-  return sortOrder.value[field] === 'asc' ? 'arrow-up' : 'arrow-down';
-};
-
-const sortData = (field) => {
-  const currentOrder = sortOrder.value[field] === 'asc' ? 'desc' : 'asc';
-  sortOrder.value[field] = currentOrder;
-
-  if (field === 'created_at') {
-    users.value.sort((a, b) => {
-      const timeA = new Date(a.created_at).getTime();
-      const timeB = new Date(b.created_at).getTime();
-      return currentOrder === 'asc' ? timeA - timeB : timeB - timeA;
-    });
-  } else {
-    users.value.sort((a, b) => {
-      const valueA = a[field] || '';
-      const valueB = b[field] || '';
-      return currentOrder === 'asc' ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
-    });
-  }
-
-  totalPages.value = Math.ceil(users.value.length / pageSize.value);
   currentPage.value = 1;
 };
 
