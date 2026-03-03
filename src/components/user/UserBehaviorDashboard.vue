@@ -138,56 +138,47 @@
             </el-select>
           </div>
         </div>
-        <el-table :data="filteredUsers" stripe style="width: 100%">
-          <el-table-column prop="username" label="用戶名" width="150" />
-          <el-table-column prop="role" label="角色" width="100">
-            <template #default="{ row }">
-              <el-tag v-if="row.role === 'admin'" type="danger" size="small">管理員</el-tag>
-              <el-tag v-else type="info" size="small">普通用戶</el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="login_count" label="登錄次數" width="120" sortable />
-          <el-table-column label="最後登錄" width="180" sortable>
-            <template #default="{ row }">
-              {{ formatTime(row.last_login) }}
-            </template>
-          </el-table-column>
-          <el-table-column label="活躍度" width="120">
-            <template #default="{ row }">
-              <el-tag :type="getSegmentTagType(row.segment)" size="small">
-                {{ getSegmentLabel(row.segment) }}
-              </el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column label="風險評分" width="120" sortable>
-            <template #default="{ row }">
-              <span :style="{ color: row.riskLevel.color, fontWeight: 'bold' }">
-                {{ row.riskScore }}
-              </span>
-            </template>
-          </el-table-column>
-          <el-table-column label="風險等級" width="120">
-            <template #default="{ row }">
-              <el-tag :type="getRiskTagType(row.riskLevel.level)" size="small">
-                {{ row.riskLevel.label }}
-              </el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column label="操作" width="150">
-            <template #default="{ row }">
-              <el-button type="primary" size="small" @click="viewUserProfile(row)">
-                查看詳情
-              </el-button>
-            </template>
-          </el-table-column>
-        </el-table>
+        <BaseTable
+          :columns="userListColumns"
+          :data="filteredUsers"
+          :loading="loading"
+          @sort="handleUserListSort"
+        >
+          <template #cell-role="{ row }">
+            <BaseTag v-if="row.role === 'admin'" type="danger" size="small">管理員</BaseTag>
+            <BaseTag v-else type="info" size="small">普通用戶</BaseTag>
+          </template>
+          <template #cell-last_login="{ value }">
+            {{ formatTime(value) }}
+          </template>
+          <template #cell-segment="{ row }">
+            <BaseTag :type="getSegmentTagType(row.segment)" size="small">
+              {{ getSegmentLabel(row.segment) }}
+            </BaseTag>
+          </template>
+          <template #cell-riskScore="{ row }">
+            <span :style="{ color: row.riskLevel.color, fontWeight: 'bold' }">
+              {{ row.riskScore }}
+            </span>
+          </template>
+          <template #cell-riskLevel="{ row }">
+            <BaseTag :type="getRiskTagType(row.riskLevel.level)" size="small">
+              {{ row.riskLevel.label }}
+            </BaseTag>
+          </template>
+          <template #actions="{ row }">
+            <button class="btn btn-primary btn-sm" @click="viewUserProfile(row)">
+              查看詳情
+            </button>
+          </template>
+        </BaseTable>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { BaseChart, StatsCard } from '@/components/common';
+import { BaseChart, StatsCard, BaseTable, BaseTag } from '@/components/common';
 import { userAPI, statsAPI, sessionAPI } from '@/api/index';
 import { useChart, useUserBehavior, useTimeFormat } from '@/composables';
 import { ElMessage } from 'element-plus';
@@ -198,6 +189,8 @@ export default {
   components: {
     BaseChart,
     StatsCard,
+    BaseTable,
+    BaseTag,
     RefreshIcon,
     Loading
   },
@@ -251,7 +244,16 @@ export default {
       heatmapData: [],
       weekDays: ['週日', '週一', '週二', '週三', '週四', '週五', '週六'],
       filterSegment: 'all',
-      filterRisk: 'all'
+      filterRisk: 'all',
+      userListColumns: [
+        { key: 'username', label: '用戶名', sortable: false },
+        { key: 'role', label: '角色', sortable: false },
+        { key: 'login_count', label: '登錄次數', sortable: true },
+        { key: 'last_login', label: '最後登錄', sortable: true },
+        { key: 'segment', label: '活躍度', sortable: false },
+        { key: 'riskScore', label: '風險評分', sortable: true },
+        { key: 'riskLevel', label: '風險等級', sortable: false }
+      ]
     };
   },
   computed: {
@@ -424,6 +426,24 @@ export default {
       this.$router.push({
         name: 'UserProfileDetail',
         params: { username: user.username }
+      });
+    },
+    handleUserListSort({ key, order }) {
+      this.users.sort((a, b) => {
+        let valueA = a[key];
+        let valueB = b[key];
+
+        // 处理日期字段
+        if (key === 'last_login') {
+          valueA = new Date(valueA).getTime();
+          valueB = new Date(valueB).getTime();
+        }
+
+        if (order === 'asc') {
+          return valueA > valueB ? 1 : -1;
+        } else {
+          return valueA < valueB ? 1 : -1;
+        }
       });
     }
   }

@@ -1,77 +1,83 @@
 <template>
-  <span :class="['base-tag', `tag-${type}`, `tag-${size}`]">
+  <span :class="['base-tag', `base-tag--${type}`, `base-tag--${size}`]">
     <slot></slot>
   </span>
 </template>
 
-<script>
-export default {
-  name: 'BaseTag',
-  props: {
-    type: {
-      type: String,
-      default: 'info', // 'success', 'warning', 'danger', 'info'
-      validator: (value) => ['success', 'warning', 'danger', 'info'].includes(value)
-    },
-    size: {
-      type: String,
-      default: 'default', // 'small', 'default'
-      validator: (value) => ['small', 'default'].includes(value)
-    }
+<script setup>
+defineOptions({
+  name: 'BaseTag'
+})
+
+defineProps({
+  type: {
+    type: String,
+    default: 'primary',
+    validator: (value) => ['primary', 'success', 'warning', 'danger', 'info'].includes(value)
+  },
+  size: {
+    type: String,
+    default: 'default',
+    validator: (value) => ['small', 'default', 'large'].includes(value)
   }
-};
+})
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@import '@/styles/abstracts/variables';
+
 .base-tag {
-  display: inline-block;
-  padding: 4px 10px;
-  font-size: 12px;
-  line-height: 1.5;
-  border-radius: var(--radius-sm, 4px);
-  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 12px;
+  border-radius: $radius-sm;
   font-weight: 500;
+  white-space: nowrap;
+  transition: all $transition-fast;
+  font-size: $font-size-xs;
+  line-height: 1.5;
 }
 
-.tag-small {
+// Sizes
+.base-tag--small {
   padding: 2px 8px;
   font-size: 11px;
 }
 
-.tag-success {
-  background-color: #f0f9ff;
-  color: var(--color-success, #67c23a);
-  border: 1px solid #b3e19d;
+.base-tag--large {
+  padding: 6px 16px;
+  font-size: $font-size-sm;
 }
 
-.tag-warning {
-  background-color: #fdf6ec;
-  color: var(--color-warning, #e6a23c);
-  border: 1px solid #f5dab1;
+// Types
+.base-tag--primary {
+  background-color: rgba($color-primary, 0.1);
+  color: $color-primary;
+  border: 1px solid rgba($color-primary, 0.3);
 }
 
-.tag-danger {
-  background-color: #fef0f0;
-  color: var(--color-danger, #f56c6c);
-  border: 1px solid #fbc4c4;
+.base-tag--success {
+  background-color: rgba($color-success, 0.1);
+  color: $color-success;
+  border: 1px solid rgba($color-success, 0.3);
 }
 
-.tag-info {
-  background-color: #f4f4f5;
-  color: #909399;
-  border: 1px solid #d3d4d6;
+.base-tag--warning {
+  background-color: rgba($color-warning, 0.1);
+  color: $color-warning;
+  border: 1px solid rgba($color-warning, 0.3);
 }
 
-/* Mobile responsive */
-@media (max-width: 768px) {
-  .base-tag {
-    font-size: 13px;
-    padding: 5px 11px;
-  }
+.base-tag--danger {
+  background-color: rgba($color-danger, 0.1);
+  color: $color-danger;
+  border: 1px solid rgba($color-danger, 0.3);
+}
 
-  .tag-small {
-    font-size: 12px;
-    padding: 3px 9px;
-  }
+.base-tag--info {
+  background-color: rgba(144, 147, 153, 0.1);
+  color: #606266;
+  border: 1px solid rgba(144, 147, 153, 0.3);
 }
 </style>

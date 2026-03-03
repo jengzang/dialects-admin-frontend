@@ -165,38 +165,33 @@
       <div class="table-header">
         <h3>用戶流量消耗排名</h3>
       </div>
-      <el-table :data="topUsers" stripe style="width: 100%">
-        <el-table-column prop="username" label="用戶名" width="150" />
-        <el-table-column prop="apiCalls" label="API 調用" width="120" sortable />
-        <el-table-column label="上行流量" width="150" sortable>
-          <template #default="{ row }">
-            {{ formatBytes(row.upload) }}
-          </template>
-        </el-table-column>
-        <el-table-column label="下行流量" width="150" sortable>
-          <template #default="{ row }">
-            {{ formatBytes(row.download) }}
-          </template>
-        </el-table-column>
-        <el-table-column label="總流量" sortable>
-          <template #default="{ row }">
-            {{ formatBytes(row.upload + row.download) }}
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="100">
-          <template #default="{ row }">
-            <el-button type="primary" size="small" @click="viewUserDetail(row)">
-              詳情
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
+      <BaseTable
+        :columns="topUsersColumns"
+        :data="topUsers"
+        :loading="loading"
+        @sort="handleTopUsersSort"
+      >
+        <template #cell-upload="{ value }">
+          {{ formatBytes(value) }}
+        </template>
+        <template #cell-download="{ value }">
+          {{ formatBytes(value) }}
+        </template>
+        <template #cell-totalTraffic="{ row }">
+          {{ formatBytes(row.upload + row.download) }}
+        </template>
+        <template #actions="{ row }">
+          <button class="btn btn-primary btn-sm" @click="viewUserDetail(row)">
+            詳情
+          </button>
+        </template>
+      </BaseTable>
     </div>
   </div>
 </template>
 
 <script>
-import { BaseChart, StatsCard } from '@/components/common';
+import { BaseChart, StatsCard, BaseTable } from '@/components/common';
 import { analyticsAPI } from '@/api/index';
 import { useChart, useApiStats } from '@/composables';
 import { ElMessage } from 'element-plus';
@@ -207,6 +202,7 @@ export default {
   components: {
     BaseChart,
     StatsCard,
+    BaseTable,
     RefreshIcon,
     DownloadIcon
   },
@@ -252,7 +248,14 @@ export default {
         totalDownload: 0,
         uniqueUsers: 0
       },
-      topUsers: []
+      topUsers: [],
+      topUsersColumns: [
+        { key: 'username', label: '用戶名', sortable: true },
+        { key: 'apiCalls', label: 'API 調用', sortable: true },
+        { key: 'upload', label: '上行流量', sortable: true },
+        { key: 'download', label: '下行流量', sortable: true },
+        { key: 'totalTraffic', label: '總流量', sortable: true }
+      ]
     };
   },
   computed: {
@@ -568,6 +571,24 @@ export default {
         console.error('Export failed:', error);
         ElMessage.error('導出失敗');
       }
+    },
+    handleTopUsersSort({ key, order }) {
+      this.topUsers.sort((a, b) => {
+        let valueA = a[key];
+        let valueB = b[key];
+
+        // 处理总流量的特殊情况
+        if (key === 'totalTraffic') {
+          valueA = a.upload + a.download;
+          valueB = b.upload + b.download;
+        }
+
+        if (order === 'asc') {
+          return valueA > valueB ? 1 : -1;
+        } else {
+          return valueA < valueB ? 1 : -1;
+        }
+      });
     }
   }
 };
