@@ -78,28 +78,39 @@ export default {
   mounted() {
     // 延迟初始化，确保容器已经渲染并有正确的尺寸
     this.$nextTick(() => {
-      if (!this.loading) {
-        this.initChart();
-      }
+      // 等待 DOM 完全渲染后再初始化
+      setTimeout(() => {
+        if (!this.loading && this.$refs.chartContainer) {
+          this.initChart();
+        }
+      }, 100);
     });
     window.addEventListener('resize', this.handleResize);
 
     // 使用 ResizeObserver 监听容器尺寸变化
-    if (this.$refs.chartContainer && typeof ResizeObserver !== 'undefined') {
-      this.resizeObserver = new ResizeObserver(() => {
-        if (this.chart) {
-          // 检查容器是否可见且有尺寸
-          const rect = this.$refs.chartContainer.getBoundingClientRect();
-          if (rect.width > 0 && rect.height > 0) {
-            this.chart.resize();
-          } else if (rect.width > 0 && rect.height === 0) {
-            // 高度为 0 但宽度正常，可能是 tab 切换导致的，尝试重新初始化
-            this.initChart();
+    this.$nextTick(() => {
+      if (this.$refs.chartContainer && typeof ResizeObserver !== 'undefined') {
+        this.resizeObserver = new ResizeObserver(() => {
+          if (this.chart) {
+            // 检查容器是否可见且有尺寸
+            const rect = this.$refs.chartContainer.getBoundingClientRect();
+            if (rect.width > 0 && rect.height > 0) {
+              this.chart.resize();
+            } else if (rect.width > 0 && rect.height === 0) {
+              // 高度为 0 但宽度正常，可能是 tab 切换导致的，尝试重新初始化
+              this.initChart();
+            }
+          } else if (!this.loading) {
+            // 如果图表还没初始化，尝试初始化
+            const rect = this.$refs.chartContainer?.getBoundingClientRect();
+            if (rect && rect.width > 0 && rect.height > 0) {
+              this.initChart();
+            }
           }
-        }
-      });
-      this.resizeObserver.observe(this.$refs.chartContainer);
-    }
+        });
+        this.resizeObserver.observe(this.$refs.chartContainer);
+      }
+    });
   },
   beforeUnmount() {
     window.removeEventListener('resize', this.handleResize);

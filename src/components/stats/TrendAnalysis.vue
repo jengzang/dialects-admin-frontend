@@ -5,8 +5,17 @@
 
     <!-- Content -->
     <div v-else>
-      <!-- API Diversity Stats -->
-      <div class="stats-grid">
+      <!-- Empty State -->
+      <div v-if="!data || !data.data || data.data.length === 0" class="empty-state">
+        <div class="empty-icon">📊</div>
+        <div class="empty-text">暫無趨勢數據</div>
+        <div class="empty-hint">請稍後再試或檢查數據源</div>
+      </div>
+
+      <!-- Data Content -->
+      <div v-else>
+        <!-- API Diversity Stats -->
+        <div class="stats-grid">
         <StatsCard
           :number="uniqueApis"
           label="活躍 API 數量"
@@ -48,6 +57,7 @@
           :data="trendChartData"
           :options="trendChartOptions"
           :height="350"
+          :loading="loading"
         />
       </BaseCard>
 
@@ -69,11 +79,13 @@
           :data="apiTrendChartData"
           :options="apiTrendChartOptions"
           :height="300"
+          :loading="loading"
         />
         <div v-else class="empty-hint">
-          請輸入 API 路徑查詢趨勢
+          请输入 API 路径查询趋势
         </div>
       </BaseCard>
+      </div>
     </div>
   </div>
 </template>
@@ -223,8 +235,18 @@ export default {
       this.$emit('loading', true);
       try {
         this.data = await apiCallStatsAPI.getDailyTrend(this.selectedDays);
+        console.log('Daily trend data loaded:', this.data);
+
+        // 验证数据结构
+        if (!this.data) {
+          console.warn('API returned null/undefined data');
+        } else if (!this.data.data || this.data.data.length === 0) {
+          console.warn('API returned empty data array');
+        }
       } catch (error) {
         console.error('Failed to fetch daily trend:', error);
+        console.error('Error details:', error.response || error.message);
+        this.$message?.error?.(`載入趨勢數據失敗: ${error.message || '未知錯誤'}`);
       } finally {
         this.loading = false;
         this.$emit('loading', false);
@@ -300,6 +322,32 @@ export default {
   padding: var(--spacing-xl);
   color: var(--color-text-secondary);
   font-size: 14px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: var(--spacing-xxl) var(--spacing-xl);
+  background: var(--color-background-light);
+  border-radius: var(--radius-lg);
+  margin: var(--spacing-lg) 0;
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: var(--spacing-md);
+  opacity: 0.5;
+}
+
+.empty-text {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.empty-hint {
+  font-size: 14px;
+  color: var(--color-text-secondary);
 }
 
 .mt-lg {

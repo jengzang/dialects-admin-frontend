@@ -29,23 +29,23 @@
       <!-- Tab Content -->
       <div class="tabs-content">
         <RealTimeMonitor
-          v-show="activeTab === 'realtime'"
+          v-if="activeTab === 'realtime'"
           ref="realtimeRef"
           @loading="handleLoading"
         />
         <TrendAnalysis
-          v-show="activeTab === 'trend'"
+          v-if="activeTab === 'trend'"
           ref="trendRef"
           @loading="handleLoading"
         />
         <ApiRanking
-          v-show="activeTab === 'ranking'"
+          v-if="activeTab === 'ranking'"
           ref="rankingRef"
           @loading="handleLoading"
           @view-detail="handleViewDetail"
         />
         <DetailedAnalysis
-          v-show="activeTab === 'detail'"
+          v-if="activeTab === 'detail'"
           ref="detailRef"
           :initial-api="selectedApi"
           @loading="handleLoading"
@@ -82,9 +82,29 @@ export default {
       ]
     };
   },
+  mounted() {
+    // 从 URL 读取 tab 参数
+    const tabFromUrl = this.$route.query.tab;
+    if (tabFromUrl && this.tabs.some(t => t.name === tabFromUrl)) {
+      this.activeTab = tabFromUrl;
+    }
+  },
+  watch: {
+    // 监听路由变化，同步 activeTab
+    '$route.query.tab'(newTab) {
+      if (newTab && this.tabs.some(t => t.name === newTab)) {
+        this.activeTab = newTab;
+      }
+    }
+  },
   methods: {
     switchTab(tabName) {
       this.activeTab = tabName;
+      // 更新 URL 中的 tab 参数
+      this.$router.push({
+        path: this.$route.path,
+        query: { tab: tabName }
+      });
     },
     goHome() {
       this.$router.push('/');
@@ -98,7 +118,7 @@ export default {
     },
     handleViewDetail(apiPath) {
       this.selectedApi = apiPath;
-      this.activeTab = 'detail';
+      this.switchTab('detail'); // 使用 switchTab 方法来同时更新 URL
     },
     handleLoading(isLoading) {
       this.loading = isLoading;
