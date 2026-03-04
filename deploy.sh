@@ -64,17 +64,39 @@ echo -e "${YELLOW}[3/4] 上传文件到服务器...${NC}"
 echo "目标服务器: ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PATH}"
 echo ""
 
-# 上传 index.html
+# 上传主要文件
 echo "上传 index.html..."
 scp "$BUILD_DIR/index.html" "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PATH}"
 
-# 上传 admin.css
 echo "上传 admin.css..."
 scp "$BUILD_DIR/admin.css" "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PATH}"
 
-# 上传 admin.js
 echo "上传 admin.js..."
 scp "$BUILD_DIR/admin.js" "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PATH}"
+
+# 上传静态资源文件
+echo "上传静态资源文件..."
+
+# 上传图标文件
+if [ -f "$BUILD_DIR/query_green.ico" ]; then
+    echo "  - query_green.ico"
+    scp "$BUILD_DIR/query_green.ico" "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PATH}"
+fi
+
+# 上传 Leaflet 地图图标
+LEAFLET_FILES=("marker-icon.png" "marker-icon-2x.png" "marker-shadow.png" "layers.png" "layers-2x.png")
+for file in "${LEAFLET_FILES[@]}"; do
+    if [ -f "$BUILD_DIR/$file" ]; then
+        echo "  - $file"
+        scp "$BUILD_DIR/$file" "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PATH}"
+    fi
+done
+
+# 上传其他静态文件（如果存在）
+if [ -f "$BUILD_DIR/vite.svg" ]; then
+    echo "  - vite.svg"
+    scp "$BUILD_DIR/vite.svg" "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PATH}"
+fi
 
 if [ $? -ne 0 ]; then
     echo -e "${RED}上传失败！${NC}"
