@@ -124,7 +124,7 @@
             <div class="percentage-bar">
               <div
                 class="percentage-fill"
-                :style="{ width: value + '%' }"
+                :style="{ width: getPercentageWidth(value) }"
               ></div>
             </div>
             <span class="percentage-text">{{ formatPercentage(value) }}</span>
@@ -316,8 +316,39 @@ export default {
     };
 
     const formatPercentage = (percentage) => {
-      if (typeof percentage !== 'number' || isNaN(percentage)) return 'N/A';
-      return `${percentage.toFixed(1)}%`;
+      // 处理 null/undefined
+      if (percentage === null || percentage === undefined) {
+        return 'N/A';
+      }
+
+      // 转换为数字（处理字符串类型）
+      const numValue = typeof percentage === 'string' ? parseFloat(percentage) : percentage;
+
+      // 检查是否为有效数字
+      if (typeof numValue !== 'number' || isNaN(numValue)) {
+        return 'N/A';
+      }
+
+      return `${numValue.toFixed(1)}%`;
+    };
+
+    const getPercentageWidth = (percentage) => {
+      // 处理 null/undefined
+      if (percentage === null || percentage === undefined) {
+        return '0%';
+      }
+
+      // 转换为数字（处理字符串类型）
+      const numValue = typeof percentage === 'string' ? parseFloat(percentage) : percentage;
+
+      // 检查是否为有效数字
+      if (typeof numValue !== 'number' || isNaN(numValue)) {
+        return '0%';
+      }
+
+      // 确保百分比在 0-100 之间
+      const clampedPercentage = Math.max(0, Math.min(100, numValue));
+      return `${clampedPercentage}%`;
     };
 
     const formatRank = (rank) => {
@@ -480,6 +511,7 @@ export default {
       tableColumns,
       formatValue,
       formatPercentage,
+      getPercentageWidth,
       formatRank,
       getRankClass,
       handleSearch,
@@ -642,32 +674,27 @@ export default {
     gap: $spacing-sm;
   }
 
+  :deep(button),
   :deep(.pagination-btn) {
-    padding: $spacing-xs $spacing-md;
-    border: 1px solid $color-border;
-    border-radius: $radius-sm;
-    background-color: $color-background-white;
-    color: $color-text-primary;
-    cursor: pointer;
-    transition: all $transition-fast;
-    font-size: $font-size-sm;
-
-    &:hover:not(:disabled) {
-      background-color: $color-primary;
-      color: $color-text-white;
-      border-color: $color-primary;
-    }
+    @include button-variant($color-primary, $color-primary-dark);
+    padding: 12px 24px;
+    margin: 0 12px;
+    border-radius: 20px;
+    font-size: $font-size-md;
+    max-width: 120px;
 
     &:disabled {
-      opacity: 0.5;
+      background-color: rgba(42, 175, 53, 0.34);
       cursor: not-allowed;
     }
   }
 
-  :deep(.pagination-info) {
+  :deep(.pagination-info),
+  :deep(span) {
     padding: 0 $spacing-sm;
     color: $color-text-secondary;
     font-size: $font-size-sm;
+    align-self: center;
   }
 }
 

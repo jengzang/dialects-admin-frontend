@@ -44,7 +44,8 @@ export default {
     return {
       chart: null,
       initRetryCount: 0,
-      maxRetries: 10
+      maxRetries: 10,
+      resizeObserver: null
     };
   },
   watch: {
@@ -82,9 +83,30 @@ export default {
       }
     });
     window.addEventListener('resize', this.handleResize);
+
+    // 使用 ResizeObserver 监听容器尺寸变化
+    if (this.$refs.chartContainer && typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver(() => {
+        if (this.chart) {
+          // 检查容器是否可见且有尺寸
+          const rect = this.$refs.chartContainer.getBoundingClientRect();
+          if (rect.width > 0 && rect.height > 0) {
+            this.chart.resize();
+          } else if (rect.width > 0 && rect.height === 0) {
+            // 高度为 0 但宽度正常，可能是 tab 切换导致的，尝试重新初始化
+            this.initChart();
+          }
+        }
+      });
+      this.resizeObserver.observe(this.$refs.chartContainer);
+    }
   },
   beforeUnmount() {
     window.removeEventListener('resize', this.handleResize);
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null;
+    }
     if (this.chart) {
       this.chart.dispose();
     }

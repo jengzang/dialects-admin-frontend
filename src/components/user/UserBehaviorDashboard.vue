@@ -237,28 +237,23 @@
                 <div class="chart-header">
                   <h3>分層詳情</h3>
                 </div>
-                <table class="segment-table">
-                  <thead>
-                    <tr>
-                      <th>分層</th>
-                      <th>用戶數</th>
-                      <th>平均調用次數</th>
-                      <th>平均在線時長</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="segment in userSegments.segments" :key="segment.level">
-                      <td>
-                        <BaseTag :type="getSegmentLevelTagType(segment.level)" size="small">
-                          {{ getSegmentLevelLabel(segment.level) }}
-                        </BaseTag>
-                      </td>
-                      <td>{{ segment.user_count }}</td>
-                      <td>{{ Math.round(segment.avg_call_count) }}</td>
-                      <td>{{ formatOnlineTime(segment.avg_online_seconds) }}</td>
-                    </tr>
-                  </tbody>
-                </table>
+                <BaseTable
+                  :columns="segmentTableColumns"
+                  :data="userSegments.segments"
+                  :loading="loading"
+                >
+                  <template #cell-level="{ row }">
+                    <BaseTag :type="getSegmentLevelTagType(row.level)" size="small">
+                      {{ getSegmentLevelLabel(row.level) }}
+                    </BaseTag>
+                  </template>
+                  <template #cell-avg_call_count="{ value }">
+                    {{ Math.round(value) }}
+                  </template>
+                  <template #cell-avg_online_seconds="{ value }">
+                    {{ formatOnlineTime(value) }}
+                  </template>
+                </BaseTable>
               </div>
             </div>
           </div>
@@ -302,30 +297,26 @@
                 <div class="chart-header">
                   <h3>分類詳情</h3>
                 </div>
-                <table class="segment-table">
-                  <thead>
-                    <tr>
-                      <th>分類</th>
-                      <th>用戶數</th>
-                      <th>平均 R 分數</th>
-                      <th>平均 F 分數</th>
-                      <th>平均 M 分數</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="category in rfmAnalysis.categories" :key="category.category">
-                      <td>
-                        <BaseTag :type="getRFMCategoryTagType(category.category)" size="small">
-                          {{ getRFMCategoryLabel(category.category) }}
-                        </BaseTag>
-                      </td>
-                      <td>{{ category.user_count }}</td>
-                      <td>{{ category.avg_r_score.toFixed(1) }}</td>
-                      <td>{{ category.avg_f_score.toFixed(1) }}</td>
-                      <td>{{ category.avg_m_score.toFixed(1) }}</td>
-                    </tr>
-                  </tbody>
-                </table>
+                <BaseTable
+                  :columns="rfmTableColumns"
+                  :data="rfmAnalysis.categories"
+                  :loading="loading"
+                >
+                  <template #cell-category="{ row }">
+                    <BaseTag :type="getRFMCategoryTagType(row.category)" size="small">
+                      {{ getRFMCategoryLabel(row.category) }}
+                    </BaseTag>
+                  </template>
+                  <template #cell-avg_r_score="{ value }">
+                    {{ value.toFixed(1) }}
+                  </template>
+                  <template #cell-avg_f_score="{ value }">
+                    {{ value.toFixed(1) }}
+                  </template>
+                  <template #cell-avg_m_score="{ value }">
+                    {{ value.toFixed(1) }}
+                  </template>
+                </BaseTable>
               </div>
             </div>
           </div>
@@ -377,28 +368,20 @@
                 <div class="chart-header">
                   <h3>Top 10 用戶（按多樣性）</h3>
                 </div>
-                <table class="segment-table">
-                  <thead>
-                    <tr>
-                      <th>用戶名</th>
-                      <th>類型</th>
-                      <th>多樣性指數</th>
-                      <th>調用次數</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="user in apiDiversity.users.slice(0, 10)" :key="user.username">
-                      <td>{{ user.username }}</td>
-                      <td>
-                        <BaseTag :type="user.user_type === 'explorer' ? 'success' : 'info'" size="small">
-                          {{ user.user_type === 'explorer' ? '探索型' : '專注型' }}
-                        </BaseTag>
-                      </td>
-                      <td>{{ user.diversity_index.toFixed(2) }}</td>
-                      <td>{{ user.total_calls }}</td>
-                    </tr>
-                  </tbody>
-                </table>
+                <BaseTable
+                  :columns="diversityTableColumns"
+                  :data="apiDiversity.users.slice(0, 10)"
+                  :loading="loading"
+                >
+                  <template #cell-user_type="{ row }">
+                    <BaseTag :type="row.user_type === 'explorer' ? 'success' : 'info'" size="small">
+                      {{ row.user_type === 'explorer' ? '探索型' : '專注型' }}
+                    </BaseTag>
+                  </template>
+                  <template #cell-diversity_index="{ value }">
+                    {{ value.toFixed(2) }}
+                  </template>
+                </BaseTable>
               </div>
             </div>
           </div>
@@ -546,13 +529,32 @@ export default {
       apiDiversity: null,
       userGrowth: null,
       userListColumns: [
-        { key: 'username', label: '用戶名', sortable: false },
-        { key: 'role', label: '角色', sortable: false },
-        { key: 'login_count', label: '登錄次數', sortable: true },
-        { key: 'last_login', label: '最後登錄', sortable: true },
-        { key: 'segment', label: '活躍度', sortable: false },
-        { key: 'riskScore', label: '風險評分', sortable: true },
-        { key: 'riskLevel', label: '風險等級', sortable: false }
+        { key: 'username', label: '用戶名', sortable: false, minWidth: '120px' },
+        { key: 'role', label: '角色', sortable: false, width: '100px' },
+        { key: 'login_count', label: '登錄次數', sortable: true, width: '120px' },
+        { key: 'last_login', label: '最後登錄', sortable: true, minWidth: '180px' },
+        { key: 'segment', label: '活躍度', sortable: false, width: '120px' },
+        { key: 'riskScore', label: '風險評分', sortable: true, width: '120px' },
+        { key: 'riskLevel', label: '風險等級', sortable: false, width: '120px' }
+      ],
+      segmentTableColumns: [
+        { key: 'level', label: '分層', sortable: false, width: '150px' },
+        { key: 'user_count', label: '用戶數', sortable: false, width: '120px' },
+        { key: 'avg_call_count', label: '平均調用次數', sortable: false, width: '150px' },
+        { key: 'avg_online_seconds', label: '平均在線時長', sortable: false, width: '150px' }
+      ],
+      rfmTableColumns: [
+        { key: 'category', label: '分類', sortable: false, width: '150px' },
+        { key: 'user_count', label: '用戶數', sortable: false, width: '120px' },
+        { key: 'avg_r_score', label: '平均 R 分數', sortable: false, width: '140px' },
+        { key: 'avg_f_score', label: '平均 F 分數', sortable: false, width: '140px' },
+        { key: 'avg_m_score', label: '平均 M 分數', sortable: false, width: '140px' }
+      ],
+      diversityTableColumns: [
+        { key: 'username', label: '用戶名', sortable: false, minWidth: '120px' },
+        { key: 'user_type', label: '類型', sortable: false, width: '120px' },
+        { key: 'diversity_index', label: '多樣性指數', sortable: false, width: '140px' },
+        { key: 'total_calls', label: '調用次數', sortable: false, width: '120px' }
       ]
     };
   },
@@ -711,7 +713,21 @@ export default {
     }
   },
   mounted() {
+    // 从路由参数读取初始 tab
+    const tabFromRoute = this.$route.query.tab;
+    if (tabFromRoute && ['overview', 'segments', 'rfm', 'diversity', 'growth'].includes(tabFromRoute)) {
+      this.activeTab = tabFromRoute;
+    }
+
     this.fetchData();
+  },
+  watch: {
+    // 监听路由变化，同步 tab 状态
+    '$route.query.tab'(newTab) {
+      if (newTab && ['overview', 'segments', 'rfm', 'diversity', 'growth'].includes(newTab)) {
+        this.activeTab = newTab;
+      }
+    }
   },
   methods: {
     goHome() {
@@ -942,6 +958,26 @@ export default {
       });
     },
     async handleTabChange(tabName) {
+      // 更新路由查询参数
+      if (this.$route.query.tab !== tabName) {
+        this.$router.push({
+          query: { ...this.$route.query, tab: tabName }
+        }).catch(err => {
+          // 忽略导航重复错误
+          if (err.name !== 'NavigationDuplicated') {
+            console.error('Route navigation error:', err);
+          }
+        });
+      }
+
+      // 等待 DOM 更新后触发图表 resize
+      // 使用 setTimeout 增加延迟，确保 tab 切换动画完成
+      this.$nextTick(() => {
+        setTimeout(() => {
+          window.dispatchEvent(new Event('resize'));
+        }, 100);
+      });
+
       if (tabName === 'overview') {
         return; // Overview data already loaded
       }
@@ -1024,6 +1060,12 @@ export default {
         ElMessage.error(`載入${tabName}數據失敗`);
       } finally {
         this.loading = false;
+        // 数据加载完成后，再次触发 resize 确保图表正确显示
+        this.$nextTick(() => {
+          setTimeout(() => {
+            window.dispatchEvent(new Event('resize'));
+          }, 100);
+        });
       }
     },
     getSegmentLevelLabel(level) {
@@ -1135,7 +1177,7 @@ export default {
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
   gap: 20px;
   margin-bottom: 30px;
 }
@@ -1152,6 +1194,8 @@ export default {
   border-radius: var(--radius-lg, 8px);
   padding: 20px;
   box-shadow: var(--shadow-sm, 0 2px 8px rgba(0, 0, 0, 0.1));
+  overflow-x: auto;
+  min-width: 0;
 }
 
 .chart-card.full-width {
@@ -1285,31 +1329,5 @@ export default {
   .heatmap-grid {
     overflow-x: auto;
   }
-}
-
-.segment-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.segment-table th,
-.segment-table td {
-  padding: 12px;
-  text-align: left;
-  border-bottom: 1px solid var(--color-border-light, #eee);
-}
-
-.segment-table th {
-  font-weight: 600;
-  color: var(--color-text-primary, #333);
-  background-color: var(--color-background, #f5f5f5);
-}
-
-.segment-table td {
-  color: var(--color-text-secondary, #666);
-}
-
-.segment-table tbody tr:hover {
-  background-color: var(--color-background, #f9f9f9);
 }
 </style>

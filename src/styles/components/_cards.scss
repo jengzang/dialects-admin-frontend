@@ -17,8 +17,10 @@
   border: 1px solid $color-border;
   border-radius: $radius-sm;
   background-color: $color-background-white;
+  color: $color-text-primary;
   cursor: pointer;
   transition: all $transition-fast;
+  font-size: $font-size-sm;
 
   &:hover:not(:disabled) {
     background-color: $color-primary;
