@@ -17,9 +17,6 @@ package-lock.json
 yarn.lock
 pnpm-lock.yaml
 
-# Documentation (keep only README.md)
-OPTIMIZATION_GUIDE.md
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -33,3 +30,26 @@ OPTIMIZATION_GUIDE.md
 
 # Claude Code
 .claude/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# OS files
+Thumbs.db
+
+# Environment files (keep .env.example)
+.env.local
+.env.*.local
+
+# Build artifacts
+*.tsbuildinfo
+
+# IDE
+*.iml
+.project
+.classpath
+.settings/

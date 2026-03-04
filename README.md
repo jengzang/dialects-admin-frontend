@@ -1,379 +1,272 @@
-# 用戶管理系統 (Admin Dashboard)
+# 方言管理后台系统 (Dialects Admin Dashboard)
 
-一個基於 Vue 3 的現代化管理後台系統，提供用戶管理、數據管理、會話監控和 API 使用統計等功能。
+<div align="center">
+
+![Vue 3](https://img.shields.io/badge/Vue-3.5.20-4FC08D?logo=vue.js)
+![Vite](https://img.shields.io/badge/Vite-7.1.4-646CFF?logo=vite)
+![Element Plus](https://img.shields.io/badge/Element_Plus-2.11.1-409EFF)
+![ECharts](https://img.shields.io/badge/ECharts-6.0.0-AA344D)
+![License](https://img.shields.io/badge/License-MIT-green)
+
+一个功能完整、现代化的 Vue 3 管理后台系统，提供用户管理、会话监控、API 统计分析、自定义数据管理等企业级功能。
+
+[在线演示](https://dialects.yzup.top/admin) | [文档](./docs) | [更新日志](#更新日志)
+
+</div>
+
+---
+
+## 📑 目录
+
+- [功能特性](#-功能特性)
+- [技术栈](#-技术栈)
+- [快速开始](#-快速开始)
+- [项目结构](#-项目结构)
+- [核心功能](#-核心功能)
+- [架构设计](#-架构设计)
+- [开发指南](#-开发指南)
+- [API 文档](#-api-文档)
+- [部署](#-部署)
+- [常见问题](#-常见问题)
+- [更新日志](#-更新日志)
+- [贡献指南](#-贡献指南)
+
+---
 
 ## ✨ 功能特性
 
-### 核心功能
-- 🔐 **用戶認證系統** - JWT Token 認證，支持自動刷新
-- 👥 **用戶管理** - 完整的 CRUD 操作，支持搜索和排序
-- 📊 **API 使用統計** - 可視化圖表展示 API 調用數據
-- 🗂️ **自定義數據管理** - 靈活的數據管理系統
-- 🔍 **會話管理** - 實時監控用戶會話狀態
-- 🌍 **IP 地理位置查詢** - 基於 Leaflet 的地圖展示
+### 🎯 核心功能
 
-### 技術亮點
-- ⚡ **性能優化** - 使用 Vite 構建，支持熱更新
-- 🎨 **現代化 UI** - Element Plus 組件庫
-- 📦 **狀態管理** - Pinia 集中式狀態管理
-- 🛡️ **安全防護** - 路由守衛、請求攔截、Token 自動刷新
-- 📱 **響應式設計** - 適配多種設備尺寸
+#### 1. 用户管理系统
+- ✅ 完整的用户 CRUD 操作
+- ✅ 用户搜索、排序、分页
+- ✅ 用户行为分析（RFM 模型）
+- ✅ 用户分层管理（高/中/低活跃度）
+- ✅ 风险评分系统
+- ✅ 用户增长趋势分析
 
-## 🚀 技術棧
+#### 2. 会话管理系统
+- ✅ 实时会话监控
+- ✅ 会话详情查看（IP 历史、活动时间线）
+- ✅ 批量会话撤销
+- ✅ 可疑会话标记
+- ✅ 在线用户统计
+- ✅ IP 地理位置显示
+- ✅ 会话活动时间线
 
-- **框架**: Vue 3.5.20
-- **構建工具**: Vite 7.1.4
-- **UI 組件**: Element Plus 2.11.1
-- **狀態管理**: Pinia 3.0.4
-- **路由**: Vue Router 4.5.1
-- **HTTP 客戶端**: Axios 1.11.0
-- **圖表**: Chart.js 4.5.0 + vue-chartjs 5.3.2
-- **地圖**: Leaflet 1.9.4
-- **日期處理**: Day.js 1.11.13 + date-fns 4.1.0
+#### 3. API 统计分析
+- ✅ 实时 API 调用监控
+- ✅ 趋势分析（小时级/日级）
+- ✅ API 排行榜
+- ✅ 详细调用记录
+- ✅ 流量统计（上传/下载）
+- ✅ IP 统计分析
+- ✅ 用户 API 多样性分析
 
-## 📦 安裝
+#### 4. 自定义数据管理
+- ✅ 灵活的数据 CRUD
+- ✅ 按用户查看数据
+- ✅ 批量操作支持
+- ✅ 数据统计展示
 
-### 環境要求
-- Node.js >= 16.0.0
-- npm >= 8.0.0
+#### 5. 数据可视化
+- ✅ ECharts 图表集成
+- ✅ 实时数据更新
+- ✅ 多种图表类型（折线图、柱状图、饼图）
+- ✅ 响应式图表设计
+- ✅ 自定义图表主题
 
-### 安裝依賴
+### 🚀 技术亮点
+
+- ⚡ **极速开发体验** - Vite HMR 热更新，毫秒级响应
+- 🎨 **现代化 UI** - Element Plus + 自定义组件库
+- 📦 **模块化架构** - API 层、组件层、状态层清晰分离
+- 🛡️ **安全可靠** - JWT 认证、Token 自动刷新、路由守卫
+- 📱 **响应式设计** - 完美适配桌面端和移动端
+- 🔧 **高度可配置** - 环境变量、主题定制、API 配置
+- 📊 **数据驱动** - Pinia 状态管理，数据流清晰
+- 🎯 **类型安全** - 完善的数据验证和错误处理
+
+---
+
+## 🛠️ 技术栈
+
+### 核心框架
+- **Vue 3.5.20** - 渐进式 JavaScript 框架
+- **Vite 7.1.4** - 下一代前端构建工具
+- **Vue Router 4.5.1** - 官方路由管理器
+- **Pinia 3.0.4** - 新一代状态管理库
+
+### UI 组件
+- **Element Plus 2.11.1** - 基于 Vue 3 的组件库
+- **ECharts 6.0.0** - 强大的数据可视化库
+- **Leaflet 1.9.4** - 开源地图库
+
+### 工具库
+- **Axios 1.11.0** - HTTP 客户端
+- **Day.js 1.11.13** - 轻量级日期处理
+- **date-fns 4.1.0** - 现代化日期工具库
+- **Lodash 4.17.21** - JavaScript 实用工具库
+
+### 开发工具
+- **Sass 1.97.3** - CSS 预处理器
+- **@vitejs/plugin-vue 6.0.1** - Vue 3 Vite 插件
+
+---
+
+## 🚀 快速开始
+
+### 环境要求
+
 ```bash
+Node.js >= 16.0.0
+npm >= 8.0.0
+```
+
+### 安装
+
+```bash
+# 克隆项目
+git clone https://github.com/jengzang/dialects-admin-frontend.git
+cd dialects-admin-frontend
+
+# 安装依赖
 npm install
 ```
 
-## 🛠️ 開發
+### 开发
 
-### 啟動開發服務器
 ```bash
+# 启动开发服务器（管理后台模式）
 npm run dev
+
+# 启动开发服务器（Web 模式）
+npm run dev:web
+
+# 访问地址
+# 管理后台: http://localhost:5173
+# Web 模式: http://localhost:5173
 ```
 
-訪問 http://localhost:5173 查看應用
+### 构建
 
-### 構建生產版本
 ```bash
+# 构建生产版本
 npm run build
-```
 
-### 預覽生產構建
-```bash
+# 预览生产构建
 npm run preview
 ```
 
-## 📁 項目結構
+### 环境配置
+
+创建 `.env.local` 文件：
+
+```env
+# API 基础地址
+VITE_API_BASE_URL=https://dialects.yzup.top
+VITE_ADMIN_BASE_URL=https://dialects.yzup.top/admin
+```
+
+---
+
+## 📁 项目结构
 
 ```
 frontend-admin/
 ├── src/
-│   ├── api/                    # API 服務層
-│   │   ├── index.js           # 統一導出
-│   │   ├── user.js            # 用戶相關 API
-│   │   ├── custom.js          # 自定義數據 API
-│   │   └── session.js         # 會話相關 API
-│   ├── components/            # 組件目錄
-│   │   ├── Login.vue          # 登錄頁面
-│   │   ├── UserManagement.vue # 用戶管理主頁
-│   │   ├── user/              # 用戶相關組件
-│   │   │   ├── CreateUser.vue
-│   │   │   ├── EditUser.vue
-│   │   │   ├── UserStats.vue
-│   │   │   ├── ApiDetail.vue
-│   │   │   └── IPQuery.vue
-│   │   ├── custom/            # 自定義數據組件
-│   │   │   ├── Custom.vue
-│   │   │   ├── CustomPerUser.vue
-│   │   │   ├── CreateCustom.vue
-│   │   │   ├── EditCustom.vue
-│   │   │   └── DeleteCustom.vue
-│   │   └── session/           # 會話管理組件
-│   │       ├── SessionManagement.vue
-│   │       └── UserSessions.vue
-│   ├── stores/                # Pinia 狀態管理
-│   │   ├── index.js           # Store 統一導出
-│   │   ├── user.js            # 用戶狀態
-│   │   └── custom.js          # 自定義數據狀態
-│   ├── router/                # 路由配置
-│   │   └── index.js           # 路由定義和守衛
-│   ├── utils/                 # 工具函數
-│   │   └── auth.js            # 認證相關工具
-│   ├── axios.js               # Axios 配置和攔截器
-│   ├── utils.js               # 通用工具函數
-│   ├── App.vue                # 根組件
-│   ├── main.js                # 應用入口
-│   └── style.css              # 全局樣式
-├── public/                    # 靜態資源
-├── index.html                 # HTML 模板
-├── vite.config.js             # Vite 配置
-├── package.json               # 項目依賴
-├── OPTIMIZATION_GUIDE.md      # 優化指南
-└── README.md                  # 項目文檔
+│   ├── api/                          # API 服务层
+│   │   ├── index.js                  # 统一导出
+│   │   ├── user.js                   # 用户 API
+│   │   ├── custom.js                 # 自定义数据 API
+│   │   ├── userSession.js            # 会话 API
+│   │   ├── analytics.js              # 分析 API
+│   │   ├── apiCallStats.js           # API 统计 API
+│   │   ├── stats.js                  # 统计 API
+│   │   └── ip.js                     # IP 查询 API
+│   │
+│   ├── components/                   # 组件目录
+│   │   ├── common/                   # 通用组件
+│   │   │   ├── BaseChart.vue         # ECharts 图表组件
+│   │   │   ├── BaseTable.vue         # 表格组件
+│   │   │   ├── BaseModal.vue         # 模态框组件
+│   │   │   ├── BasePagination.vue    # 分页组件
+│   │   │   ├── BaseSearchInput.vue   # 搜索输入框
+│   │   │   ├── StatsCard.vue         # 统计卡片
+│   │   │   ├── IPLocationDisplay.vue # IP 地理位置显示
+│   │   │   └── ...                   # 其他通用组件
+│   │   │
+│   │   ├── user/                     # 用户相关组件
+│   │   │   ├── UserBehaviorDashboard.vue  # 用户行为分析
+│   │   │   ├── UserProfileDetail.vue      # 用户详情
+│   │   │   ├── UserStats.vue              # 用户统计
+│   │   │   └── ...
+│   │   │
+│   │   ├── session/                  # 会话管理组件
+│   │   │   ├── GlobalSessionManagement.vue  # 全局会话管理
+│   │   │   ├── UserSessionManagement.vue    # 用户会话管理
+│   │   │   ├── SessionDetailModal.vue       # 会话详情
+│   │   │   └── ...
+│   │   │
+│   │   ├── stats/                    # 统计分析组件
+│   │   │   ├── ApiCallStatsPage.vue  # API 统计页面
+│   │   │   ├── RealTimeMonitor.vue   # 实时监控
+│   │   │   ├── TrendAnalysis.vue     # 趋势分析
+│   │   │   ├── ApiRanking.vue        # API 排行榜
+│   │   │   └── DetailedAnalysis.vue  # 详细分析
+│   │   │
+│   │   ├── custom/                   # 自定义数据组件
+│   │   │   └── CustomPerUser.vue     # 用户数据管理
+│   │   │
+│   │   ├── Login.vue                 # 登录页面
+│   │   └── UserManagement.vue        # 用户管理主页
+│   │
+│   ├── composables/                  # 组合式函数
+│   │   ├── index.js                  # 统一导出
+│   │   ├── useTable.js               # 表格状态管理
+│   │   ├── useTimeFormat.js          # 时间格式化
+│   │   ├── useApiStats.js            # API 统计计算
+│   │   ├── useApiCallStats.js        # API 调用统计
+│   │   ├── useChart.js               # 图表配置
+│   │   └── useUserBehavior.js        # 用户行为分析
+│   │
+│   ├── stores/                       # Pinia 状态管理
+│   │   ├── index.js                  # Store 统一导出
+│   │   ├── user.js                   # 用户状态
+│   │   └── custom.js                 # 自定义数据状态
+│   │
+│   ├── router/                       # 路由配置
+│   │   └── index.js                  # 路由定义和守卫
+│   │
+│   ├── styles/                       # 样式文件
+│   │   ├── abstracts/                # 抽象层（变量、混入）
+│   │   ├── base/                     # 基础样式
+│   │   ├── components/               # 组件样式
+│   │   ├── utilities/                # 工具类
+│   │   ├── variables.css             # CSS 变量
+│   │   └── common.css                # 通用样式
+│   │
+│   ├── utils/                        # 工具函数
+│   │   └── auth.js                   # 认证工具
+│   │
+│   ├── axios.js                      # Axios 配置
+│   ├── App.vue                       # 根组件
+│   └── main.js                       # 应用入口
+│
+├── public/                           # 静态资源
+├── docs/                             # 项目文档
+│   ├── guides/                       # 使用指南
+│   ├── api/                          # API 文档
+│   ├── archive/                      # 归档文档
+│   └── OPTIMIZATION_GUIDE.md         # 优化指南
+│
+├── .env.development                  # 开发环境配置
+├── .env.production                   # 生产环境配置
+├── .env.web                          # Web 模式配置
+├── index.html                        # HTML 模板
+├── vite.config.js                    # Vite 配置
+├── package.json                      # 项目依赖
+├── CLAUDE.md                         # Claude Code 指南
+└── README.md                         # 项目文档
 ```
 
-## 🔧 配置
-
-### API 基礎地址
-在 `src/axios.js` 中配置後端 API 地址：
-
-```javascript
-window.WEB_BASE = "https://dialects.yzup.top"
-window.ADMIN_BASE = window.WEB_BASE + "/admin"
-```
-
-### 環境變量
-可以通過環境變量配置不同環境的 API 地址。
-
-## 🎯 主要功能模塊
-
-### 1. 用戶管理
-- **用戶列表**: 查看所有用戶，支持搜索和排序
-- **創建用戶**: 添加新用戶賬號
-- **編輯用戶**: 修改用戶信息
-- **用戶統計**: 查看用戶的 API 使用統計
-- **數據管理**: 查看和管理用戶的自定義數據
-
-### 2. API 使用監控
-- **API 調用詳情**: 查看最近的 API 調用記錄
-- **使用圖表**: 可視化展示 API 使用趨勢
-- **統計分析**: 按用戶、時間等維度分析 API 使用情況
-
-### 3. 自定義數據管理
-- **數據列表**: 查看所有自定義數據
-- **按用戶查看**: 查看特定用戶的數據
-- **CRUD 操作**: 創建、編輯、刪除數據
-- **批量操作**: 支持批量選擇和操作
-
-### 4. 會話管理
-- **會話列表**: 查看所有活躍會話
-- **用戶會話**: 查看特定用戶的會話歷史
-- **會話監控**: 實時監控會話狀態
-
-### 5. IP 地理位置
-- **IP 查詢**: 查詢 IP 地址的地理位置
-- **地圖展示**: 使用 Leaflet 在地圖上標記位置
-
-## 🔐 認證系統
-
-### Token 管理
-- 使用 JWT Token 進行身份驗證
-- 自動檢測 Token 過期並刷新
-- Token 存儲在 localStorage
-- 支持 Refresh Token 機制
-
-### 路由守衛
-- 未登錄用戶自動重定向到登錄頁
-- 登錄後跳轉到原始目標頁面
-- 已登錄用戶訪問登錄頁自動重定向到首頁
-
-### 請求攔截
-- 自動為請求添加 Authorization 頭
-- 401 錯誤自動嘗試刷新 Token
-- 統一的錯誤處理和提示
-
-## 📊 狀態管理
-
-使用 Pinia 進行狀態管理，主要包括：
-
-### User Store
-- 用戶信息管理
-- 用戶列表緩存
-- 登錄/登出操作
-- 用戶 CRUD 操作
-
-### Custom Store
-- 自定義數據管理
-- 選中數據狀態
-- 數據 CRUD 操作
-- 加載狀態管理
-
-詳細使用方法請參考 [OPTIMIZATION_GUIDE.md](./OPTIMIZATION_GUIDE.md)
-
-## 🚦 路由結構
-
-| 路徑 | 組件 | 說明 | 需要認證 |
-|------|------|------|----------|
-| `/` | UserManagement | 用戶管理首頁 | ✅ |
-| `/login` | Login | 登錄頁面 | ❌ |
-| `/users/create` | CreateUser | 創建用戶 | ✅ |
-| `/users/edit` | EditUser | 編輯用戶 | ✅ |
-| `/users/stats` | UserStats | 用戶統計 | ✅ |
-| `/apiUsage` | ApiDetail | API 使用詳情 | ✅ |
-| `/ip/:ip` | IPQuery | IP 地理位置查詢 | ✅ |
-| `/custom` | Custom | 所有自定義數據 | ✅ |
-| `/per-user` | CustomPerUser | 用戶數據 | ✅ |
-| `/custom/create` | CreateCustom | 創建數據 | ✅ |
-| `/custom/edit` | EditCustom | 編輯數據 | ✅ |
-| `/custom/delete` | DeleteCustom | 刪除數據 | ✅ |
-| `/sessions` | SessionManagement | 會話管理 | ✅ |
-| `/sessions/user` | UserSessions | 用戶會話 | ✅ |
-
-## 🔌 API 接口
-
-### 用戶相關
-- `GET /admin/users` - 獲取用戶列表
-- `POST /admin/users` - 創建用戶
-- `PUT /admin/users` - 更新用戶
-- `DELETE /admin/users/:username` - 刪除用戶
-- `GET /admin/users/:username/stats` - 獲取用戶統計
-
-### 自定義數據
-- `GET /admin/custom/all` - 獲取所有數據
-- `GET /admin/custom/:username` - 獲取用戶數據
-- `POST /admin/custom` - 創建數據
-- `PUT /admin/custom` - 更新數據
-- `DELETE /admin/custom` - 刪除數據
-
-### 會話管理
-- `GET /admin/sessions` - 獲取會話列表
-- `GET /admin/sessions/:username` - 獲取用戶會話
-
-### 認證
-- `POST /auth/login` - 用戶登錄
-- `POST /auth/refresh` - 刷新 Token
-- `GET /auth/me` - 獲取當前用戶信息
-
-## 💡 開發指南
-
-### 添加新頁面
-
-1. 在 `src/components/` 創建組件
-2. 在 `src/router/index.js` 添加路由
-3. 如需認證，設置 `meta: { requiresAuth: true }`
-
-```javascript
-{
-  path: '/new-page',
-  name: 'NewPage',
-  component: NewPage,
-  meta: { requiresAuth: true }
-}
-```
-
-### 調用 API
-
-推薦使用 API 服務層：
-
-```javascript
-import { userAPI } from '@/api'
-
-// 獲取用戶列表
-const response = await userAPI.getAll()
-const users = response.data
-```
-
-或使用 Pinia Store（推薦）：
-
-```javascript
-import { useUserStore } from '@/stores'
-
-const userStore = useUserStore()
-await userStore.fetchUserList()
-const users = userStore.userList
-```
-
-### 組件間傳遞數據
-
-使用 Pinia Store 而不是 localStorage：
-
-```javascript
-// 發送組件
-this.customStore.setSelectedUsers(this.selectedUsers)
-this.$router.push({ name: 'TargetPage' })
-
-// 接收組件
-const selectedUsers = this.customStore.selectedUsers
-```
-
-### 錯誤處理
-
-Axios 攔截器已處理常見錯誤，通常不需要額外處理：
-
-```javascript
-try {
-  await userAPI.create(userData)
-  ElMessage.success('創建成功')
-} catch (error) {
-  // 錯誤已被攔截器處理並顯示提示
-  console.error(error)
-}
-```
-
-## 🎨 UI 組件
-
-使用 Element Plus 組件庫，常用組件：
-
-- `el-button` - 按鈕
-- `el-input` - 輸入框
-- `el-table` - 表格
-- `el-form` - 表單
-- `el-dialog` - 對話框
-- `el-message` - 消息提示
-- `el-loading` - 加載狀態
-
-詳細文檔：https://element-plus.org/
-
-## 📈 性能優化
-
-- ✅ 使用 Vite 進行快速構建
-- ✅ 路由懶加載（可選）
-- ✅ 組件緩存（keep-alive）
-- ✅ API 請求去重
-- ✅ Token 自動刷新機制
-- ✅ 用戶信息緩存
-
-## 🔒 安全特性
-
-- JWT Token 認證
-- 請求自動添加 Authorization 頭
-- Token 過期自動刷新
-- 路由守衛保護頁面
-- XSS 防護（Vue 自動轉義）
-- CSRF 防護（Token 機制）
-
-## 📝 代碼規範
-
-- 使用 Vue 3 Composition API 或 Options API
-- 組件命名使用 PascalCase
-- 文件命名使用 PascalCase
-- 變量命名使用 camelCase
-- 常量命名使用 UPPER_CASE
-- 適當添加註釋說明複雜邏輯
-
-## 🐛 常見問題
-
-### 1. Token 過期怎麼辦？
-系統會自動檢測並刷新 Token，無需手動處理。
-
-### 2. 如何修改 API 地址？
-在 `src/axios.js` 中修改 `window.WEB_BASE` 的值。
-
-### 3. 如何添加新的 API 接口？
-在 `src/api/` 目錄下對應的文件中添加新方法。
-
-### 4. 頁面刷新後狀態丟失？
-使用 Pinia 的持久化插件或將關鍵數據存儲在 localStorage。
-
-## 📚 相關文檔
-
-- [Vue 3 官方文檔](https://vuejs.org/)
-- [Vite 官方文檔](https://vitejs.dev/)
-- [Element Plus 文檔](https://element-plus.org/)
-- [Pinia 文檔](https://pinia.vuejs.org/)
-- [Vue Router 文檔](https://router.vuejs.org/)
-- [優化指南](./OPTIMIZATION_GUIDE.md)
-
-## 📄 License
-
-MIT
-
-## 👨‍💻 作者
-
-joengzaang
-
-## 🤝 貢獻
-
-歡迎提交 Issue 和 Pull Request！
-
----
-
-**注意**: 本項目為管理後台系統，請確保在安全的環境中使用，並妥善保管認證信息。
