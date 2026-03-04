@@ -270,3 +270,72 @@ frontend-admin/
 └── README.md                         # 项目文档
 ```
 
+
+---
+
+## 📚 文档
+
+- **[开发指南](./docs/GUIDE.md)** - 开发最佳实践和常用模式
+- **[Claude Code 指南](./CLAUDE.md)** - Claude Code 开发规范
+
+---
+
+## 📝 更新日志
+
+### v1.0.0 (2026-03-04)
+
+#### 新增功能
+- ✨ 用户管理系统（CRUD、搜索、排序）
+- ✨ 用户行为分析（RFM 模型、用户分层、风险评分）
+- ✨ 会话管理（实时监控、详情查看、批量操作）
+- ✨ API 统计分析（实时监控、趋势分析、排行榜）
+- ✨ IP 地理位置显示
+- ✨ 自定义数据管理
+- ✨ ECharts 图表集成
+
+#### 技术改进
+- 🔧 统一 API 层架构
+- 🔧 通用组件库（BaseChart、BaseTable、BaseModal 等）
+- 🔧 Composables 逻辑复用
+- 🔧 Pinia 状态管理
+- 🔧 CSS 变量系统
+- 🔧 Token 自动刷新
+
+#### Bug 修复
+- 🐛 修复图表容器尺寸问题
+- 🐛 修复 IP 地理位置数据丢失
+- 🐛 修复时区转换问题
+
+---
+
+## 🤝 贡献指南
+
+欢迎贡献！请遵循以下步骤：
+
+1. Fork 本仓库
+2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启 Pull Request
+
+---
+
+## 📄 License
+
+MIT License - Copyright (c) 2026 joengzaang
+
+---
+
+## 👨‍💻 作者
+
+**joengzaang** - [@jengzang](https://github.com/jengzang)
+
+---
+
+<div align="center">
+
+**[⬆ 回到顶部](#方言管理后台系统-dialects-admin-dashboard)**
+
+Made with ❤️ by joengzaang
+
+</div>
