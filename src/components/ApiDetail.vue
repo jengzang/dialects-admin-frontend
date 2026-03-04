@@ -350,6 +350,7 @@ const updateStatsFromBackend = (statistics) => {
   if (statistics.ip_stats) {
     ipStats.value = statistics.ip_stats.map(stat => ({
       ip: stat.ip,
+      location: stat.location,  // 添加位置字段
       totalDuration: stat.total_duration || 0,
       occurrenceCount: stat.call_count || 0,
       totalUploadTraffic: ((stat.total_upload || 0) / 1024).toFixed(2),
