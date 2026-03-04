@@ -168,6 +168,16 @@
           {{ truncate(value, 20) }}
         </template>
 
+        <!-- 當前 IP 列 -->
+        <template #cell-current_ip="{ row }">
+          <IPLocationDisplay
+            v-if="row.current_ip"
+            :ip="row.current_ip"
+            :location="row.current_ip_location"
+          />
+          <span v-else>-</span>
+        </template>
+
         <!-- 創建時間列 -->
         <template #cell-created_at="{ value }">
           {{ formatDateTime(value) }}
@@ -277,7 +287,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useMessage, useDialog } from '@/composables';
-import { BaseRow, BaseCol, BaseCard, BaseForm, BaseFormItem, BaseInput, BaseSelect, BaseTable, BaseTag, BasePagination, BaseModal } from '@/components/common';
+import { BaseRow, BaseCol, BaseCard, BaseForm, BaseFormItem, BaseInput, BaseSelect, BaseTable, BaseTag, BasePagination, BaseModal, IPLocationDisplay } from '@/components/common';
 import SessionDetailModal from './SessionDetailModal.vue';
 import userSessionAPI from '@/api/userSession';
 import queryGreenIcon from '@/assets/query_green.ico';

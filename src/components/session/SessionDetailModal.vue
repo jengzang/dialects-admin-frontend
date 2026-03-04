@@ -82,11 +82,25 @@
             <div class="info-grid">
               <div class="info-item">
                 <span class="info-label">首次 IP</span>
-                <span class="info-value monospace">{{ sessionDetail.first_ip || 'N/A' }}</span>
+                <span class="info-value">
+                  <IPLocationDisplay
+                    v-if="sessionDetail.first_ip"
+                    :ip="sessionDetail.first_ip"
+                    :location="sessionDetail.first_ip_location"
+                  />
+                  <span v-else>N/A</span>
+                </span>
               </div>
               <div class="info-item">
                 <span class="info-label">當前 IP</span>
-                <span class="info-value monospace">{{ sessionDetail.current_ip || 'N/A' }}</span>
+                <span class="info-value">
+                  <IPLocationDisplay
+                    v-if="sessionDetail.current_ip"
+                    :ip="sessionDetail.current_ip"
+                    :location="sessionDetail.current_ip_location"
+                  />
+                  <span v-else>N/A</span>
+                </span>
               </div>
               <div class="info-item">
                 <span class="info-label">IP 變更次數</span>
@@ -118,7 +132,12 @@
                   <div class="timeline-dot"></div>
                   <div class="timeline-content">
                     <div class="timeline-time">{{ formatDateTime(item.timestamp) }}</div>
-                    <div class="timeline-text monospace">{{ item.ip }}</div>
+                    <div class="timeline-text">
+                      <IPLocationDisplay
+                        :ip="item.ip"
+                        :location="item.location"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -266,7 +285,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue';
-import { BaseModal } from '@/components/common';
+import { BaseModal, IPLocationDisplay } from '@/components/common';
 import userSessionAPI from '@/api/userSession';
 import { ElMessage, ElMessageBox } from 'element-plus';
 

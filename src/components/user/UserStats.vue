@@ -7,7 +7,15 @@
     <div class="stats-card">
       <div><strong>登錄次數:</strong> {{ stats.login_count }}</div>
       <div><strong>登錄失敗次數:</strong> {{ stats.failed_attempts }}</div>
-      <div><strong>註冊IP:</strong> {{ stats.register_ip }}</div>
+      <div>
+        <strong>註冊IP:</strong>
+        <IPLocationDisplay
+          v-if="stats.register_ip"
+          :ip="stats.register_ip"
+          :location="stats.register_ip_location"
+        />
+        <span v-else>-</span>
+      </div>
       <div><strong>總在線時長:</strong> {{ formatOnlineTime(stats.total_online_seconds) }}</div>
       <div><strong>最近一次登錄:</strong> {{ formatTime(stats.last_login) }}</div>
     </div>
@@ -26,7 +34,12 @@
         </thead>
         <tbody>
         <tr v-for="(count, ip) in ipCounts" :key="ip">
-          <td>{{ ip }}</td>
+          <td>
+            <IPLocationDisplay
+              :ip="ip"
+              :location="ipLocations[ip]"
+            />
+          </td>
           <td>{{ count }}</td>
         </tr>
         </tbody>
@@ -103,6 +116,7 @@ import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { statsAPI, analyticsAPI } from '../../api/index';
 import { formatTime } from "../../utils.js";
+import { IPLocationDisplay } from '@/components/common';
 
 const router = useRouter();
 const route = useRoute();
@@ -112,6 +126,7 @@ const username = ref('');
 const filteredApiUsage = ref([]);
 const loginHistory = ref([]);
 const ipCounts = ref({});
+const ipLocations = ref({});
 const apiLogs = ref({});
 const userName = ref('');
 const tooltipStyle = ref({});
@@ -124,14 +139,20 @@ const formatOnlineTime = (seconds) => {
 
 const processIpCounts = () => {
   const counts = {};
+  const locations = {};
   loginHistory.value.forEach(log => {
     if (counts[log.ip]) {
       counts[log.ip] += 1;
     } else {
       counts[log.ip] = 1;
     }
+    // 收集IP位置信息
+    if (log.ip_location && !locations[log.ip]) {
+      locations[log.ip] = log.ip_location;
+    }
   });
   ipCounts.value = counts;
+  ipLocations.value = locations;
 };
 
 const getDeviceInfo = (userAgent) => {

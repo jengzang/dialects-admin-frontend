@@ -65,7 +65,12 @@
           </thead>
           <tbody>
           <tr v-for="ipStat in filteredIPStats" :key="ipStat.ip">
-            <td class="clickable-cell" @click="handleIPClick(ipStat.ip)">{{ ipStat.ip }}</td>
+            <td class="clickable-cell" @click="handleIPClick(ipStat.ip)">
+              <IPLocationDisplay
+                :ip="ipStat.ip"
+                :location="ipStat.location"
+              />
+            </td>
             <td>{{ ipStat.totalDuration.toFixed(3) }}s</td> <!-- 总使用时长 -->
             <td>{{ ipStat.occurrenceCount }}</td> <!-- 出现次数 -->
             <td>{{ ipStat.totalUploadTraffic }}KB</td>  <!-- 上行流量 -->
@@ -155,7 +160,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { analyticsAPI } from '../api';
 import { formatTime } from "../utils.js";
-import { BasePagination } from '@/components/common';
+import { BasePagination, IPLocationDisplay } from '@/components/common';
 
 const router = useRouter();
 

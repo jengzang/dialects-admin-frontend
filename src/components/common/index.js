@@ -23,4 +23,5 @@ export { default as BaseFormItem } from './BaseFormItem.vue';
 export { default as BasePageHeader } from './BasePageHeader.vue';
 export { default as BaseTooltip } from './BaseTooltip.vue';
 export { default as BaseModal } from './BaseModal.vue';
+export { default as IPLocationDisplay } from './IPLocationDisplay.vue';
 

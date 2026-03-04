@@ -66,7 +66,14 @@
             </div>
             <div class="info-item">
               <span class="label">註冊 IP：</span>
-              <span class="value">{{ userStats.register_ip || 'N/A' }}</span>
+              <span class="value">
+                <IPLocationDisplay
+                  v-if="userStats.register_ip"
+                  :ip="userStats.register_ip"
+                  :location="userStats.register_ip_location"
+                />
+                <span v-else>N/A</span>
+              </span>
             </div>
             <div class="info-item">
               <span class="label">最後登錄：</span>
@@ -353,7 +360,7 @@
 </template>
 
 <script>
-import { BaseChart, StatsCard, BaseTable, BaseTag, BaseCard } from '@/components/common';
+import { BaseChart, StatsCard, BaseTable, BaseTag, BaseCard, IPLocationDisplay } from '@/components/common';
 import { userAPI, statsAPI, sessionAPI, analyticsAPI } from '@/api/index';
 import { useChart, useUserBehavior, useTimeFormat } from '@/composables';
 import { ElMessage } from 'element-plus';
@@ -367,6 +374,7 @@ export default {
     BaseTable,
     BaseTag,
     BaseCard,
+    IPLocationDisplay,
     Loading
   },
   setup() {

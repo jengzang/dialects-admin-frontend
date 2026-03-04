@@ -107,6 +107,16 @@
           </BaseTooltip>
         </template>
 
+        <!-- 當前 IP 列 -->
+        <template #cell-current_ip="{ row }">
+          <IPLocationDisplay
+            v-if="row.current_ip"
+            :ip="row.current_ip"
+            :location="row.current_ip_location"
+          />
+          <span v-else>-</span>
+        </template>
+
         <!-- 創建時間列 -->
         <template #cell-created_at="{ value }">
           {{ formatDateTime(value) }}
@@ -162,7 +172,15 @@
         :columns="ipColumns"
         :data="recentIPs"
         :sortable="false"
-      />
+      >
+        <!-- IP 地址列 -->
+        <template #cell-ip="{ row }">
+          <IPLocationDisplay
+            :ip="row.ip"
+            :location="row.ip_location"
+          />
+        </template>
+      </BaseTable>
     </BaseCard>
 
     <!-- Session Detail Modal -->
@@ -186,7 +204,8 @@ import {
   BaseCheckbox,
   BaseTable,
   BaseTag,
-  BaseTooltip
+  BaseTooltip,
+  IPLocationDisplay
 } from '@/components/common';
 import SessionDetailModal from './SessionDetailModal.vue';
 import userSessionAPI from '@/api/userSession';
