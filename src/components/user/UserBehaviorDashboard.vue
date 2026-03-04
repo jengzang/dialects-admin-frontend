@@ -5,10 +5,17 @@
       <h2>用戶行為分析</h2>
       <div class="header-actions">
         <el-button
+          @click="goHome"
+          size="small"
+        >
+          返回首頁
+        </el-button>
+        <el-button
           :icon="RefreshIcon"
           @click="fetchData"
           :loading="loading"
           size="small"
+          type="primary"
         >
           刷新
         </el-button>
@@ -126,6 +133,18 @@
             <div class="table-header">
               <h3>用戶列表</h3>
               <div class="table-filters">
+                <!-- 加载风险评分按钮 -->
+                <button
+                  v-if="!riskScoresLoaded"
+                  @click="loadRiskScores"
+                  :disabled="loadingRiskScores"
+                  class="btn btn-primary btn-sm"
+                  style="margin-right: 10px;"
+                >
+                  <span v-if="loadingRiskScores">載入中...</span>
+                  <span v-else>📊 載入風險評分</span>
+                </button>
+
                 <el-select v-model="filterSegment" placeholder="篩選分群" size="small" style="width: 150px;">
                   <el-option label="全部" value="all" />
                   <el-option label="高活躍" value="high" />
@@ -160,14 +179,16 @@
                 </BaseTag>
               </template>
               <template #cell-riskScore="{ row }">
-                <span :style="{ color: row.riskLevel.color, fontWeight: 'bold' }">
+                <span v-if="riskScoresLoaded" :style="{ color: row.riskLevel.color, fontWeight: 'bold' }">
                   {{ row.riskScore }}
                 </span>
+                <span v-else style="color: #999; font-size: 12px;">-</span>
               </template>
               <template #cell-riskLevel="{ row }">
-                <BaseTag :type="getRiskTagType(row.riskLevel.level)" size="small">
+                <BaseTag v-if="riskScoresLoaded" :type="getRiskTagType(row.riskLevel.level)" size="small">
                   {{ row.riskLevel.label }}
                 </BaseTag>
+                <BaseTag v-else type="info" size="small">未計算</BaseTag>
               </template>
               <template #actions="{ row }">
                 <button class="btn btn-primary btn-sm" @click="viewUserProfile(row)">
@@ -518,6 +539,8 @@ export default {
       weekDays: ['週日', '週一', '週二', '週三', '週四', '週五', '週六'],
       filterSegment: 'all',
       filterRisk: 'all',
+      riskScoresLoaded: false,
+      loadingRiskScores: false,
       userSegments: null,
       rfmAnalysis: null,
       apiDiversity: null,
@@ -535,12 +558,19 @@ export default {
   },
   computed: {
     activityTrendData() {
-      const trend = this.calculateActivityTrend(this.loginLogs, 30);
+      // 直接使用后端提供的 DAU 数据
+      if (!this.loginLogs || this.loginLogs.length === 0) {
+        return this.createLineChartData([], [{ label: '日活躍用戶', data: [] }]);
+      }
+
+      // BaseChart (ECharts) 期望的格式：
+      // labels: 日期字符串数组
+      // data: 简单数值数组（不是 {x, y} 对象）
       return this.createLineChartData(
-        trend.map(d => d.date),
+        this.loginLogs.map(d => d.date),
         [{
           label: '日活躍用戶',
-          data: trend.map(d => ({ x: d.date, y: d.count }))
+          data: this.loginLogs.map(d => d.count)
         }]
       );
     },
@@ -580,6 +610,17 @@ export default {
         else if (segments.medium.find(u => u.id === user.id)) segment = 'medium';
         else if (segments.low.find(u => u.id === user.id)) segment = 'low';
 
+        // 如果风险评分未加载，返回默认值
+        if (!this.riskScoresLoaded) {
+          return {
+            ...user,
+            segment,
+            riskScore: 0,
+            riskLevel: { level: 'low', label: '未計算', color: '#999' }
+          };
+        }
+
+        // 已加载风险评分，正常计算
         const sessions = this.sessionsMap[user.id] || [];
         const riskScore = this.calculateRiskScore(user, sessions);
         const riskLevel = this.getRiskLevel(riskScore);
@@ -640,7 +681,7 @@ export default {
         growth.map(g => g.month),
         [{
           label: '新增用戶',
-          data: growth.map(g => ({ x: g.month, y: g.new_users }))
+          data: growth.map(g => g.new_users)
         }]
       );
     },
@@ -652,7 +693,7 @@ export default {
         growth.map(g => g.month),
         [{
           label: '累計用戶',
-          data: growth.map(g => ({ x: g.month, y: g.cumulative_users }))
+          data: growth.map(g => g.cumulative_users)
         }]
       );
     },
@@ -673,8 +714,13 @@ export default {
     this.fetchData();
   },
   methods: {
+    goHome() {
+      this.$router.push('/');
+    },
     async fetchData() {
       this.loading = true;
+      this.riskScoresLoaded = false;
+      this.sessionsMap = {};
       try {
         // 1. 获取用户完整信息
         const usersRes = await userAPI.getAllUsersComplete();
@@ -764,9 +810,6 @@ export default {
         const totalOnlineSeconds = this.users.reduce((sum, u) => sum + (u.total_online_seconds || 0), 0);
         this.avgOnlineTime = this.users.length > 0 ? totalOnlineSeconds / this.users.length : 0;
 
-        // 加载会话数据（用于风险评分）
-        await this.loadSessionsData();
-
         ElMessage.success(`成功載入 ${this.users.length} 個用戶數據`);
       } catch (error) {
         console.error('Failed to fetch user behavior data:', error);
@@ -777,20 +820,63 @@ export default {
     },
     async loadSessionsData() {
       try {
-        // 为每个用户加载会话数据
-        const sessionPromises = this.users.slice(0, 50).map(user =>
-          sessionAPI.getUserHistory(user.id, false)
-            .then(res => ({ userId: user.id, sessions: res.sessions || [] }))
-            .catch(() => ({ userId: user.id, sessions: [] }))
-        );
+        const BATCH_SIZE = 5; // 每批处理 5 个用户
+        const DELAY_MS = 200; // 批次间延迟 200ms
 
-        const results = await Promise.all(sessionPromises);
-        this.sessionsMap = results.reduce((map, { userId, sessions }) => {
-          map[userId] = sessions;
-          return map;
-        }, {});
+        this.sessionsMap = {};
+        const totalUsers = this.users.length;
+
+        // 分批处理
+        for (let i = 0; i < totalUsers; i += BATCH_SIZE) {
+          const batch = this.users.slice(i, i + BATCH_SIZE);
+
+          // 并发处理当前批次
+          const batchPromises = batch.map(user =>
+            sessionAPI.getUserHistory(user.id, false)
+              .then(res => ({ userId: user.id, sessions: res.sessions || [] }))
+              .catch(() => ({ userId: user.id, sessions: [] }))
+          );
+
+          const batchResults = await Promise.all(batchPromises);
+
+          // 合并结果
+          batchResults.forEach(({ userId, sessions }) => {
+            this.sessionsMap[userId] = sessions;
+          });
+
+          // 批次间延迟（最后一批不需要延迟）
+          if (i + BATCH_SIZE < totalUsers) {
+            await new Promise(resolve => setTimeout(resolve, DELAY_MS));
+          }
+        }
+
+        console.log(`Loaded session data for ${totalUsers} users in batches`);
       } catch (error) {
         console.error('Failed to load sessions data:', error);
+        throw error;
+      }
+    },
+    async loadRiskScores() {
+      if (this.riskScoresLoaded) {
+        ElMessage.info('風險評分已載入');
+        return;
+      }
+
+      if (this.users.length === 0) {
+        ElMessage.warning('沒有用戶數據');
+        return;
+      }
+
+      this.loadingRiskScores = true;
+      try {
+        await this.loadSessionsData();
+        this.riskScoresLoaded = true;
+        ElMessage.success(`成功載入 ${this.users.length} 個用戶的風險評分`);
+      } catch (error) {
+        console.error('Failed to load risk scores:', error);
+        ElMessage.error('載入風險評分失敗');
+      } finally {
+        this.loadingRiskScores = false;
       }
     },
     getHeatmapColor(count) {
@@ -863,16 +949,75 @@ export default {
       try {
         if (tabName === 'segments' && !this.userSegments) {
           this.loading = true;
-          this.userSegments = await analyticsAPI.getUserSegments(false);
+          const response = await analyticsAPI.getUserSegments(false);
+          // Transform backend response to match frontend expectations
+          this.userSegments = {
+            total_users: response.total_users,
+            segments: response.segments.map(seg => ({
+              level: seg.level,
+              user_count: seg.count,
+              avg_call_count: seg.avg_calls,
+              avg_online_seconds: seg.avg_duration,
+              percentage: seg.percentage,
+              count: seg.count // 保留原始字段供图表使用
+            }))
+          };
         } else if (tabName === 'rfm' && !this.rfmAnalysis) {
           this.loading = true;
-          this.rfmAnalysis = await analyticsAPI.getRFMAnalysis(false);
+          const response = await analyticsAPI.getRFMAnalysis(false);
+
+          // 映射后端返回的 segment 值到前端期望的格式
+          const segmentMapping = {
+            'VIP': 'vip',
+            'Potential': 'potential',
+            'New': 'new',
+            'Dormant High Value': 'sleeping_high_value',
+            'Low Value': 'low_value',
+            'Others': 'other'
+          };
+
+          // Transform backend response to match frontend expectations
+          this.rfmAnalysis = {
+            categories: response.segments.map(seg => ({
+              category: segmentMapping[seg.segment] || seg.segment.toLowerCase().replace(/ /g, '_'),
+              user_count: seg.count,
+              count: seg.count, // 保留原始字段供图表使用
+              avg_r_score: seg.avg_recency_days,
+              avg_f_score: seg.avg_frequency,
+              avg_m_score: seg.avg_monetary
+            }))
+          };
         } else if (tabName === 'diversity' && !this.apiDiversity) {
           this.loading = true;
-          this.apiDiversity = await analyticsAPI.getApiDiversity();
+          const response = await analyticsAPI.getApiDiversity();
+          // Transform backend response to match frontend expectations
+          this.apiDiversity = {
+            explorer_count: response.summary.explorer_count,
+            focused_count: response.summary.focused_count,
+            avg_diversity: response.summary.avg_diversity,
+            distribution: {
+              '探索型': response.summary.explorer_count,
+              '專注型': response.summary.focused_count
+            },
+            users: response.users.map(user => ({
+              username: user.username,
+              user_type: user.user_type === '探索型' ? 'explorer' : 'focused',
+              diversity_index: user.diversity_score,
+              total_calls: user.total_calls,
+              api_count: user.api_count
+            }))
+          };
         } else if (tabName === 'growth' && !this.userGrowth) {
           this.loading = true;
-          this.userGrowth = await analyticsAPI.getUserGrowth(12);
+          const response = await analyticsAPI.getUserGrowth(12);
+          // Transform backend response to match frontend expectations
+          this.userGrowth = {
+            total_users: response.summary.total_users,
+            avg_monthly_growth: response.summary.avg_monthly_growth,
+            months_analyzed: response.summary.months_analyzed,
+            monthly_growth: response.monthly_growth,
+            monthly_data: response.monthly_growth // Alias for template compatibility
+          };
         }
       } catch (error) {
         console.error(`Failed to load ${tabName} data:`, error);
@@ -885,6 +1030,7 @@ export default {
       const labels = {
         super_active: '超級活躍',
         active: '活躍',
+        regular: '普通',
         normal: '普通',
         low_active: '低活躍',
         dormant: '休眠'
@@ -895,6 +1041,7 @@ export default {
       const colors = {
         super_active: '#52c41a',
         active: '#73d13d',
+        regular: '#faad14',
         normal: '#faad14',
         low_active: '#ff7a45',
         dormant: '#f5222d'
@@ -905,6 +1052,7 @@ export default {
       const types = {
         super_active: 'success',
         active: 'success',
+        regular: 'warning',
         normal: 'warning',
         low_active: 'info',
         dormant: 'danger'

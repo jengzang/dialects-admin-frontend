@@ -9,3 +9,4 @@ export { analyticsAPI } from './analytics';
 export { ipAPI } from './ip';
 export { statsAPI } from './stats';
 export { leaderboardAPI } from './leaderboard';
+export { apiCallStatsAPI } from './apiCallStats';

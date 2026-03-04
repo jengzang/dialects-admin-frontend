@@ -6,6 +6,7 @@
       <div class="button-container0">
         <button @click="goToCreateUser">創建新用戶</button>
         <button @click="apidetail">近期api調用</button>
+        <button @click="goToApiCallStats">API統計</button>
 <!--        <button @click="goToAnalytics">數據分析</button>-->
         <button @click="goToUserBehavior">用戶行為</button>
 <!--        <button @click="goToAnomalyDetection">異常檢測</button>-->
@@ -168,6 +169,10 @@ const goToAnalytics = () => {
   router.push({ name: 'AnalyticsDashboard' });
 };
 
+const goToApiCallStats = () => {
+  router.push({ name: 'ApiCallStats' });
+};
+
 const goToUserBehavior = () => {
   router.push({ name: 'UserBehaviorDashboard' });
 };
@@ -254,7 +259,6 @@ onMounted(() => {
   justify-content: center;
   gap: $spacing-sm;
   flex-wrap: wrap;
-  max-width: 650px;
   width: 100%;
 
   button {
@@ -297,7 +301,6 @@ onMounted(() => {
   justify-content: center !important;
   align-items: center;
   gap: $spacing-sm;
-  flex-wrap: wrap;
   width: 100%;
 }
 

@@ -42,7 +42,9 @@ export default {
   },
   data() {
     return {
-      chart: null
+      chart: null,
+      initRetryCount: 0,
+      maxRetries: 10
     };
   },
   watch: {
@@ -97,11 +99,18 @@ export default {
       // 检查容器尺寸
       const rect = this.$refs.chartContainer.getBoundingClientRect();
       if (rect.width === 0 || rect.height === 0) {
-        console.warn('Chart container has zero size:', rect);
-        // 延迟重试
-        setTimeout(() => this.initChart(), 100);
+        // 限制重试次数，避免无限循环
+        if (this.initRetryCount < this.maxRetries) {
+          this.initRetryCount++;
+          setTimeout(() => this.initChart(), 100);
+        } else {
+          console.error('Chart container still has zero size after max retries. Container may be hidden or have CSS issues.');
+        }
         return;
       }
+
+      // 重置重试计数
+      this.initRetryCount = 0;
 
       // 如果已经有图表实例，先销毁
       if (this.chart) {
@@ -150,15 +159,38 @@ export default {
         return {};
       }
 
-      const series = data.datasets.map(dataset => ({
-        name: dataset.label,
-        type: 'line',
-        data: (dataset.data || []).map(d => [d.x, d.y]),
-        smooth: true,
-        lineStyle: {
-          width: 2
+      // 支持两种数据格式：
+      // 1. Chart.js 格式：{ labels: [], datasets: [{ data: [] }] }
+      // 2. ECharts 格式：{ datasets: [{ data: [{x, y}] }] }
+      const hasLabels = data.labels && Array.isArray(data.labels);
+
+      const series = data.datasets.map(dataset => {
+        let seriesData;
+        if (hasLabels) {
+          // Chart.js 格式：使用 labels 和简单数值数组
+          seriesData = dataset.data || [];
+        } else {
+          // ECharts 格式：使用 {x, y} 对象数组
+          seriesData = (dataset.data || []).map(d => [d.x, d.y]);
         }
-      }));
+
+        return {
+          name: dataset.label,
+          type: 'line',
+          data: seriesData,
+          smooth: true,
+          lineStyle: {
+            width: 2,
+            color: dataset.borderColor
+          },
+          itemStyle: {
+            color: dataset.borderColor
+          },
+          areaStyle: dataset.fill ? {
+            color: dataset.backgroundColor || 'rgba(76, 175, 80, 0.1)'
+          } : undefined
+        };
+      });
 
       return {
         tooltip: {
@@ -176,7 +208,11 @@ export default {
           bottom: 30,
           containLabel: true
         },
-        xAxis: {
+        xAxis: hasLabels ? {
+          type: 'category',
+          data: data.labels,
+          boundaryGap: false
+        } : {
           type: 'time'
         },
         yAxis: {
@@ -286,7 +322,7 @@ export default {
   position: relative;
   width: 100%;
   min-width: 200px;
-  height: v-bind('height + "px"');
+  height: v-bind(height + 'px');
   min-height: 200px;
 }
 

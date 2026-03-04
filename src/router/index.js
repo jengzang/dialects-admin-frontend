@@ -30,6 +30,7 @@ import CreateRegion from "../components/custom/CreateRegion.vue"
 import EditRegion from "../components/custom/EditRegion.vue"
 import DeleteRegion from "../components/custom/DeleteRegion.vue"
 import LeaderboardView from "../components/leaderboard/LeaderboardView.vue"
+import ApiCallStatsPage from "../components/stats/ApiCallStatsPage.vue"
 
 // 根路徑配置
 const routes = [
@@ -201,6 +202,12 @@ const routes = [
     path: '/leaderboard',
     name: 'Leaderboard',
     component: LeaderboardView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/api-call-stats',
+    name: 'ApiCallStats',
+    component: ApiCallStatsPage,
     meta: { requiresAuth: true }
   },
 ]
