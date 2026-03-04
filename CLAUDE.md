@@ -409,6 +409,25 @@ Base: `window.ADMIN_BASE` (https://dialects.yzup.top/admin)
 - **Build outputs single files** - admin.js and admin.css only
 - **Language**: UI text is in Traditional Chinese (繁體中文)
 - **Element Plus**: Use for all UI components (buttons, tables, forms, dialogs)
+- **Documentation**: All documentation files MUST be placed in the `docs/` directory. Only keep `README.md` and `CLAUDE.md` in the project root.
+
+## Documentation Structure
+
+```
+project-root/
+├── README.md           # Project overview and quick start (root only)
+├── CLAUDE.md          # Claude Code development guide (root only)
+└── docs/              # All other documentation
+    ├── GUIDE.md       # Development guide and best practices
+    └── ...            # Other documentation files
+```
+
+**Rules**:
+- Never create new `.md` files in the project root (except README.md and CLAUDE.md)
+- All guides, tutorials, API docs, and other documentation go in `docs/`
+- Keep documentation minimal and up-to-date
+- Delete outdated documentation promptly
+
 
 ## Migration Status (2026-03-02)
 
