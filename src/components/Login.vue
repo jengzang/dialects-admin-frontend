@@ -59,9 +59,9 @@ const handleLogin = async () => {
     form.append('username', username.value);
     form.append('password', password.value);
 
-    // 使用原來的 API（因為後端可能還是使用 /auth/login）
+    // 使用原來的 API（因為後端可能還是使用 /api/auth/login）
     const WEB_BASE = window.WEB_BASE;
-    const res = await fetch(WEB_BASE + '/auth/login', {
+    const res = await fetch(WEB_BASE + '/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: form,

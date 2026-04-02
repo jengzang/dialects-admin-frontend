@@ -237,9 +237,9 @@ async function initUserInfo() {
 
   // 緩存未命中，從 API 獲取
   try {
-    // 注意：/auth/me 使用基礎路徑，不是 admin 路徑
+    // 注意：/api/auth/me 使用基礎路徑，不是 admin 路徑
     const WEB_BASE = window.WEB_BASE || 'http://localhost:5000';
-    const response = await fetch(WEB_BASE + '/auth/me', {
+    const response = await fetch(WEB_BASE + '/api/auth/me', {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('access_token') || localStorage.getItem('ACCESS_TOKEN')}`
       }

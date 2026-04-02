@@ -187,7 +187,7 @@ export const refreshAccessToken = async () => {
     try {
       const WEB_BASE = window.WEB_BASE || 'http://localhost:5000';
 
-      const res = await fetch(WEB_BASE + '/auth/refresh', {
+      const res = await fetch(WEB_BASE + '/api/auth/refresh', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refresh_token: refreshToken })
